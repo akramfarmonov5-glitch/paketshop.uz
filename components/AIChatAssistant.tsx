@@ -72,10 +72,12 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     if (env.VITE_SUPABASE_URL) {
       try {
         await supabase.from('leads').insert({
+          id: `lead_${Date.now()}`,
           name: formData.name,
           phone: formData.phone,
           created_at: new Date().toISOString()
         });
+        console.log('Lead saved successfully');
       } catch (error) {
         console.error("Error saving lead:", error);
       }
