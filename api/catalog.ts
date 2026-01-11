@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     if (error) throw error;
 
     // 2. Base URL of your shop
-    const BASE_URL = 'https://luxecore.uz'; // Change this to your actual Vercel domain
+    const BASE_URL = 'https://paketshop.uz'; // Change this to your actual domain
 
     // 3. Generate XML
     const xmlItems = products.map((product) => `
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       <g:description><![CDATA[${product.shortDescription || product.name}]]></g:description>
       <g:link>${BASE_URL}?product_id=${product.id}</g:link>
       <g:image_link>${product.image}</g:image_link>
-      <g:brand>LUXECORE</g:brand>
+      <g:brand>PaketShop</g:brand>
       <g:condition>new</g:condition>
       <g:availability>${(product.stock && product.stock > 0) ? 'in stock' : 'out of stock'}</g:availability>
       <g:price>${product.price} UZS</g:price>
@@ -31,9 +31,9 @@ export default async function handler(req, res) {
     const xmlFeed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
-    <title>LUXECORE Product Feed</title>
+    <title>PaketShop Product Feed</title>
     <link>${BASE_URL}</link>
-    <description>Premium luxury products from LUXECORE</description>
+    <description>Sifatli mahsulotlar PaketShop.uz dan</description>
     ${xmlItems}
   </channel>
 </rss>`;

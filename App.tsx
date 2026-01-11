@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
   const { toggleCart } = useCart();
 
   useEffect(() => {
-    const adminSession = localStorage.getItem('luxecore_admin_session');
+    const adminSession = localStorage.getItem('paketshop_admin_session');
     if (adminSession === 'active') {
       setIsAdminAuthenticated(true);
     }
@@ -195,12 +195,12 @@ const AppContent: React.FC = () => {
 
   const handleAdminLogin = () => {
     setIsAdminAuthenticated(true);
-    localStorage.setItem('luxecore_admin_session', 'active');
+    localStorage.setItem('paketshop_admin_session', 'active');
   };
 
   const handleAdminLogout = () => {
     setIsAdminAuthenticated(false);
-    localStorage.removeItem('luxecore_admin_session');
+    localStorage.removeItem('paketshop_admin_session');
     navigateToHome();
   };
 

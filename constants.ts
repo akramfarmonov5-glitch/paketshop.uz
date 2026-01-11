@@ -3,7 +3,7 @@ import { Product, Category, HeroContent, NavigationSettings } from './types';
 export const DEFAULT_HERO_CONTENT: HeroContent = {
   badge: "Yangi Mavsum",
   title: "Premium Collection 2026",
-  description: "Elegentlik va zamonaviy dizayn uyg'unligi. O'z uslubingizni LUXECORE bilan yangi bosqichga olib chiqing.",
+  description: "Sifatli mahsulotlar va qulay narxlar. O'z uslubingizni PaketShop bilan yangi bosqichga olib chiqing.",
   buttonText: "Sotib olish",
   images: [
     "https://images.unsplash.com/photo-1547996160-71df45082e0e?q=80&w=1000&auto=format&fit=crop", // Nature/Landscape for vibe

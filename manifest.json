@@ -1,19 +1,19 @@
 {
-  "name": "LUXECORE Premium Store",
-  "short_name": "LUXECORE",
+  "name": "PaketShop.uz Online Do'kon",
+  "short_name": "PaketShop",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",
-  "theme_color": "#FBBF24",
+  "theme_color": "#F97316",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Eo_circle_amber_letter-l.svg",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Eo_circle_orange_letter-p.svg",
       "sizes": "192x192",
       "type": "image/svg+xml"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3b/Eo_circle_amber_letter-l.svg",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Eo_circle_orange_letter-p.svg",
       "sizes": "512x512",
       "type": "image/svg+xml"
     }

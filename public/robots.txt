@@ -1,5 +1,5 @@
-# LUXECORE - Premium Store
-# https://luxecoreuz.vercel.app
+# PaketShop.uz - Online Do'kon
+# https://paketshop.uz
 
 User-agent: *
 Allow: /
@@ -10,4 +10,4 @@ Disallow: /admin/
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://luxecoreuz.vercel.app/sitemap.xml
+Sitemap: https://paketshop.uz/sitemap.xml

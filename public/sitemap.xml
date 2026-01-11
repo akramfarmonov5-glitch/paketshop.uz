@@ -4,7 +4,7 @@
   
   <!-- Homepage -->
   <url>
-    <loc>https://luxecoreuz.vercel.app/</loc>
+    <loc>https://paketshop.uz/</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -12,35 +12,35 @@
   
   <!-- Categories -->
   <url>
-    <loc>https://luxecoreuz.vercel.app/#soatlar</loc>
+    <loc>https://paketshop.uz/#soatlar</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
-    <loc>https://luxecoreuz.vercel.app/#sumkalar</loc>
+    <loc>https://paketshop.uz/#sumkalar</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
-    <loc>https://luxecoreuz.vercel.app/#kozoynaklar</loc>
+    <loc>https://paketshop.uz/#kozoynaklar</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
-    <loc>https://luxecoreuz.vercel.app/#parfyumeriya</loc>
+    <loc>https://paketshop.uz/#parfyumeriya</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
-    <loc>https://luxecoreuz.vercel.app/#aksessuarlar</loc>
+    <loc>https://paketshop.uz/#aksessuarlar</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -48,7 +48,7 @@
   
   <!-- Blog -->
   <url>
-    <loc>https://luxecoreuz.vercel.app/#blog</loc>
+    <loc>https://paketshop.uz/#blog</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

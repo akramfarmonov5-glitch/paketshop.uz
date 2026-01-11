@@ -21,7 +21,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Load cart from local storage on mount (optional persistence)
   useEffect(() => {
-    const savedCart = localStorage.getItem('luxecore_cart');
+    const savedCart = localStorage.getItem('paketshop_cart');
     if (savedCart) {
       try {
         setCart(JSON.parse(savedCart));
@@ -33,7 +33,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Save cart to local storage whenever it changes
   useEffect(() => {
-    localStorage.setItem('luxecore_cart', JSON.stringify(cart));
+    localStorage.setItem('paketshop_cart', JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (product: Product) => {

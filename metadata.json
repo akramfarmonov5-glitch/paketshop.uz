@@ -1,6 +1,6 @@
 {
-  "name": "Luxecore_uz",
-  "description": "Premium onlayn do'kon - zamonaviy dizayn va yuqori sifat.",
+  "name": "paketshop_uz",
+  "description": "Ishonchli onlayn do'kon - sifatli mahsulotlar va qulay narxlar.",
   "requestFramePermissions": [
     "microphone"
   ]

@@ -17,7 +17,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Load from local storage
   useEffect(() => {
-    const saved = localStorage.getItem('luxecore_wishlist');
+    const saved = localStorage.getItem('paketshop_wishlist');
     if (saved) {
       try {
         setWishlist(JSON.parse(saved));
@@ -29,7 +29,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Save to local storage
   useEffect(() => {
-    localStorage.setItem('luxecore_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('paketshop_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
   const addToWishlist = (product: Product) => {
