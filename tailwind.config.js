@@ -7,6 +7,7 @@ export default {
     "./App.tsx",
     "./index.tsx"
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -21,6 +22,13 @@ export default {
         dark: {
           900: '#0f0f0f',
           800: '#1a1a1a',
+        },
+        light: {
+          bg: '#FFFBF5',
+          card: '#F5F5F7',
+          text: '#1A1A1A',
+          muted: '#6B7280',
+          border: '#E5E5E5',
         }
       }
     },
