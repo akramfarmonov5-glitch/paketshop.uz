@@ -233,7 +233,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
-                  className="bg-white/5 text-white border border-white/10 font-bold py-3 md:py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+                  className={`font-bold py-3 md:py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base border ${isDark ? 'bg-white/5 text-white border-white/10 hover:bg-white hover:text-black' : 'bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200'}`}
                 >
                   <ShoppingBag size={18} className="md:w-[20px] md:h-[20px]" />
                   Savatga
