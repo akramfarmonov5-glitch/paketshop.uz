@@ -4,6 +4,7 @@ import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Im
 import { Product, Category } from '../../types';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../../lib/supabaseClient';
+import CloudinaryUpload from '../CloudinaryUpload';
 
 interface AdminProductsProps {
   products: Product[];
@@ -393,20 +394,21 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                     </button>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
                   {formData.images?.map((url, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <span className="text-xs text-gray-600 w-4">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={url}
-                        onChange={(e) => updateImage(index, e.target.value)}
-                        className="flex-1 bg-black border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
-                        placeholder="https://..."
+                    <div key={index} className="relative">
+                      <CloudinaryUpload
+                        currentImage={url}
+                        label={`Rasm ${index + 1}`}
+                        onUpload={(newUrl) => updateImage(index, newUrl)}
                       />
                       {index > 0 && (
-                        <button type="button" onClick={() => removeImage(index)} className="text-red-400 hover:text-red-300 p-2">
-                          <MinusCircle size={18} />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-lg text-xs z-10"
+                        >
+                          <MinusCircle size={14} />
                         </button>
                       )}
                     </div>
