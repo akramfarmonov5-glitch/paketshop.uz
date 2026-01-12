@@ -58,7 +58,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     setIsGenerating(true);
     try {
       const env = import.meta.env || {};
-      const ai = new GoogleGenAI({ apiKey: env.VITE_API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: env.VITE_GEMINI_API_KEY || '' });
 
       const prompt = `
             You are a fashion blog writer for a luxury store.
