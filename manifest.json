@@ -8,14 +8,14 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Eo_circle_orange_letter-p.svg",
+      "src": "/logo.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Eo_circle_orange_letter-p.svg",
+      "src": "/logo.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
