@@ -52,7 +52,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           >
             <Menu size={24} />
           </button>
-          <button onClick={onNavigateHome} className={`text-xl md:text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
+          <button onClick={onNavigateHome} className={`flex items-center gap-2 text-xl md:text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
+            <img src="/logo.png" alt="PaketShop" className="w-8 h-8 md:w-9 md:h-9" />
             Paket<span className="text-gold-400">Shop</span>
           </button>
         </div>
@@ -130,7 +131,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
               className={`fixed top-0 left-0 bottom-0 w-[85%] max-w-sm border-r z-[70] p-6 flex flex-col md:hidden transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
             >
               <div className="flex justify-between items-center mb-8">
-                <h2 className={`text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
+                <h2 className={`flex items-center gap-2 text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
+                  <img src="/logo.png" alt="PaketShop" className="w-8 h-8" />
                   Paket<span className="text-gold-400">Shop</span>
                 </h2>
                 <div className="flex items-center gap-2">
