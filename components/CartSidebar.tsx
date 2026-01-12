@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface CartSidebarProps {
   onCheckout: () => void;
@@ -9,6 +10,7 @@ interface CartSidebarProps {
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
   const { cart, isCartOpen, toggleCart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { isDark } = useTheme();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
@@ -33,20 +35,20 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-dark-900 border-l border-white/10 z-[70] shadow-2xl flex flex-col"
+            className={`fixed top-0 right-0 h-full w-full md:w-[450px] border-l z-[70] shadow-2xl flex flex-col transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-dark-900/50 backdrop-blur-md">
+            <div className={`flex items-center justify-between p-6 border-b backdrop-blur-md ${isDark ? 'border-white/10 bg-dark-900/50' : 'border-light-border bg-white/50'}`}>
               <div className="flex items-center gap-3">
                 <ShoppingBag size={20} className="text-gold-400" />
-                <h2 className="text-xl font-bold text-white tracking-wide">Savatcha</h2>
-                <span className="bg-white/10 text-xs px-2 py-1 rounded-full text-gray-300">
+                <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-light-text'}`}>Savatcha</h2>
+                <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-white/10 text-gray-300' : 'bg-light-card text-light-muted'}`}>
                   {cart.length} ta mahsulot
                 </span>
               </div>
               <button
                 onClick={toggleCart}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-light-card text-light-muted hover:text-light-text'}`}
               >
                 <X size={24} />
               </button>
@@ -56,10 +58,10 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                    <ShoppingBag size={32} className="text-gray-600" />
+                  <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-light-card'}`}>
+                    <ShoppingBag size={32} className={isDark ? 'text-gray-600' : 'text-light-muted'} />
                   </div>
-                  <p className="text-gray-400 text-lg">Savatchangiz bo'sh</p>
+                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Savatchangiz bo'sh</p>
                   <button onClick={toggleCart} className="text-gold-400 hover:text-gold-500 underline underline-offset-4">
                     Xaridni davom ettirish
                   </button>
@@ -79,7 +81,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                     <div className="flex-1 flex flex-col justify-between py-1">
                       <div>
                         <div className="flex justify-between items-start">
-                          <h3 className="text-white font-medium line-clamp-1">{item.name}</h3>
+                          <h3 className={`font-medium line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{item.name}</h3>
                           <button
                             onClick={() => removeFromCart(item.id)}
                             className="text-gray-500 hover:text-red-400 transition-colors p-1"
@@ -87,12 +89,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        <p className="text-gray-400 text-xs mt-1">{item.category}</p>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{item.category}</p>
                       </div>
-                      
+
                       <div className="flex items-end justify-between">
                         <p className="text-gold-400 font-medium">{formatPrice(item.price)}</p>
-                        
+
                         <div className="flex items-center gap-3 bg-white/5 rounded-full px-2 py-1 border border-white/5">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -117,22 +119,22 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
 
             {/* Footer */}
             {cart.length > 0 && (
-              <div className="p-6 border-t border-white/10 bg-dark-900">
+              <div className={`p-6 border-t ${isDark ? 'border-white/10 bg-dark-900' : 'border-light-border bg-light-card'}`}>
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-gray-400 text-sm">
+                  <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                     <span>Mahsulotlar summasi</span>
                     <span>{formatPrice(cartTotal)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-400 text-sm">
+                  <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                     <span>Yetkazib berish</span>
                     <span className="text-green-400">Bepul</span>
                   </div>
-                  <div className="flex justify-between text-xl font-bold text-white pt-4 border-t border-white/5">
+                  <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
                     <span>Jami</span>
                     <span>{formatPrice(cartTotal)}</span>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => {
                     toggleCart();
