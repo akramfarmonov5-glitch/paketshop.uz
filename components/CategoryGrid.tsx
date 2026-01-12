@@ -27,7 +27,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
         {/* Mobile: grid-cols-3 (3 ustun), Tablet/Desktop: grid-cols-3/4 */}
         <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 auto-rows-[160px] md:auto-rows-[300px]">
           {/* Slice ko'paytirildi: 6 tagacha kategoriya sig'adi (1 ta katta + 5 ta kichik) */}
-          {categories.slice(0, 6).map((category, index) => (
+          {categories.map((category, index) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 20 }}
