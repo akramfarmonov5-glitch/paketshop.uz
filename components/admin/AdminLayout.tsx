@@ -92,7 +92,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       <aside className="w-64 bg-zinc-900 border-r border-white/10 flex flex-col fixed h-full z-20">
         <div className="p-6 border-b border-white/10">
           <h1 className="text-2xl font-bold tracking-wider text-white">
-            LUXE<span className="text-gold-400">ADMIN</span>
+            Paket<span className="text-gold-400">ADMIN</span>
           </h1>
           <p className="text-xs text-gray-500 mt-1">Management Console</p>
         </div>

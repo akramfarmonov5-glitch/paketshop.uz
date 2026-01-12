@@ -30,7 +30,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
               </div>
               <div className="flex items-center gap-2">
                  <User size={16} />
-                 <span>LUXECORE Admin</span>
+                 <span>PaketShop Admin</span>
               </div>
            </div>
         </div>

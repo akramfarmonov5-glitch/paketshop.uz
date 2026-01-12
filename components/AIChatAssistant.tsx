@@ -23,7 +23,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   const [formLoading, setFormLoading] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: "Assalomu alaykum! Men LUXECORE shaxsiy stilistingizman. Sizga qanday yordam bera olaman? Masalan, 'sovg'a uchun soat' yoki 'yozgi sumka' so'rashingiz mumkin." }
+    { role: 'model', text: "Assalomu alaykum! Men PaketShop shaxsiy stilistingizman. Sizga qanday yordam bera olaman? Masalan, 'sovg'a uchun soat' yoki 'yozgi sumka' so'rashingiz mumkin." }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +51,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   }, [messages, isOpen, isLive, isRegistered]);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('luxecore_chat_user');
+    const savedUser = localStorage.getItem('paketshop_chat_user');
     if (savedUser) {
       setIsRegistered(true);
       const user = JSON.parse(savedUser);
@@ -66,7 +66,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     e.preventDefault();
     setFormLoading(true);
 
-    localStorage.setItem('luxecore_chat_user', JSON.stringify(formData));
+    localStorage.setItem('paketshop_chat_user', JSON.stringify(formData));
 
     const env = import.meta.env || {};
     if (env.VITE_SUPABASE_URL) {
@@ -93,7 +93,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     ).join('\n');
 
     return `
-      Siz LUXECORE premium do'konining professional sotuvchi-konsultanti va stilistisiz.
+      Siz PaketShop onlayn do'konining professional sotuvchi-konsultanti va stilistisiz.
       Mijozingizning ismi: ${formData.name}. Unga ismi bilan murojaat qiling.
       Siz xushmuomala, "siz"lab va o'zbek tilida gaplashing.
       
@@ -371,7 +371,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                   <Sparkles size={20} className="text-black" />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-sm">LUXE Assistant</h3>
+                  <h3 className="text-white font-bold text-sm">PaketShop Assistant</h3>
                   <div className="flex items-center gap-1.5">
                     <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-500 animate-pulse' : 'bg-green-500'} `}></span>
                     <span className="text-xs text-gray-400">{isLive ? 'Voice Live' : 'Online | Gemini AI'}</span>
