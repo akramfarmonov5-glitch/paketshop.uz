@@ -53,144 +53,146 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
             <Menu size={24} />
           </button>
           <button onClick={onNavigateHome} className={`flex items-center gap-2 text-xl md:text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
-            <img src="/logo.png" alt="PaketShop" className="w-8 h-8 md:w-9 md:h-9" />
+            <img src={isDark ? '/logo.png' : '/logo-light.png'} alt="PaketShop" className="w-8 h-8 md:w-9 md:h-9" />
             Paket<span className="text-gold-400">Shop</span>
           </button>
         </div>
 
-        {/* Desktop Links */}
-        <div className={`hidden md:flex gap-8 text-sm font-medium tracking-wide ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>
-          {navigationSettings.menuItems.map((link) => (
-            <button key={link.id} onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
-              {link.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Desktop Icons (Hidden on Mobile as we have Bottom Nav) */}
-        <div className={`hidden md:flex items-center gap-5 ${isDark ? 'text-white' : 'text-light-text'}`}>
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-white/5 hover:bg-white/10 text-yellow-400' : 'bg-light-card hover:bg-gray-200 text-amber-600'}`}
-            title={isDark ? "Yorug' tema" : "Qorong'u tema"}
-          >
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      {/* Desktop Links */}
+      <div className={`hidden md:flex gap-8 text-sm font-medium tracking-wide ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>
+        {navigationSettings.menuItems.map((link) => (
+          <button key={link.id} onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
+            {link.label}
           </button>
+        ))}
+      </div>
 
-          <button onClick={onSearchClick} className="hover:text-gold-400 transition-colors">
-            <Search size={22} strokeWidth={1.5} />
-          </button>
+      {/* Desktop Icons (Hidden on Mobile as we have Bottom Nav) */}
+      <div className={`hidden md:flex items-center gap-5 ${isDark ? 'text-white' : 'text-light-text'}`}>
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-white/5 hover:bg-white/10 text-yellow-400' : 'bg-light-card hover:bg-gray-200 text-amber-600'}`}
+          title={isDark ? "Yorug' tema" : "Qorong'u tema"}
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
-          <button onClick={onWishlistClick} className="relative hover:text-gold-400 transition-colors">
-            <Heart size={22} strokeWidth={1.5} />
-            {wishlist.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-black bg-gold-400 rounded-full">
-                {wishlist.length}
-              </span>
-            )}
-          </button>
+        <button onClick={onSearchClick} className="hover:text-gold-400 transition-colors">
+          <Search size={22} strokeWidth={1.5} />
+        </button>
 
-          <button onClick={onProfileClick} className="hover:text-gold-400 transition-colors">
-            <User size={22} strokeWidth={1.5} />
-          </button>
+        <button onClick={onWishlistClick} className="relative hover:text-gold-400 transition-colors">
+          <Heart size={22} strokeWidth={1.5} />
+          {wishlist.length > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-black bg-gold-400 rounded-full">
+              {wishlist.length}
+            </span>
+          )}
+        </button>
 
-          <button
-            onClick={toggleCart}
-            className="relative cursor-pointer group hover:text-gold-400 transition-colors"
-          >
-            <ShoppingBag size={22} strokeWidth={1.5} />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold text-black bg-gold-400 rounded-full animate-bounce">
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
+        <button onClick={onProfileClick} className="hover:text-gold-400 transition-colors">
+          <User size={22} strokeWidth={1.5} />
+        </button>
 
-        {/* Mobile Spacer */}
-        <div className="md:hidden w-8"></div>
-      </motion.nav>
+        <button
+          onClick={toggleCart}
+          className="relative cursor-pointer group hover:text-gold-400 transition-colors"
+        >
+          <ShoppingBag size={22} strokeWidth={1.5} />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold text-black bg-gold-400 rounded-full animate-bounce">
+              {cartCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Spacer */}
+      <div className="md:hidden w-8"></div>
+    </motion.nav >
+
+      {/* Mobile Menu Drawer */ }
       <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm md:hidden"
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className={`fixed top-0 left-0 bottom-0 w-[85%] max-w-sm border-r z-[70] p-6 flex flex-col md:hidden transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
-            >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className={`flex items-center gap-2 text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
-                  <img src="/logo.png" alt="PaketShop" className="w-8 h-8" />
-                  Paket<span className="text-gold-400">Shop</span>
-                </h2>
-                <div className="flex items-center gap-2">
-                  {/* Mobile Theme Toggle */}
-                  <button
-                    onClick={toggleTheme}
-                    className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/5 text-yellow-400' : 'bg-light-card text-amber-600'}`}
-                  >
-                    {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                  </button>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`p-2 rounded-full ${isDark ? 'bg-white/5 text-gray-400 hover:text-white' : 'bg-light-card text-light-muted hover:text-light-text'}`}
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
+  {
+    isMobileMenuOpen && (
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm md:hidden"
+        />
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '-100%' }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className={`fixed top-0 left-0 bottom-0 w-[85%] max-w-sm border-r z-[70] p-6 flex flex-col md:hidden transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
+        >
+          <div className="flex justify-between items-center mb-8">
+            <h2 className={`flex items-center gap-2 text-2xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-light-text'}`}>
+              <img src={isDark ? '/logo.png' : '/logo-light.png'} alt="PaketShop" className="w-8 h-8" />
+              Paket<span className="text-gold-400">Shop</span>
+            </h2>
+            <div className="flex items-center gap-2">
+              {/* Mobile Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/5 text-yellow-400' : 'bg-light-card text-amber-600'}`}
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`p-2 rounded-full ${isDark ? 'bg-white/5 text-gray-400 hover:text-white' : 'bg-light-card text-light-muted hover:text-light-text'}`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
 
-              {/* Navigation Links */}
-              <div className="space-y-2 flex-1 overflow-y-auto">
-                {navigationSettings.menuItems.map((link) => (
-                  <button
-                    key={link.id}
-                    onClick={handleMobileLinkClick}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}
-                  >
-                    <span className="font-medium">{link.label}</span>
-                    <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
-                  </button>
-                ))}
-              </div>
+          {/* Navigation Links */}
+          <div className="space-y-2 flex-1 overflow-y-auto">
+            {navigationSettings.menuItems.map((link) => (
+              <button
+                key={link.id}
+                onClick={handleMobileLinkClick}
+                className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}
+              >
+                <span className="font-medium">{link.label}</span>
+                <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
+              </button>
+            ))}
+          </div>
 
-              {/* Social Media & Footer Info */}
-              <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
-                <p className={`text-xs mb-4 uppercase tracking-widest font-semibold ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Bizni kuzating</p>
-                <div className="flex gap-4 mb-8">
-                  {navigationSettings.socialLinks.map((social) => (
-                    <a
-                      key={social.id}
-                      href={social.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-card text-light-muted'}`}
-                    >
-                      {getSocialIcon(social.platform)}
-                    </a>
-                  ))}
-                </div>
+          {/* Social Media & Footer Info */}
+          <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
+            <p className={`text-xs mb-4 uppercase tracking-widest font-semibold ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Bizni kuzating</p>
+            <div className="flex gap-4 mb-8">
+              {navigationSettings.socialLinks.map((social) => (
+                <a
+                  key={social.id}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-card text-light-muted'}`}
+                >
+                  {getSocialIcon(social.platform)}
+                </a>
+              ))}
+            </div>
 
-                <p className={`text-xs text-center ${isDark ? 'text-gray-600' : 'text-light-muted'}`}>
-                  &copy; 2026 PaketShop.uz. <br /> Sifatli Onlayn Xaridlar.
-                </p>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            <p className={`text-xs text-center ${isDark ? 'text-gray-600' : 'text-light-muted'}`}>
+              &copy; 2026 PaketShop.uz. <br /> Sifatli Onlayn Xaridlar.
+            </p>
+          </div>
+        </motion.div>
+      </>
+    )
+  }
+      </AnimatePresence >
     </>
   );
 };
