@@ -7,6 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 import Breadcrumbs from './Breadcrumbs';
 import ProductCard from './ProductCard';
 import * as fpixel from '../lib/fpixel';
@@ -23,6 +24,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
+  const { isDark } = useTheme();
   const [aiDescription, setAiDescription] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [activeImage, setActiveImage] = useState<string>(product.image);
@@ -40,7 +42,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   useEffect(() => {
     window.scrollTo(0, 0);
     setActiveImage(product.image);
-    setIsPlaying(false); 
+    setIsPlaying(false);
 
     fpixel.trackViewContent(product);
 
@@ -49,9 +51,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         const env = import.meta.env || {};
         const apiKey = env.VITE_API_KEY;
         if (!apiKey) {
-            setAiDescription(`${product.name} - bu ${product.category} olamidagi haqiqiy inqilob. Har bir detalda mukammallik va hashamat ufurib turadi.`);
-            setLoading(false);
-            return;
+          setAiDescription(`${product.name} - bu ${product.category} olamidagi haqiqiy inqilob. Har bir detalda mukammallik va hashamat ufurib turadi.`);
+          setLoading(false);
+          return;
         }
 
         const ai = new GoogleGenAI({ apiKey });
@@ -107,8 +109,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const hasVideo = !!videoId;
 
   const handleOpenVideo = () => {
-      setIsPlaying(false);
-      setShowVideo(true);
+    setIsPlaying(false);
+    setShowVideo(true);
   }
 
   const handleCloseVideo = () => {
@@ -117,21 +119,21 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   };
 
   return (
-    <div className="pt-24 pb-20 min-h-screen bg-black text-white">
+    <div className={`pt-24 pb-20 min-h-screen transition-colors duration-300 ${isDark ? "bg-black text-white" : "bg-light-bg text-light-text"}`}>
       <div className="container mx-auto px-4 md:px-6 max-w-6xl">
         <div className="mb-6 md:mb-8">
-            <Breadcrumbs 
-                onHomeClick={onBack}
-                items={[
-                    { label: product.category, onClick: onBack }, 
-                    { label: product.name, active: true }
-                ]}
-            />
+          <Breadcrumbs
+            onHomeClick={onBack}
+            items={[
+              { label: product.category, onClick: onBack },
+              { label: product.name, active: true }
+            ]}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-20 mb-20">
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="lg:col-span-7"
@@ -139,48 +141,48 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="sticky top-24 md:top-28 space-y-4">
               <div className="aspect-[4/5] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-gold-500/20 to-purple-500/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-                <img 
-                  src={activeImage} 
-                  alt={product.name} 
+                <img
+                  src={activeImage}
+                  alt={product.name}
                   className="relative w-full h-full object-cover z-10 transition-opacity duration-300"
                 />
-                
+
                 {hasVideo && (
-                    <button 
-                        onClick={handleOpenVideo}
-                        className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md pl-3 pr-4 py-2 rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group/btn"
-                    >
-                        <PlayCircle size={18} className="text-white group-hover/btn:scale-110 transition-transform md:w-[22px] md:h-[22px]" />
-                        <span className="text-xs md:text-sm font-bold tracking-wide">VIDEO REVIEW</span>
-                    </button>
+                  <button
+                    onClick={handleOpenVideo}
+                    className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md pl-3 pr-4 py-2 rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group/btn"
+                  >
+                    <PlayCircle size={18} className="text-white group-hover/btn:scale-110 transition-transform md:w-[22px] md:h-[22px]" />
+                    <span className="text-xs md:text-sm font-bold tracking-wide">VIDEO REVIEW</span>
+                  </button>
                 )}
               </div>
 
               <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 custom-scrollbar">
                 {galleryImages.map((img, idx) => (
-                    <button 
-                        key={idx}
-                        onClick={() => setActiveImage(img)}
-                        className={`w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-gold-400 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                    >
-                        <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
-                    </button>
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={`w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-gold-400 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                  >
+                    <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
+                  </button>
                 ))}
-                
+
                 {hasVideo && (
-                    <button 
-                        onClick={handleOpenVideo}
-                        className="w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 border-white/10 bg-dark-800 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
-                    >
-                        <Youtube size={20} className="text-red-500 group-hover:scale-110 transition-transform md:w-[24px] md:h-[24px]" />
-                        <span className="text-[10px] font-medium">VIDEO</span>
-                    </button>
+                  <button
+                    onClick={handleOpenVideo}
+                    className="w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 border-white/10 bg-dark-800 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
+                  >
+                    <Youtube size={20} className="text-red-500 group-hover:scale-110 transition-transform md:w-[24px] md:h-[24px]" />
+                    <span className="text-[10px] font-medium">VIDEO</span>
+                  </button>
                 )}
               </div>
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -193,42 +195,42 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400">
                 {product.name}
               </h1>
-              
+
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                 <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium text-white ${product.stock === 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                    {product.stock === 0 ? 'Out of Stock' : (product.stock ? `${product.stock} dona` : 'In Stock')}
-                 </span>
-                 <div className="flex text-gold-500">
-                   {[...Array(5)].map((_, i) => <Star key={i} size={12} className="md:w-[14px] md:h-[14px]" fill="currentColor" />)}
-                 </div>
-                 
-                 {hasVideo && (
-                     <button 
-                        onClick={handleOpenVideo}
-                        className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 md:px-3 rounded hover:bg-red-500 hover:text-white transition-colors"
-                     >
-                        <Youtube size={12} className="md:w-[14px] md:h-[14px]" />
-                        VIDEO SHARH
-                     </button>
-                 )}
+                <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium text-white ${product.stock === 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                  {product.stock === 0 ? 'Out of Stock' : (product.stock ? `${product.stock} dona` : 'In Stock')}
+                </span>
+                <div className="flex text-gold-500">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={12} className="md:w-[14px] md:h-[14px]" fill="currentColor" />)}
+                </div>
+
+                {hasVideo && (
+                  <button
+                    onClick={handleOpenVideo}
+                    className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 md:px-3 rounded hover:bg-red-500 hover:text-white transition-colors"
+                  >
+                    <Youtube size={12} className="md:w-[14px] md:h-[14px]" />
+                    VIDEO SHARH
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="py-6 md:py-8 border-t border-white/10 border-b border-white/10 mb-6 md:mb-8">
               <div className="flex items-end justify-between mb-4 md:mb-6">
                 <div>
-                   <p className="text-gray-400 text-xs mb-1">Jami summa</p>
-                   <p className="text-2xl md:text-3xl font-light text-white">{product.formattedPrice}</p>
+                  <p className="text-gray-400 text-xs mb-1">Jami summa</p>
+                  <p className="text-2xl md:text-3xl font-light text-white">{product.formattedPrice}</p>
                 </div>
-                <button 
+                <button
                   onClick={handleToggleWishlist}
                   className={`p-3 rounded-xl border transition-all ${isLiked ? 'bg-gold-400 border-gold-400 text-black' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'}`}
                 >
-                    <Heart size={22} className={isLiked ? 'fill-black' : ''} />
+                  <Heart size={22} className={isLiked ? 'fill-black' : ''} />
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <button 
+                <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
                   className="bg-white/5 text-white border border-white/10 font-bold py-3 md:py-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
@@ -236,7 +238,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   <ShoppingBag size={18} className="md:w-[20px] md:h-[20px]" />
                   Savatga
                 </button>
-                <button 
+                <button
                   onClick={handleBuyNow}
                   disabled={product.stock === 0}
                   className="bg-gold-400 text-black font-bold py-3 md:py-4 rounded-xl hover:bg-gold-500 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
@@ -250,37 +252,37 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="mb-6 md:mb-8 relative">
               <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-gold-400 to-transparent rounded-full"></div>
               <div className="pl-4 md:pl-6">
-                 <div className="flex items-center gap-2 mb-2 md:mb-3">
-                    <Sparkles size={14} className="text-gold-400 animate-pulse md:w-[16px] md:h-[16px]" />
-                    <h3 className="text-gray-300 text-xs md:text-sm font-semibold tracking-wide">GEMINI AI TAHLILI</h3>
-                 </div>
-                 {loading ? (
-                    <div className="space-y-2 animate-pulse">
-                      <div className="h-4 bg-white/10 rounded w-full"></div>
-                      <div className="h-4 bg-white/10 rounded w-5/6"></div>
-                      <div className="h-4 bg-white/10 rounded w-4/6"></div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-300 text-base md:text-lg leading-relaxed font-light italic">
-                      "{aiDescription}"
-                    </p>
-                  )}
+                <div className="flex items-center gap-2 mb-2 md:mb-3">
+                  <Sparkles size={14} className="text-gold-400 animate-pulse md:w-[16px] md:h-[16px]" />
+                  <h3 className="text-gray-300 text-xs md:text-sm font-semibold tracking-wide">GEMINI AI TAHLILI</h3>
+                </div>
+                {loading ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-4 bg-white/10 rounded w-full"></div>
+                    <div className="h-4 bg-white/10 rounded w-5/6"></div>
+                    <div className="h-4 bg-white/10 rounded w-4/6"></div>
+                  </div>
+                ) : (
+                  <p className="text-gray-300 text-base md:text-lg leading-relaxed font-light italic">
+                    "{aiDescription}"
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="bg-white/5 rounded-2xl p-4 md:p-6 backdrop-blur-md border border-white/5">
-               <h3 className="text-white text-sm font-semibold mb-4 flex items-center gap-2">
-                 <Activity size={16} className="text-gold-400"/>
-                 Texnik Xususiyatlar
-               </h3>
-               <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
-                 {product.specs.map((spec, index) => (
-                   <div key={index}>
-                     <p className="text-gray-500 text-[10px] md:text-xs uppercase tracking-wider mb-1">{spec.label}</p>
-                     <p className="text-white text-xs md:text-sm font-medium">{spec.value}</p>
-                   </div>
-                 ))}
-               </div>
+              <h3 className="text-white text-sm font-semibold mb-4 flex items-center gap-2">
+                <Activity size={16} className="text-gold-400" />
+                Texnik Xususiyatlar
+              </h3>
+              <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
+                {product.specs.map((spec, index) => (
+                  <div key={index}>
+                    <p className="text-gray-500 text-[10px] md:text-xs uppercase tracking-wider mb-1">{spec.label}</p>
+                    <p className="text-white text-xs md:text-sm font-medium">{spec.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="mt-6 md:mt-8 flex flex-wrap gap-4 items-center justify-between text-gray-400 text-xs md:text-sm px-1">
@@ -302,99 +304,99 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         </div>
 
         {relatedProducts.length > 0 && (
-            <motion.div 
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="mt-20 border-t border-white/10 pt-12"
-            >
-                <div className="flex justify-between items-end mb-8">
-                    <div>
-                        <span className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 block">
-                            Tavsiyalar
-                        </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-white">
-                            O'xshash Mahsulotlar
-                        </h2>
-                    </div>
-                </div>
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-20 border-t border-white/10 pt-12"
+          >
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <span className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 block">
+                  Tavsiyalar
+                </span>
+                <h2 className="text-2xl md:text-3xl font-bold text-white">
+                  O'xshash Mahsulotlar
+                </h2>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                    {relatedProducts.map((p) => (
-                        <motion.div key={p.id} whileHover={{ y: -5 }}>
-                            <ProductCard 
-                                product={p} 
-                                onNavigate={() => onProductSelect ? onProductSelect(p.id) : null}
-                            />
-                        </motion.div>
-                    ))}
-                </div>
-            </motion.div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+              {relatedProducts.map((p) => (
+                <motion.div key={p.id} whileHover={{ y: -5 }}>
+                  <ProductCard
+                    product={p}
+                    onNavigate={() => onProductSelect ? onProductSelect(p.id) : null}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         )}
       </div>
 
       <AnimatePresence>
         {showVideo && videoId && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    exit={{ opacity: 0 }}
-                    onClick={handleCloseVideo}
-                    className="absolute inset-0 bg-black/95 backdrop-blur-xl"
-                />
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }} 
-                    animate={{ scale: 1, opacity: 1 }} 
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col group"
-                >
-                     <button 
-                        onClick={handleCloseVideo}
-                        className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
-                     >
-                        <X size={20} className="md:w-[24px] md:h-[24px]" />
-                     </button>
-                     
-                     <div className="relative w-full h-full">
-                        {!isPlaying ? (
-                             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black cursor-pointer group" onClick={() => setIsPlaying(true)}>
-                                 <img 
-                                    src={activeImage} 
-                                    alt="Video Cover" 
-                                    className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm group-hover:opacity-40 transition-opacity duration-700"
-                                 />
-                                 <div className="z-20 transform group-hover:scale-110 transition-transform duration-300">
-                                     <div className="w-16 h-16 md:w-24 md:h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.5)]">
-                                         <Youtube size={32} className="text-white fill-white md:w-[48px] md:h-[48px]" />
-                                     </div>
-                                 </div>
-                                 <p className="z-20 mt-4 md:mt-6 text-sm md:text-xl font-bold tracking-widest text-white drop-shadow-lg">VIDEONI KO'RISH</p>
-                             </div>
-                        ) : (
-                             <iframe 
-                                src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&showinfo=0`}
-                                title="Product Video" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                allowFullScreen 
-                                className="w-full h-full border-0"
-                             ></iframe>
-                        )}
-                        
-                        <div className={`absolute bottom-4 left-0 right-0 md:bottom-6 text-center pointer-events-none z-30 transition-opacity duration-500 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-                            <a 
-                                href={product.videoUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="pointer-events-auto inline-flex items-center gap-2 text-[10px] md:text-xs font-bold text-white bg-black/70 hover:bg-red-600 px-4 py-2 md:px-6 md:py-3 rounded-full backdrop-blur-md transition-all border border-white/10 shadow-lg"
-                            >
-                                <ExternalLink size={12} className="md:w-[14px] md:h-[14px]" />
-                                Agar video ishlamasa, YouTube orqali ko'ring
-                            </a>
-                        </div>
-                     </div>
-                </motion.div>
-            </div>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCloseVideo}
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col group"
+            >
+              <button
+                onClick={handleCloseVideo}
+                className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
+              >
+                <X size={20} className="md:w-[24px] md:h-[24px]" />
+              </button>
+
+              <div className="relative w-full h-full">
+                {!isPlaying ? (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black cursor-pointer group" onClick={() => setIsPlaying(true)}>
+                    <img
+                      src={activeImage}
+                      alt="Video Cover"
+                      className="absolute inset-0 w-full h-full object-cover opacity-60 blur-sm group-hover:opacity-40 transition-opacity duration-700"
+                    />
+                    <div className="z-20 transform group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-16 h-16 md:w-24 md:h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.5)]">
+                        <Youtube size={32} className="text-white fill-white md:w-[48px] md:h-[48px]" />
+                      </div>
+                    </div>
+                    <p className="z-20 mt-4 md:mt-6 text-sm md:text-xl font-bold tracking-widest text-white drop-shadow-lg">VIDEONI KO'RISH</p>
+                  </div>
+                ) : (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&showinfo=0`}
+                    title="Product Video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  ></iframe>
+                )}
+
+                <div className={`absolute bottom-4 left-0 right-0 md:bottom-6 text-center pointer-events-none z-30 transition-opacity duration-500 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                  <a
+                    href={product.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pointer-events-auto inline-flex items-center gap-2 text-[10px] md:text-xs font-bold text-white bg-black/70 hover:bg-red-600 px-4 py-2 md:px-6 md:py-3 rounded-full backdrop-blur-md transition-all border border-white/10 shadow-lg"
+                  >
+                    <ExternalLink size={12} className="md:w-[14px] md:h-[14px]" />
+                    Agar video ishlamasa, YouTube orqali ko'ring
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
@@ -402,3 +404,4 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
 };
 
 export default ProductDetail;
+
