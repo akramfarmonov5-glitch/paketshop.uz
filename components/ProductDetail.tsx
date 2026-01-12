@@ -192,7 +192,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <span className="text-gold-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
                 {product.category}
               </span>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400">
+              <h1 className={`text-3xl md:text-5xl lg:text-6xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
                 {product.name}
               </h1>
 
@@ -220,7 +220,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <div className="flex items-end justify-between mb-4 md:mb-6">
                 <div>
                   <p className="text-gray-400 text-xs mb-1">Jami summa</p>
-                  <p className="text-2xl md:text-3xl font-light text-white">{product.formattedPrice}</p>
+                  <p className={`text-2xl md:text-3xl font-light ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.formattedPrice}</p>
                 </div>
                 <button
                   onClick={handleToggleWishlist}
