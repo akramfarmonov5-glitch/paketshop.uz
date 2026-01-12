@@ -50,7 +50,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const code = promoCode.trim().toUpperCase();
-    if (code === 'LUXE2026') {
+    if (code === 'PAKET2026') {
       const discount = cartTotal * 0.1;
       setDiscountAmount(discount);
       setAppliedPromo(code);
@@ -121,7 +121,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     const paymentLabel = paymentMethod === 'paynet' ? '📲 Paynet (Onlayn)' : '💵 Naqd (Yetkazilganda)';
 
     const message = `
-📦 <b>YANGI BUYURTMA! (LUXECORE)</b>
+📦 <b>YANGI BUYURTMA! (PaketShop)</b>
 
 👤 <b>Mijoz:</b> ${formData.firstName} ${formData.lastName}
 📞 <b>Tel:</b> ${formData.phone}
