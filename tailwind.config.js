@@ -15,9 +15,9 @@ export default {
       },
       colors: {
         gold: {
-          400: '#FBBF24', // Amber 400
-          500: '#F59E0B', // Amber 500
-          600: '#D97706', // Amber 600
+          400: '#EF4444', // Red 400
+          500: '#DC2626', // Red 500
+          600: '#B91C1C', // Red 600
         },
         dark: {
           900: '#0f0f0f',
@@ -35,3 +35,4 @@ export default {
   },
   plugins: [],
 }
+
