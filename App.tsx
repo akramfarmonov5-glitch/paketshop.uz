@@ -21,6 +21,7 @@ import { MOCK_PRODUCTS, MOCK_CATEGORIES, DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATIO
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { supabase } from './lib/supabaseClient';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from './types';
 
@@ -284,8 +285,10 @@ const AppContent: React.FC = () => {
     );
   };
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-gold-400 selection:text-black">
+    <div className={`min-h-screen font-sans selection:bg-gold-400 selection:text-black transition-colors duration-300 ${isDark ? 'dark bg-black text-white' : 'light bg-light-bg text-light-text'}`}>
       <MetaPixel />
       {currentRoute.name !== 'CHECKOUT' && currentRoute.name !== 'ADMIN' && currentRoute.name !== 'TRACKING' && (
         <Navbar
@@ -330,13 +333,15 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <AppContent />
-        </CartProvider>
-      </WishlistProvider>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </WishlistProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 };
 
