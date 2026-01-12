@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabaseClient';
 import * as fpixel from '../lib/fpixel';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface CheckoutProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { cart, cartTotal, clearCart } = useCart();
   const { showToast } = useToast();
+  const { isDark } = useTheme();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'paynet' | 'cash'>('paynet');
@@ -185,10 +187,10 @@ ${discountInfo}
 
   if (cart.length === 0 && !isSuccess) {
     return (
-      <div className="min-h-screen pt-24 pb-12 bg-black flex flex-col items-center justify-center text-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-4">Savatchangiz bo'sh</h2>
-        <p className="text-gray-400 mb-8">Buyurtma berish uchun avval mahsulot tanlang.</p>
-        <button onClick={onBack} className="px-8 py-3 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors">
+      <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-6 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
+        <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>Savatchangiz bo'sh</h2>
+        <p className={`mb-8 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Buyurtma berish uchun avval mahsulot tanlang.</p>
+        <button onClick={onBack} className={`px-8 py-3 rounded-full transition-colors ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-light-card text-light-text hover:bg-gray-200'}`}>
           Do'konga qaytish
         </button>
       </div>
@@ -196,66 +198,66 @@ ${discountInfo}
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 bg-black text-white relative">
+    <div className={`min-h-screen pt-24 pb-12 relative transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-light-bg text-light-text'}`}>
       <div className="container mx-auto px-6 max-w-6xl relative z-10">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors">
+        <button onClick={onBack} className={`flex items-center gap-2 mb-8 transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-light-muted hover:text-light-text'}`}>
           <ArrowLeft size={18} />
           <span>Do'konga qaytish</span>
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="text-3xl font-bold mb-8">Buyurtmani rasmiylashtirish</h1>
+            <h1 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtmani rasmiylashtirish</h1>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Ismingiz</label>
-                  <input required name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all" placeholder="Aziz" />
+                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Ismingiz</label>
+                  <input required name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Aziz" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Familiyangiz</label>
-                  <input required name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all" placeholder="Rahimov" />
+                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Familiyangiz</label>
+                  <input required name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Rahimov" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Telefon raqam</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Telefon raqam</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">+998</span>
-                  <input required name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className="w-full bg-dark-800 border border-white/10 rounded-lg pl-16 pr-4 py-3 text-white focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all" placeholder="90 123 45 67" />
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>+998</span>
+                  <input required name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="90 123 45 67" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Shahar</label>
-                <select name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none">
-                  <option className="bg-zinc-900 text-white" value="Toshkent">Toshkent</option>
-                  <option className="bg-zinc-900 text-white" value="Samarqand">Samarqand</option>
-                  <option className="bg-zinc-900 text-white" value="Buxoro">Buxoro</option>
-                  <option className="bg-zinc-900 text-white" value="Andijon">Andijon</option>
-                  <option className="bg-zinc-900 text-white" value="Farg'ona">Farg'ona</option>
-                  <option className="bg-zinc-900 text-white" value="Namangan">Namangan</option>
-                  <option className="bg-zinc-900 text-white" value="Xorazm">Xorazm</option>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Shahar</label>
+                <select name="city" value={formData.city} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Toshkent">Toshkent</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Samarqand">Samarqand</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Buxoro">Buxoro</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Andijon">Andijon</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Farg'ona">Farg'ona</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Namangan">Namangan</option>
+                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Xorazm">Xorazm</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Manzil</label>
-                <input required name="address" type="text" value={formData.address} onChange={handleInputChange} className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all" placeholder="Amir Temur ko'chasi, 15-uy" />
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Manzil</label>
+                <input required name="address" type="text" value={formData.address} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Amir Temur ko'chasi, 15-uy" />
               </div>
 
               <div className="pt-2">
-                <label className="text-sm text-gray-400 mb-2 block">Promo kod (Agar bo'lsa)</label>
+                <label className={`text-sm mb-2 block ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Promo kod (Agar bo'lsa)</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <Ticket className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`} size={18} />
                     <input
                       type="text"
                       value={promoCode}
                       disabled={!!appliedPromo}
                       onChange={(e) => setPromoCode(e.target.value)}
                       placeholder="Kodini kiriting"
-                      className="w-full bg-dark-800 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:border-gold-400 focus:outline-none disabled:opacity-50"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:border-gold-400 focus:outline-none disabled:opacity-50 ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
                     />
                   </div>
                   {!appliedPromo ? (
@@ -263,7 +265,7 @@ ${discountInfo}
                       type="button"
                       onClick={handleApplyPromo}
                       disabled={!promoCode || isCheckingPromo}
-                      className="bg-white/10 hover:bg-gold-400 hover:text-black text-white px-6 rounded-lg font-medium transition-colors disabled:opacity-50"
+                      className={`px-6 rounded-lg font-medium transition-colors disabled:opacity-50 ${isDark ? 'bg-white/10 hover:bg-gold-400 hover:text-black text-white' : 'bg-light-card hover:bg-gold-400 hover:text-black text-light-text'}`}
                     >
                       {isCheckingPromo ? <Loader2 className="animate-spin" size={20} /> : "Qo'llash"}
                     </button>
@@ -285,14 +287,14 @@ ${discountInfo}
               </div>
 
               <div className="space-y-3 pt-2">
-                <label className="text-sm text-gray-400">To'lov usuli</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>To'lov usuli</label>
                 <div className="grid grid-cols-2 gap-4">
-                  <button type="button" onClick={() => setPaymentMethod('paynet')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'paynet' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'}`}>
+                  <button type="button" onClick={() => setPaymentMethod('paynet')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'paynet' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Wallet size={24} />
                     <span className="font-medium text-sm">Paynet (Onlayn)</span>
                     {paymentMethod === 'paynet' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
                   </button>
-                  <button type="button" onClick={() => setPaymentMethod('cash')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'cash' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'}`}>
+                  <button type="button" onClick={() => setPaymentMethod('cash')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'cash' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Banknote size={24} />
                     <span className="font-medium text-sm">Naqd (Qabulda)</span>
                     {paymentMethod === 'cash' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
@@ -322,19 +324,19 @@ ${discountInfo}
             </form>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-dark-900 border border-white/10 rounded-2xl p-8 h-fit sticky top-28">
-            <h3 className="text-xl font-bold mb-6">Buyurtma tarkibi</h3>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`border rounded-2xl p-8 h-fit sticky top-28 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border shadow-sm'}`}>
+            <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtma tarkibi</h3>
             <div className="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-4">
-                  <div className="w-16 h-20 bg-gray-800 rounded-lg overflow-hidden shrink-0">
+                  <div className={`w-16 h-20 rounded-lg overflow-hidden shrink-0 ${isDark ? 'bg-gray-800' : 'bg-light-card'}`}>
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium text-white">{item.name}</h4>
-                    <p className="text-xs text-gray-400">{item.category}</p>
+                    <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-light-text'}`}>{item.name}</h4>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{item.category}</p>
                     <div className="flex justify-between mt-2">
-                      <span className="text-xs text-gray-500">x{item.quantity}</span>
+                      <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>x{item.quantity}</span>
                       <span className="text-sm font-medium text-gold-400">{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   </div>
@@ -342,8 +344,8 @@ ${discountInfo}
               ))}
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-white/10">
-              <div className="flex justify-between text-gray-400">
+            <div className={`space-y-3 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
+              <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                 <span>Mahsulotlar</span>
                 <span>{formatPrice(cartTotal)}</span>
               </div>
@@ -353,24 +355,24 @@ ${discountInfo}
                   <span>-{formatPrice(discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-gray-400">
+              <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                 <span>Yetkazib berish</span>
                 <span className="text-green-400">Bepul</span>
               </div>
-              <div className="flex justify-between text-xl font-bold text-white pt-4 border-t border-white/5">
+              <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
                 <span>Jami to'lov</span>
                 <span>{formatPrice(finalTotal)}</span>
               </div>
             </div>
 
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-white/5">
+              <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
                 <Truck className="text-gold-400 mb-2" size={24} />
-                <span className="text-xs text-center text-gray-300">Tezkor yetkazish</span>
+                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>Tezkor yetkazish</span>
               </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-white/5">
+              <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
                 <CreditCard className="text-gold-400 mb-2" size={24} />
-                <span className="text-xs text-center text-gray-300">Qulay to'lov</span>
+                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>Qulay to'lov</span>
               </div>
             </div>
           </motion.div>
