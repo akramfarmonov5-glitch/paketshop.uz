@@ -3,6 +3,7 @@ import { Home, Search, ShoppingBag, User, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MobileNavProps {
   onNavigateHome: () => void;
@@ -16,17 +17,18 @@ const MobileNav: React.FC<MobileNavProps> = ({ onNavigateHome, onSearchClick, on
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-xl border-t px-2 py-3 z-40 flex justify-between items-center safe-pb transition-colors duration-300 ${isDark ? 'bg-dark-900/95 border-white/10' : 'bg-white/95 border-light-border'}`}>
       <button onClick={onNavigateHome} className={`flex-1 flex flex-col items-center gap-1 hover:text-gold-400 transition-colors ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
         <Home size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">Asosiy</span>
+        <span className="text-[10px] font-medium">{t('nav_home')}</span>
       </button>
 
       <button onClick={onSearchClick} className={`flex-1 flex flex-col items-center gap-1 hover:text-gold-400 transition-colors ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
         <Search size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">Qidiruv</span>
+        <span className="text-[10px] font-medium">{t('search') || 'Qidiruv'}</span>
       </button>
 
       <button onClick={onWishlistClick} className={`flex-1 relative flex flex-col items-center gap-1 hover:text-gold-400 transition-colors ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
@@ -38,7 +40,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onNavigateHome, onSearchClick, on
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">Sevimlilar</span>
+        <span className="text-[10px] font-medium">{t('wishlist') || 'Sevimlilar'}</span>
       </button>
 
       <button onClick={onCartClick} className={`flex-1 relative flex flex-col items-center gap-1 hover:text-gold-400 transition-colors ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
@@ -50,12 +52,12 @@ const MobileNav: React.FC<MobileNavProps> = ({ onNavigateHome, onSearchClick, on
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">Savatcha</span>
+        <span className="text-[10px] font-medium">{t('cart_title')}</span>
       </button>
 
       <button onClick={onProfileClick} className={`flex-1 flex flex-col items-center gap-1 hover:text-gold-400 transition-colors ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
         <User size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">Profil</span>
+        <span className="text-[10px] font-medium">{t('profile') || 'Profil'}</span>
       </button>
     </div>
   );

@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import Breadcrumbs from './Breadcrumbs';
 import ProductCard from './ProductCard';
 import * as fpixel from '../lib/fpixel';
@@ -25,6 +26,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
   const { isDark } = useTheme();
+  const { lang, t } = useLanguage();
   const [aiDescription, setAiDescription] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [activeImage, setActiveImage] = useState<string>(product.image);
@@ -51,7 +53,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     document.title = `${product.name} | PaketShop.uz`;
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', `${product.name} - ${product.category}. Sifatli mahsulotlar PaketShop.uz do'konida.`);
+      const localizedDesc = lang === 'uz'
+        ? `${product.name} - ${product.category}. Sifatli mahsulotlar PaketShop.uz do'konida.`
+        : lang === 'ru'
+          ? `${product.name} - ${product.category}. Качественные товары в магазине PaketShop.uz.`
+          : `${product.name} - ${product.category}. Quality products at PaketShop.uz store.`;
+      metaDescription.setAttribute('content', localizedDesc);
     }
 
     // Add JSON-LD Product Schema
@@ -90,7 +97,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     const generateAIDescription = async () => {
       try {
         const env = import.meta.env || {};
-        const apiKey = env.VITE_API_KEY;
+        const apiKey = env.VITE_GEMINI_API_KEY;
         if (!apiKey) {
           setAiDescription(`${product.name} - bu ${product.category} olamidagi haqiqiy inqilob. Har bir detalda mukammallik va hashamat ufurib turadi.`);
           setLoading(false);
@@ -98,14 +105,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         }
 
         const ai = new GoogleGenAI({ apiKey });
-        const prompt = `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description should be in Uzbek language. It should feel like an Apple product description: minimalist, impactful, and premium. Focus on craftsmanship and lifestyle. Max 3 sentences.`;
+        const languageName = lang === 'uz' ? 'Uzbek (Cyrillic or Latin as common)' : lang === 'ru' ? 'Russian' : 'English';
+        const prompt = `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description MUST BE in ${languageName} language. It should feel like an Apple product description: minimalist, impactful, and premium. Focus on craftsmanship and lifestyle. Max 3 sentences.`;
 
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-preview-09-2025',
           contents: prompt,
         });
 
-        setAiDescription(response.text || "Ma'lumot yuklanmadi.");
+        const text = response.text;
+        setAiDescription(text || "Ma'lumot yuklanmadi.");
       } catch (error) {
         console.error("AI Error:", error);
         setAiDescription("Eksklyuziv dizayn va yuqori sifat uyg'unligi. Ushbu mahsulot sizning stilingizni yangi darajaga olib chiqadi.");
@@ -115,20 +124,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     };
 
     generateAIDescription();
-  }, [product]);
+  }, [product, lang]);
 
   const handleAddToCart = () => {
     addToCart(product);
-    showToast("Mahsulot savatchaga qo'shildi", 'success');
+    showToast(t('toast_added_to_cart'), 'success');
     fpixel.trackAddToCart(product);
   };
 
   const handleToggleWishlist = () => {
     toggleWishlist(product);
     if (!isLiked) {
-      showToast("Sevimlilarga qo'shildi", 'success');
+      showToast(t('toast_added_to_wishlist'), 'success');
     } else {
-      showToast("Sevimlilardan olib tashlandi", 'info');
+      showToast(t('toast_removed_from_wishlist'), 'info');
     }
   };
 
@@ -194,7 +203,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                     className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md pl-3 pr-4 py-2 rounded-full text-white hover:bg-red-600 transition-colors border border-white/10 group/btn"
                   >
                     <PlayCircle size={18} className="text-white group-hover/btn:scale-110 transition-transform md:w-[22px] md:h-[22px]" />
-                    <span className="text-xs md:text-sm font-bold tracking-wide">VIDEO REVIEW</span>
+                    <span className="text-xs md:text-sm font-bold tracking-wide">{t('video_review')}</span>
                   </button>
                 )}
               </div>
@@ -239,7 +248,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
 
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium text-white ${product.stock === 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                  {product.stock === 0 ? 'Out of Stock' : (product.stock ? `${product.stock} dona` : 'In Stock')}
+                  {product.stock === 0 ? t('out_of_stock') : (product.stock ? `${product.stock} ${t('stock_in')}` : t('in_stock'))}
                 </span>
                 <div className="flex text-gold-500">
                   {[...Array(5)].map((_, i) => <Star key={i} size={12} className="md:w-[14px] md:h-[14px]" fill="currentColor" />)}
@@ -251,7 +260,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                     className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 md:px-3 rounded hover:bg-red-500 hover:text-white transition-colors"
                   >
                     <Youtube size={12} className="md:w-[14px] md:h-[14px]" />
-                    VIDEO SHARH
+                    {t('video_review')}
                   </button>
                 )}
               </div>
@@ -260,7 +269,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="py-6 md:py-8 border-t border-white/10 border-b border-white/10 mb-6 md:mb-8">
               <div className="flex items-end justify-between mb-4 md:mb-6">
                 <div>
-                  <p className="text-gray-400 text-xs mb-1">Jami summa</p>
+                  <p className="text-gray-400 text-xs mb-1">{t('total_sum')}</p>
                   <p className={`text-2xl md:text-3xl font-light ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.formattedPrice}</p>
                 </div>
                 <button
@@ -277,7 +286,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   className={`font-bold py-3 md:py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base border ${isDark ? 'bg-white/5 text-white border-white/10 hover:bg-white hover:text-black' : 'bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200'}`}
                 >
                   <ShoppingBag size={18} className="md:w-[20px] md:h-[20px]" />
-                  Savatga
+                  {t('add_to_cart')}
                 </button>
                 <button
                   onClick={handleBuyNow}
@@ -285,7 +294,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   className="bg-gold-400 text-black font-bold py-3 md:py-4 rounded-xl hover:bg-gold-500 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
                   <Zap size={18} className="md:w-[20px] md:h-[20px]" fill="currentColor" />
-                  Hozir olish
+                  {t('buy_now')}
                 </button>
               </div>
             </div>
@@ -295,7 +304,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <div className="pl-4 md:pl-6">
                 <div className="flex items-center gap-2 mb-2 md:mb-3">
                   <Sparkles size={14} className="text-gold-400 animate-pulse md:w-[16px] md:h-[16px]" />
-                  <h3 className="text-gray-300 text-xs md:text-sm font-semibold tracking-wide">GEMINI AI TAHLILI</h3>
+                  <h3 className="text-gray-300 text-xs md:text-sm font-semibold tracking-wide">{t('ai_analysis')}</h3>
                 </div>
                 {loading ? (
                   <div className="space-y-2 animate-pulse">
@@ -314,7 +323,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="bg-white/5 rounded-2xl p-4 md:p-6 backdrop-blur-md border border-white/5">
               <h3 className="text-white text-sm font-semibold mb-4 flex items-center gap-2">
                 <Activity size={16} className="text-gold-400" />
-                Texnik Xususiyatlar
+                {t('tech_specs')}
               </h3>
               <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
                 {product.specs.map((spec, index) => (
@@ -329,15 +338,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="mt-6 md:mt-8 flex flex-wrap gap-4 items-center justify-between text-gray-400 text-xs md:text-sm px-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-gold-400 md:w-[18px] md:h-[18px]" />
-                <span>Premium Kafolat</span>
+                <span>{t('premium_warranty')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Truck size={16} className="text-gold-400 md:w-[18px] md:h-[18px]" />
-                <span>Bepul Yetkazish</span>
+                <span>{t('free_delivery')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Box size={16} className="text-gold-400 md:w-[18px] md:h-[18px]" />
-                <span>Eko-qadoq</span>
+                <span>{t('eco_package')}</span>
               </div>
             </div>
 
@@ -354,10 +363,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             <div className="flex justify-between items-end mb-8">
               <div>
                 <span className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 block">
-                  Tavsiyalar
+                  {t('recommendations')}
                 </span>
                 <h2 className="text-2xl md:text-3xl font-bold text-white">
-                  O'xshash Mahsulotlar
+                  {t('related_products')}
                 </h2>
               </div>
             </div>
@@ -412,7 +421,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                         <Youtube size={32} className="text-white fill-white md:w-[48px] md:h-[48px]" />
                       </div>
                     </div>
-                    <p className="z-20 mt-4 md:mt-6 text-sm md:text-xl font-bold tracking-widest text-white drop-shadow-lg">VIDEONI KO'RISH</p>
+                    <p className="z-20 mt-4 md:mt-6 text-sm md:text-xl font-bold tracking-widest text-white drop-shadow-lg uppercase">{t('video_review')}</p>
                   </div>
                 ) : (
                   <iframe
@@ -432,7 +441,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                     className="pointer-events-auto inline-flex items-center gap-2 text-[10px] md:text-xs font-bold text-white bg-black/70 hover:bg-red-600 px-4 py-2 md:px-6 md:py-3 rounded-full backdrop-blur-md transition-all border border-white/10 shadow-lg"
                   >
                     <ExternalLink size={12} className="md:w-[14px] md:h-[14px]" />
-                    Agar video ishlamasa, YouTube orqali ko'ring
+                    {t('video_error')}
                   </a>
                 </div>
               </div>
