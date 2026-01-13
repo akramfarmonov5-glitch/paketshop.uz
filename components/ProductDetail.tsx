@@ -44,7 +44,48 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     setActiveImage(product.image);
     setIsPlaying(false);
 
+    // Track Facebook Pixel ViewContent
     fpixel.trackViewContent(product);
+
+    // Update dynamic meta tags
+    document.title = `${product.name} | PaketShop.uz`;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', `${product.name} - ${product.category}. Sifatli mahsulotlar PaketShop.uz do'konida.`);
+    }
+
+    // Add JSON-LD Product Schema
+    const scriptId = `product-schema-${product.id}`;
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+
+    const productSchema = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "image": [product.image, ...(product.images || [])],
+      "description": aiDescription || product.name,
+      "sku": `SKU-${product.id}`,
+      "brand": {
+        "@type": "Brand",
+        "name": "PaketShop"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": window.location.href,
+        "priceCurrency": "UZS",
+        "price": product.price,
+        "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      }
+    };
+
+    script.textContent = JSON.stringify(productSchema);
 
     const generateAIDescription = async () => {
       try {

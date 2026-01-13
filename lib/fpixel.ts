@@ -2,6 +2,8 @@
 const env = import.meta.env || {};
 export const FB_PIXEL_ID = env.VITE_FACEBOOK_PIXEL_ID;
 
+console.log('Facebook Pixel ID:', FB_PIXEL_ID);
+
 declare global {
   interface Window {
     fbq: any;
