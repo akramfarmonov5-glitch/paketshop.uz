@@ -331,17 +331,21 @@ const AppContent: React.FC = () => {
   );
 };
 
+import { LanguageProvider } from './context/LanguageContext'; // Added import for LanguageProvider
+
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <AppContent />
-          </CartProvider>
-        </WishlistProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <AppContent />
+            </CartProvider>
+          </WishlistProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 };
 
