@@ -57,10 +57,11 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
                     Kolleksiya
                   </span>
                   {/* Matn o'lchamlari mobil uchun moslashtirildi */}
-                  <h3 className={`font-bold text-white mb-1 md:mb-2 leading-tight ${index === 0 ? 'text-xl md:text-4xl' : 'text-xs md:text-2xl'}`}>
+                  <h3 className={`font-bold text-white mb-2 md:mb-4 leading-tight ${index === 0 ? 'text-xl md:text-4xl' : 'text-xs md:text-2xl'}`}>
                     {category.name}
                   </h3>
-                  <p className={`text-gray-300 text-xs md:text-sm mb-4 md:mb-6 line-clamp-2 ${index === 0 ? 'max-w-md' : ''} ${index !== 0 && 'hidden md:block'}`}>
+                  {/* Hidden for UI, but kept for SEO */}
+                  <p className="sr-only">
                     {category.description}
                   </p>
 
