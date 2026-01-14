@@ -57,12 +57,17 @@ const translations: Translations = {
     free_delivery: { uz: 'Bepul Yetkazish', ru: 'Бесплатная Доставка', en: 'Free Delivery' },
     eco_package: { uz: 'Eko-qadoq', ru: 'Эко-упаковка', en: 'Eco-package' },
     recommendations: { uz: 'Tavsiyalar', ru: 'Рекомендации', en: 'Recommendations' },
-    video_error: { uz: 'Agar video ishlamasa, YouTube orqali ko\'ring', ru: 'Если video ne ishlayotgan bo\'lsa, YouTube da ko\'ring', en: 'If video doesn\'t work, watch on YouTube' },
+    video_error: { uz: 'Agar video ishlamasa, YouTube orqali ko\'ring', ru: 'Если видео не работает, посмотрите на YouTube', en: 'If the video doesn\'t work, watch on YouTube' },
+    category_collection: { uz: 'Kolleksiya', ru: 'Коллекция', en: 'Collection' },
+    view: { uz: 'Ko\'rish', ru: 'Посмотреть', en: 'View' },
 
     // Toast Messages
     toast_added_to_cart: { uz: 'Mahsulot savatchaga qo\'shildi', ru: 'Товар добавлен в корзину', en: 'Product added to cart' },
     toast_added_to_wishlist: { uz: 'Sevimlilarga qo\'shildi', ru: 'Добавлено в избранное', en: 'Added to wishlist' },
     toast_removed_from_wishlist: { uz: 'Sevimlilardan olib tashlandi', ru: 'Удалено из избранного', en: 'Removed from wishlist' },
+    added_to_cart_desc: { uz: 'savatchaga qo\'shildi', ru: 'добавлен в корзину', en: 'added to cart' },
+    added_to_wishlist_desc: { uz: 'sevimlilarga qo\'shildi', ru: 'добавлено в избранное', en: 'added to wishlist' },
+    removed_from_wishlist_desc: { uz: 'sevimlilardan olib tashlandi', ru: 'удалено из избранного', en: 'removed from wishlist' },
 
     // Missing Keys
     search: { uz: 'Qidiruv', ru: 'Поиск', en: 'Search' },
@@ -83,6 +88,23 @@ const translations: Translations = {
     categories: { uz: 'Kategoriyalar', ru: 'Категории', en: 'Categories' },
     products: { uz: 'Mahsulotlar', ru: 'Товары', en: 'Products' },
     nothing_found: { uz: 'Hech narsa topilmadi.', ru: 'Ничего не найдено.', en: 'Nothing found.' },
+
+    // Dynamic Category Translations (Fallbacks for Mock/User data)
+    'Paketlar (Polietilen va qog\'oz mahsulotlari)': { uz: 'Paketlar (Polietilen va qog\'oz mahsulotlari)', ru: 'Пакеты (Полиэтиленовая и бумажная продукция)', en: 'Bags (Polyethylene and Paper Products)' },
+    'Oshxona sarflov materiallari': { uz: 'Oshxona sarflov materiallari', ru: 'Кухонные расходные материалы', en: 'Kitchen Consumables' },
+    'Tozalash inventarlari (Cleaning)': { uz: 'Tozalash inventarlari (Cleaning)', ru: 'Инвентарь для уборки (Клининг)', en: 'Cleaning Equipment' },
+    'Qog\'oz gigiyenasi': { uz: 'Qog\'oz gigiyenasi', ru: 'Бумажная гигиена', en: 'Paper Hygiene' },
+    'Bir martalik idishlar va Konteynerlar': { uz: 'Bir martalik idishlar va Konteynerlar', ru: 'Одноразовая посуда и контейнеры', en: 'Disposable Tableware and Containers' },
+    'Oshxona anjomlari va Aksessuarlar': { uz: 'Oshxona anjomlari va Aksessuarlar', ru: 'Кухонные принадлежности и аксессуары', en: 'Kitchen Utensils and Accessories' },
+    'Stakanlar (Keng assortiment)': { uz: 'Stakanlar (Keng assortiment)', ru: 'Стаканы (Широкий ассортимент)', en: 'Cups (Wide range)' },
+    'Likpachalar': { uz: 'Likpachalar', ru: 'Тарелки', en: 'Plates' },
+    'Likopchalar': { uz: 'Likopchalar', ru: 'Тарелки', en: 'Plates' },
+    'Maishiy kimyo (Umumiy assortiment)': { uz: 'Maishiy kimyo (Umumiy assortiment)', ru: 'Бытовая химия (Общий ассортимент)', en: 'Household Chemicals (General assortment)' },
+    'Soatlar': { uz: 'Soatlar', ru: 'Часы', en: 'Watches' },
+    'Sumkalar': { uz: 'Sumkalar', ru: 'Сумки', en: 'Bags' },
+    'Ko\'zoynaklar': { uz: 'Ko\'zoynaklar', ru: 'Очки', en: 'Glasses' },
+    'Parfyumeriya': { uz: 'Parfyumeriya', ru: 'Парфюмерия', en: 'Perfume' },
+    'Aksessuarlar': { uz: 'Aksessuarlar', ru: 'Аксессуары', en: 'Accessories' },
 };
 
 interface LanguageContextType {
