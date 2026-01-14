@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface CategoryGridProps {
   categories: Category[];
@@ -11,6 +12,7 @@ interface CategoryGridProps {
 
 const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategory }) => {
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <section className={`py-12 md:py-20 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
@@ -54,11 +56,11 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               <div className="absolute inset-0 p-3 md:p-8 flex flex-col justify-end items-start">
                 <div className="transform translate-y-0 md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                   <span className="text-gold-400 text-[9px] md:text-xs font-bold uppercase tracking-widest mb-1 md:mb-2 block">
-                    Kolleksiya
+                    {t('category_collection')}
                   </span>
                   {/* Matn o'lchamlari mobil uchun moslashtirildi */}
                   <h3 className={`font-bold text-white mb-2 md:mb-4 leading-tight ${index === 0 ? 'text-xl md:text-4xl' : 'text-xs md:text-2xl'}`}>
-                    {category.name}
+                    {t(category.name)}
                   </h3>
                   {/* Hidden for UI, but kept for SEO */}
                   <p className="sr-only">
@@ -66,7 +68,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
                   </p>
 
                   <div className="inline-flex items-center gap-2 text-white text-[10px] md:text-sm font-medium group-hover:text-gold-400 transition-colors">
-                    <span className="hidden md:inline">Ko'rish</span>
+                    <span className="hidden md:inline">{t('view')}</span>
                     <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-gold-400 group-hover:text-black transition-all">
                       <ArrowRight size={10} className="md:w-[14px] md:h-[14px]" />
                     </div>

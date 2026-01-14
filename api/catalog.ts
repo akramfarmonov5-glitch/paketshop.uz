@@ -1,16 +1,28 @@
 import { supabase } from '../lib/supabaseClient';
 
 export default async function handler(req, res) {
+  console.log('Catalog feed generation started...');
   try {
+    // Check if Supabase is configured
+    const { supabase } = await import('../lib/supabaseClient');
+
+    if (!supabase) {
+      console.error('Supabase client failed to initialize');
+      return res.status(500).send('Database initialization error');
+    }
+
     // 1. Fetch products from Supabase
     const { data: products, error } = await supabase
       .from('products')
       .select('*');
 
-    if (error) throw error;
+    if (productError) {
+      console.error('Supabase fetch error:', productError);
+      throw productError;
+    }
 
     // 2. Base URL of your shop
-    const BASE_URL = 'https://paketshop.uz'; // Change this to your actual domain
+    const BASE_URL = 'https://paketshop.uz';
 
     // 3. Generate XML
     const xmlItems = products.map((product) => `

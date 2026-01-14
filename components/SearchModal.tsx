@@ -133,7 +133,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800">
                               <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
                             </div>
-                            <span className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{cat.name}</span>
+                            <span className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{t(cat.name)}</span>
                             <ArrowRight size={16} className={`ml-auto group-hover:text-gold-400 ${isDark ? 'text-gray-600' : 'text-light-muted'}`} />
                           </div>
                         ))}
@@ -156,8 +156,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                               <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1">
-                              <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{product.name}</h4>
-                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{product.category}</p>
+                              <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{t(product.name)}</h4>
+                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t(product.category)}</p>
                             </div>
                             <div className="text-right">
                               <span className="text-sm font-bold text-gold-400">{product.formattedPrice}</span>

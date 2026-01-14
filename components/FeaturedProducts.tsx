@@ -89,7 +89,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                         onClick={() => setSelectedCategory(cat.name)}
                                         className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
                                     >
-                                        <span>{cat.name}</span>
+                                        <span>{t(cat.name)}</span>
                                         {selectedCategory === cat.name && <Check size={16} />}
                                     </button>
                                 ))}
@@ -183,7 +183,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                         onClick={() => { setSelectedCategory(cat.name); setIsFilterOpen(false); }}
                                         className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
                                     >
-                                        {cat.name}
+                                        {t(cat.name)}
                                     </button>
                                 ))}
                             </div>

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   const isLiked = isInWishlist(product.id);
 
@@ -24,16 +26,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
     e.stopPropagation();
     toggleWishlist(product);
     if (!isLiked) {
-      showToast(`${product.name} sevimlilarga qo'shildi`, 'success');
+      showToast(`${t(product.name)} ${t('added_to_wishlist_desc')}`, 'success');
     } else {
-      showToast(`${product.name} sevimlilardan olib tashlandi`, 'info');
+      showToast(`${t(product.name)} ${t('removed_from_wishlist_desc')}`, 'info');
     }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addToCart(product);
-    showToast(`${product.name} savatchaga qo'shildi`, 'success');
+    showToast(`${t(product.name)} ${t('added_to_cart_desc')}`, 'success');
   };
 
   return (
@@ -57,8 +59,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
           <button
             onClick={handleWishlistClick}
             className={`p-2 md:p-3 backdrop-blur-md rounded-full transition-all shadow-lg ${isLiked
-                ? 'bg-gold-400 text-black scale-110'
-                : 'bg-black/40 text-white hover:bg-gold-400 hover:text-black border border-white/10'
+              ? 'bg-gold-400 text-black scale-110'
+              : 'bg-black/40 text-white hover:bg-gold-400 hover:text-black border border-white/10'
               }`}
           >
             <Heart size={16} className={`md:w-[18px] md:h-[18px] ${isLiked ? 'fill-black' : ''}`} />
@@ -69,9 +71,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
       {/* Content */}
       <div className="p-3 md:p-6 flex flex-col flex-grow">
         <div className="flex-grow cursor-pointer" onClick={onNavigate}>
-          <span className={`text-[9px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{product.category}</span>
+          <span className={`text-[9px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t(product.category)}</span>
           <h3 className={`text-sm md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
-            {product.name}
+            {t(product.name)}
           </h3>
         </div>
 
@@ -83,10 +85,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
           <button
             onClick={handleAddToCart}
             className={`flex items-center justify-center gap-2 w-7 h-7 md:w-auto md:h-auto md:px-4 md:py-2 border rounded-full text-sm font-medium transition-all duration-300 ${isDark ? 'bg-white/5 hover:bg-white text-white hover:text-black border-white/10' : 'bg-light-card hover:bg-gold-400 text-light-text hover:text-black border-light-border'}`}
-            aria-label="Add to cart"
+            aria-label={t('add_to_cart')}
           >
             <Plus size={14} className="md:w-[16px] md:h-[16px]" />
-            <span className="hidden md:inline">Savatga</span>
+            <span className="hidden md:inline">{t('add_to_cart')}</span>
           </button>
         </div>
       </div>
