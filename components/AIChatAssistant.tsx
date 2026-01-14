@@ -127,7 +127,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
       const ai = new GoogleGenAI({ apiKey });
       const chat = ai.chats.create({
-        model: 'gemini-2.5-flash-preview-09-2025',
+        model: 'gemini-2.0-flash',
         config: {
           systemInstruction: getSystemInstruction(),
         }
@@ -139,9 +139,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
       setMessages(prev => [...prev, { role: 'model', text }]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, tizimda xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring." }]);
+      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, tizimda xatolik yuz berdi: ${error.message || error}` }]);
     } finally {
       setIsLoading(false);
     }
