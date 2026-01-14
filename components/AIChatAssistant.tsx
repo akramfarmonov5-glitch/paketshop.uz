@@ -118,30 +118,39 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     try {
       const env = import.meta.env || {};
-      const apiKey = env.VITE_GEMINI_API_KEY1 || env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        setMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, AI tizimi hozircha mavjud emas (API Key topilmadi)." }]);
-        setIsLoading(false);
-        return;
+      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean); // Get available keys
+
+      let lastError;
+
+      for (const apiKey of keys) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const chat = ai.chats.create({
+            model: 'gemini-2.5-flash',
+            config: {
+              systemInstruction: getSystemInstruction(),
+            }
+          });
+
+          const response = await chat.sendMessage({ message: userMessage });
+          const text = response.text || "Uzr, tushunmadim. Qayta so'ray olasizmi?";
+
+          setMessages(prev => [...prev, { role: 'model', text }]);
+          setIsLoading(false);
+          return; // Success, exit function
+        } catch (error: any) {
+          console.error(`Error with API key ${apiKey.substring(0, 5)}...:`, error);
+          lastError = error;
+          // Continue to next key if loop isn't finished
+        }
       }
 
-      const ai = new GoogleGenAI({ apiKey });
-      const chat = ai.chats.create({
-        model: 'gemini-2.5-flash',
-        config: {
-          systemInstruction: getSystemInstruction(),
-        }
-      });
-
-      const response = await chat.sendMessage({ message: userMessage });
-
-      const text = response.text || "Uzr, tushunmadim. Qayta so'ray olasizmi?";
-
-      setMessages(prev => [...prev, { role: 'model', text }]);
+      // If all keys failed
+      throw lastError;
 
     } catch (error: any) {
-      console.error("AI Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, tizimda xatolik yuz berdi: ${error.message || error}` }]);
+      console.error("All API Keys Failed:", error);
+      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, barcha urinishlar besamar ketdi. Xatolik: ${error.message || error}` }]);
     } finally {
       setIsLoading(false);
     }
