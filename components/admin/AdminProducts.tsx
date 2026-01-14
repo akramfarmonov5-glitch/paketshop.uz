@@ -85,7 +85,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     setIsGenerating(true);
     try {
       const env = import.meta.env || {};
-      const apiKey = env.VITE_GEMINI_API_KEY;
+      const apiKey = env.VITE_GEMINI_API_KEY1 || env.VITE_GEMINI_API_KEY;
       const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
       const prompt = `
