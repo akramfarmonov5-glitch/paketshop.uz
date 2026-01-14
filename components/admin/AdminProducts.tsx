@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles, Box } from 'lucide-react';
 import { Product, Category } from '../../types';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../../lib/supabaseClient';
@@ -26,6 +26,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     videoUrl: '',
     shortDescription: '',
     stock: 0,
+    itemsPerPackage: 1,
     specs: []
   });
 
@@ -39,6 +40,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       videoUrl: '',
       shortDescription: '',
       stock: 0,
+      itemsPerPackage: 1,
       specs: [{ label: '', value: '' }]
     });
     setIsModalOpen(true);
@@ -148,6 +150,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       videoUrl: formData.videoUrl?.trim(),
       shortDescription: formData.shortDescription,
       stock: Number(formData.stock),
+      itemsPerPackage: Number(formData.itemsPerPackage || 1),
       specs: formData.specs
     };
 
@@ -379,6 +382,23 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                     value={formData.stock}
                     onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
                     className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400 flex items-center gap-2">
+                    <Box size={14} className="text-gold-400" /> Qadoqdagi soni
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    value={formData.itemsPerPackage}
+                    onChange={e => setFormData({ ...formData, itemsPerPackage: Number(e.target.value) })}
+                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none"
+                    placeholder="Masalan: 100"
                   />
                 </div>
               </div>

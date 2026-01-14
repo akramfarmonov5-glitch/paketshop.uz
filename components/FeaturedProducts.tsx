@@ -10,11 +10,19 @@ interface FeaturedProductsProps {
     products: Product[];
     categories: Category[];
     onNavigateToProduct: (id: number) => void;
+    activeCategory?: string;
     isLoading?: boolean;
 }
 
-const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categories, onNavigateToProduct, isLoading }) => {
+const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categories, onNavigateToProduct, activeCategory, isLoading }) => {
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+    // Sync internal state with prop
+    useEffect(() => {
+        if (activeCategory) {
+            setSelectedCategory(activeCategory);
+        }
+    }, [activeCategory]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const { isDark } = useTheme();
@@ -161,19 +169,19 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             onClick={(e) => e.stopPropagation()}
-                            className={`absolute left-0 top-0 bottom-0 w-[80%] max-w-sm border-r p-6 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
+                            className={`absolute left-0 top-0 bottom-0 w-[80%] max-w-sm border-r p-6 flex flex-col ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
                         >
-                            <div className="flex justify-between items-center mb-8">
+                            <div className="flex justify-between items-center mb-4">
                                 <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-light-text'}`}>{t('filter')}</h3>
                                 <button onClick={() => setIsFilterOpen(false)} className={isDark ? 'text-gray-400 hover:text-white' : 'text-light-muted hover:text-light-text'}>
                                     <X size={24} />
                                 </button>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-1 overflow-y-auto max-h-[calc(100vh-140px)] pr-2 custom-scrollbar">
                                 <button
                                     onClick={() => { setSelectedCategory('All'); setIsFilterOpen(false); }}
-                                    className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                                    className={`w-full text-left px-4 py-2 rounded-xl transition-all ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
                                 >
                                     {t('all_categories')}
                                 </button>
@@ -181,7 +189,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                     <button
                                         key={cat.id}
                                         onClick={() => { setSelectedCategory(cat.name); setIsFilterOpen(false); }}
-                                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                                        className={`w-full text-left px-4 py-2 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
                                     >
                                         {t(cat.name)}
                                     </button>

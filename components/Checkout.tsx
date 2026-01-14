@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabaseClient';
 import * as fpixel from '../lib/fpixel';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface CheckoutProps {
   onBack: () => void;
@@ -15,6 +16,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { cart, cartTotal, clearCart } = useCart();
   const { showToast } = useToast();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'paynet' | 'cash'>('paynet');
@@ -38,6 +40,22 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const PAYNET_URL = "https://app.paynet.uz/?m=49156&i=4805742d-d76c-4b39-8c02-8ddf1c450f33&branchId=&actTypeId=144";
   const PAYNET_QR_IMAGE = "/images/paynet-qr.jpg";
   const QR_FALLBACK = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(PAYNET_URL)}&color=000000&bgcolor=ffffff`;
+
+  const cities = [
+    'city_toshkent',
+    'city_samarqand',
+    'city_buxoro',
+    'city_andijon',
+    'city_fargona',
+    'city_namangan',
+    'city_xorazm',
+    'city_qashqadaryo',
+    'city_surxondaryo',
+    'city_jizzax',
+    'city_sirdaryo',
+    'city_navoiy',
+    'city_qoraqalpogiston'
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -152,7 +170,8 @@ ${discountInfo}
     await saveOrderToDatabase();
 
     const orderId = `ORD-${Date.now()}`;
-    fpixel.trackPurchase(orderId, finalTotal, 'UZS');
+    const productIds = cart.map(item => item.id.toString());
+    fpixel.trackPurchase(orderId, finalTotal, productIds, 'UZS');
 
     setShowPaynetModal(false);
     setIsLoading(false);
@@ -229,15 +248,13 @@ ${discountInfo}
               </div>
 
               <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Shahar</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('city_label')}</label>
                 <select name="city" value={formData.city} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Toshkent">Toshkent</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Samarqand">Samarqand</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Buxoro">Buxoro</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Andijon">Andijon</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Farg'ona">Farg'ona</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Namangan">Namangan</option>
-                  <option className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value="Xorazm">Xorazm</option>
+                  {cities.map(cityKey => (
+                    <option key={cityKey} className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value={t(cityKey)}>
+                      {t(cityKey)}
+                    </option>
+                  ))}
                 </select>
               </div>
 

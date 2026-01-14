@@ -187,7 +187,10 @@ const AppContent: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+
   const handleCategorySelect = (categoryName: string) => {
+    setActiveCategory(categoryName);
     const element = document.getElementById('featured-products');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -277,6 +280,7 @@ const AppContent: React.FC = () => {
         <FeaturedProducts
           products={products}
           categories={categories}
+          activeCategory={activeCategory}
           onNavigateToProduct={navigateToProduct}
           isLoading={isLoading}
         />

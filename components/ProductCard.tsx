@@ -75,6 +75,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
           <h3 className={`text-sm md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
             {t(product.name)}
           </h3>
+          {product.itemsPerPackage && product.itemsPerPackage > 1 && (
+            <span className="text-[10px] text-gold-400/80 font-medium">
+              ({product.itemsPerPackage} {t('items_per_package_desc')})
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between mt-2 md:mt-4">

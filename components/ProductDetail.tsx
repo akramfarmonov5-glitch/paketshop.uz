@@ -264,6 +264,14 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   </button>
                 )}
               </div>
+              {product.itemsPerPackage && product.itemsPerPackage > 1 && (
+                <div className="inline-block">
+                  <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium border flex items-center gap-2 ${isDark ? 'border-gold-400/30 text-gold-400 bg-gold-400/5' : 'border-gold-500/30 text-gold-600 bg-gold-400/10'}`}>
+                    <Box size={12} />
+                    {product.itemsPerPackage} {t('items_per_package_desc')}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="py-6 md:py-8 border-t border-white/10 border-b border-white/10 mb-6 md:mb-8">
@@ -349,7 +357,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 <span>{t('eco_package')}</span>
               </div>
             </div>
-
           </motion.div>
         </div>
 
