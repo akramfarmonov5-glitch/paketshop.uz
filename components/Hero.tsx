@@ -118,10 +118,10 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
             <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8 p-4 md:p-6 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 z-20">
               <div className="flex justify-between items-end">
                 <div>
-                  <h3 className="text-white text-lg md:text-xl font-semibold">Premium Series</h3>
-                  <p className="text-gray-300 text-xs md:text-sm mt-1">Limited Edition</p>
+                  <h3 className="text-white text-lg md:text-xl font-bold">{t('premium_series')}</h3>
+                  <p className="text-gray-300 text-xs md:text-sm mt-1">{t('limited_edition')}</p>
                 </div>
-                <span className="text-gold-400 font-bold text-sm md:text-lg">2026 Collection</span>
+                <span className="text-gold-400 font-bold text-sm md:text-lg">{t('collection_2026')}</span>
               </div>
             </div>
 

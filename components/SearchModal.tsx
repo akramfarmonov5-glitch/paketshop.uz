@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight, TrendingUp } from 'lucide-react';
 import { Product, Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   // Auto focus input when modal opens
   useEffect(() => {
@@ -79,7 +81,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Qidirish..."
+                placeholder={t('search_placeholder')}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className={`flex-1 bg-transparent text-xl focus:outline-none ${isDark ? 'text-white placeholder:text-gray-600' : 'text-light-text placeholder:text-light-muted'}`}
@@ -97,7 +99,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
               {!query.trim() && (
                 <div>
                   <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>
-                    <TrendingUp size={14} /> Ommabop qidiruvlar
+                    <TrendingUp size={14} /> {t('popular_searches')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {suggestions.map((item, idx) => (
@@ -117,14 +119,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                 <div className="space-y-8">
                   {filteredProducts.length === 0 && filteredCategories.length === 0 && (
                     <div className="text-center text-gray-500 py-8">
-                      Hech narsa topilmadi.
+                      {t('nothing_found')}
                     </div>
                   )}
 
                   {/* Categories */}
                   {filteredCategories.length > 0 && (
                     <div>
-                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>Kategoriyalar</h3>
+                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t('categories')}</h3>
                       <div className="space-y-2">
                         {filteredCategories.map(cat => (
                           <div key={cat.id} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'}`}>
@@ -142,7 +144,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                   {/* Products */}
                   {filteredProducts.length > 0 && (
                     <div>
-                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>Mahsulotlar</h3>
+                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t('products')}</h3>
                       <div className="space-y-2">
                         {filteredProducts.map(product => (
                           <div
@@ -170,7 +172,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20 text-center text-xs text-gray-500">
-              <span className="hidden md:inline">Tanlash uchun <kbd className="bg-white/10 px-1 rounded">Enter</kbd>, chiqish uchun <kbd className="bg-white/10 px-1 rounded">ESC</kbd> bosing</span>
+              <span className="hidden md:inline">{t('search_help')}</span>
             </div>
           </motion.div>
         </div>
