@@ -60,6 +60,8 @@ const translations: Translations = {
     video_error: { uz: 'Agar video ishlamasa, YouTube orqali ko\'ring', ru: 'Если видео не работает, посмотрите на YouTube', en: 'If the video doesn\'t work, watch on YouTube' },
     category_collection: { uz: 'Kolleksiya', ru: 'Коллекция', en: 'Collection' },
     view: { uz: 'Ko\'rish', ru: 'Посмотреть', en: 'View' },
+    items_per_package: { uz: 'Qadoqdagi soni', ru: 'Колличество в упаковке', en: 'Items per package' },
+    items_per_package_desc: { uz: 'Har bir qadoqda', ru: 'В каждой упаковке', en: 'In each package' },
 
     // Toast Messages
     toast_added_to_cart: { uz: 'Mahsulot savatchaga qo\'shildi', ru: 'Товар добавлен в корзину', en: 'Product added to cart' },
@@ -103,8 +105,23 @@ const translations: Translations = {
     'Soatlar': { uz: 'Soatlar', ru: 'Часы', en: 'Watches' },
     'Sumkalar': { uz: 'Sumkalar', ru: 'Сумки', en: 'Bags' },
     'Ko\'zoynaklar': { uz: 'Ko\'zoynaklar', ru: 'Очки', en: 'Glasses' },
-    'Parfyumeriya': { uz: 'Parfyumeriya', ru: 'Парфюмерия', en: 'Perfume' },
     'Aksessuarlar': { uz: 'Aksessuarlar', ru: 'Аксессуары', en: 'Accessories' },
+
+    // Regions/Cities
+    city_label: { uz: 'Shahar', ru: 'Город', en: 'City' },
+    city_toshkent: { uz: 'Toshkent', ru: 'Ташкент', en: 'Tashkent' },
+    city_samarqand: { uz: 'Samarqand', ru: 'Самарканд', en: 'Samarkand' },
+    city_buxoro: { uz: 'Buxoro', ru: 'Бухара', en: 'Bukhara' },
+    city_andijon: { uz: 'Andijon', ru: 'Андижан', en: 'Andijan' },
+    city_fargona: { uz: "Farg'ona", ru: 'Фергана', en: 'Fergana' },
+    city_namangan: { uz: 'Namangan', ru: 'Наманган', en: 'Namangan' },
+    city_xorazm: { uz: 'Xorazm', ru: 'Хорезм', en: 'Khorezm' },
+    city_qashqadaryo: { uz: 'Qashqadaryo', ru: 'Кашкадарья', en: 'Kashkadarya' },
+    city_surxondaryo: { uz: 'Surxondaryo', ru: 'Сурхандарья', en: 'Surkhandarya' },
+    city_jizzax: { uz: 'Jizzax', ru: 'Джизак', en: 'Jizzakh' },
+    city_sirdaryo: { uz: 'Sirdaryo', ru: 'Сырдарья', en: 'Syrdarya' },
+    city_navoiy: { uz: 'Navoiy', ru: 'Навои', en: 'Navoi' },
+    city_qoraqalpogiston: { uz: "Qoraqalpog'iston", ru: 'Каракалпакстан', en: 'Karakalpakstan' },
 };
 
 interface LanguageContextType {

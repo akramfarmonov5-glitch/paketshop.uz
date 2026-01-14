@@ -44,9 +44,11 @@ export const trackAddToCart = (product: { id: number; name: string; price: numbe
   });
 };
 
-export const trackPurchase = (orderId: string, value: number, currency: string = 'UZS') => {
+export const trackPurchase = (orderId: string, value: number, productIds: string[] = [], currency: string = 'UZS') => {
   event('Purchase', {
     order_id: orderId,
+    content_ids: productIds,
+    content_type: 'product',
     value: value,
     currency: currency,
   });
