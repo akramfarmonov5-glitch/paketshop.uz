@@ -126,7 +126,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         try {
           const ai = new GoogleGenAI({ apiKey });
           const chat = ai.chats.create({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.0-flash-exp',
             config: {
               systemInstruction: getSystemInstruction(),
             }
