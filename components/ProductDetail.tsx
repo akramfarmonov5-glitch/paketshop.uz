@@ -304,7 +304,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <div className="pl-4 md:pl-6">
                 <div className="flex items-center gap-2 mb-2 md:mb-3">
                   <Sparkles size={14} className="text-gold-400 animate-pulse md:w-[16px] md:h-[16px]" />
-                  <h3 className="text-gray-300 text-xs md:text-sm font-semibold tracking-wide">{t('ai_analysis')}</h3>
+                  <h3 className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-xs md:text-sm font-semibold tracking-wide`}>{t('ai_analysis')}</h3>
                 </div>
                 {loading ? (
                   <div className="space-y-2 animate-pulse">
@@ -313,23 +313,23 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                     <div className="h-4 bg-white/10 rounded w-4/6"></div>
                   </div>
                 ) : (
-                  <p className="text-gray-300 text-base md:text-lg leading-relaxed font-light italic">
+                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-base md:text-lg leading-relaxed font-light italic`}>
                     "{aiDescription}"
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-2xl p-4 md:p-6 backdrop-blur-md border border-white/5">
-              <h3 className="text-white text-sm font-semibold mb-4 flex items-center gap-2">
+            <div className={`${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-100 border-gray-200'} rounded-2xl p-4 md:p-6 backdrop-blur-md border`}>
+              <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} text-sm font-semibold mb-4 flex items-center gap-2`}>
                 <Activity size={16} className="text-gold-400" />
                 {t('tech_specs')}
               </h3>
               <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
                 {product.specs.map((spec, index) => (
                   <div key={index}>
-                    <p className="text-gray-500 text-[10px] md:text-xs uppercase tracking-wider mb-1">{spec.label}</p>
-                    <p className="text-white text-xs md:text-sm font-medium">{spec.value}</p>
+                    <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-[10px] md:text-xs uppercase tracking-wider mb-1`}>{spec.label}</p>
+                    <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-xs md:text-sm font-medium`}>{spec.value}</p>
                   </div>
                 ))}
               </div>
