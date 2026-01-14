@@ -3,22 +3,14 @@ import { supabase } from '../lib/supabaseClient';
 export default async function handler(req, res) {
   console.log('Catalog feed generation started...');
   try {
-    // Check if Supabase is configured
-    const { supabase } = await import('../lib/supabaseClient');
-
-    if (!supabase) {
-      console.error('Supabase client failed to initialize');
-      return res.status(500).send('Database initialization error');
-    }
-
     // 1. Fetch products from Supabase
     const { data: products, error } = await supabase
       .from('products')
       .select('*');
 
-    if (productError) {
-      console.error('Supabase fetch error:', productError);
-      throw productError;
+    if (error) {
+      console.error('Supabase fetch error:', error);
+      throw error;
     }
 
     // 2. Base URL of your shop
