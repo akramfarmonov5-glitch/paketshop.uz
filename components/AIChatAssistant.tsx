@@ -118,7 +118,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     try {
       const env = import.meta.env || {};
-      const apiKey = env.VITE_GEMINI_API_KEY;
+      const apiKey = env.VITE_GEMINI_API_KEY1 || env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         setMessages(prev => [...prev, { role: 'model', text: "Kechirasiz, AI tizimi hozircha mavjud emas (API Key topilmadi)." }]);
         setIsLoading(false);
