@@ -75,6 +75,14 @@ const translations: Translations = {
     all_rights_reserved: { uz: 'Barcha huquqlar himoyalangan', ru: 'Все права защищены', en: 'All rights reserved' },
     meta_title: { uz: 'PaketShop.uz | Online Do\'kon - O\'zbekistondagi Sifatli Mahsulotlar', ru: 'PaketShop.uz | Онлайн Магазин - Качественные Товары в Узбекистане', en: 'PaketShop.uz | Online Store - Quality Products in Uzbekistan' },
     meta_description: { uz: 'PaketShop.uz - O\'zbekistondagi ishonchli onlayn do\'kon. Soatlar, sumkalar, parfyumeriya va boshqa sifatli mahsulotlar.', ru: 'PaketShop.uz - надежный онлайн-магазин в Узбекистане. Часы, сумки, парфюмерия и другие качественные товары.', en: 'PaketShop.uz - reliable online store in Uzbekistan. Watches, bags, perfumes and other quality products.' },
+    premium_series: { uz: 'Premium Seriya', ru: 'Премиум Серия', en: 'Premium Series' },
+    limited_edition: { uz: 'Maxsus Nashr', ru: 'Лимитированная Серия', en: 'Limited Edition' },
+    collection_2026: { uz: '2026 To\'plami', ru: 'Коллекция 2026', en: '2026 Collection' },
+    popular_searches: { uz: 'Ommabop qidiruvlar', ru: 'Популярные запросы', en: 'Popular searches' },
+    search_help: { uz: 'Tanlash uchun Enter, chiqish uchun ESC bosing', ru: 'Нажмите Enter для выбора, ESC для выхода', en: 'Press Enter to select, ESC to exit' },
+    categories: { uz: 'Kategoriyalar', ru: 'Категории', en: 'Categories' },
+    products: { uz: 'Mahsulotlar', ru: 'Товары', en: 'Products' },
+    nothing_found: { uz: 'Hech narsa topilmadi.', ru: 'Ничего не найдено.', en: 'Nothing found.' },
 };
 
 interface LanguageContextType {

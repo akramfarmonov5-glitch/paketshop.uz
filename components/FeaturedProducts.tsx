@@ -164,7 +164,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                             className={`absolute left-0 top-0 bottom-0 w-[80%] max-w-sm border-r p-6 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-light-text'}`}>Filtr</h3>
+                                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-light-text'}`}>{t('filter')}</h3>
                                 <button onClick={() => setIsFilterOpen(false)} className={isDark ? 'text-gray-400 hover:text-white' : 'text-light-muted hover:text-light-text'}>
                                     <X size={24} />
                                 </button>
@@ -175,7 +175,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                     onClick={() => { setSelectedCategory('All'); setIsFilterOpen(false); }}
                                     className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
                                 >
-                                    Barchasi
+                                    {t('all_categories')}
                                 </button>
                                 {categories.map(cat => (
                                     <button
