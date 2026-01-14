@@ -114,7 +114,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
         `;
 
           const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-exp',
+            model: 'gemini-2.5-flash-lite-preview-09-2025',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
           });
