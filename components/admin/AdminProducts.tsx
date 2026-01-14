@@ -85,10 +85,16 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     setIsGenerating(true);
     try {
       const env = import.meta.env || {};
-      const apiKey = env.VITE_GEMINI_API_KEY1 || env.VITE_GEMINI_API_KEY;
-      const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean);
 
-      const prompt = `
+      let lastError;
+      let success = false;
+
+      for (const apiKey of keys) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+
+          const prompt = `
             You are a luxury product expert for an online store.
             Product Name: "${formData.name}"
             Category: "${formData.category}"
@@ -107,25 +113,34 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
             }
         `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: { responseMimeType: 'application/json' }
-      });
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+          });
 
-      const text = response.text;
-      if (text) {
-        const data = JSON.parse(text);
-        setFormData(prev => ({
-          ...prev,
-          shortDescription: data.shortDescription,
-          specs: data.specs
-        }));
+          const text = response.text;
+          if (text) {
+            const data = JSON.parse(text);
+            setFormData(prev => ({
+              ...prev,
+              shortDescription: data.shortDescription,
+              specs: data.specs
+            }));
+            success = true;
+            break; // Stop loop on success
+          }
+        } catch (error) {
+          console.error(`Error with API key ${apiKey.substring(0, 5)}...:`, error);
+          lastError = error;
+        }
       }
+
+      if (!success) throw lastError;
 
     } catch (error) {
       console.error("AI Error:", error);
-      alert("AI ma'lumot yaratishda xatolik yuz berdi.");
+      alert("AI ma'lumot yaratishda xatolik yuz berdi. Barcha kalitlar limitdan chiqgan bo'lishi mumkin.");
     } finally {
       setIsGenerating(false);
     }
