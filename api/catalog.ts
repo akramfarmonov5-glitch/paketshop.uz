@@ -1,23 +1,30 @@
-import { supabase } from '../lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
-  console.log('Catalog feed generation started...');
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_KEY;
+  const BASE_URL = 'https://paketshop.uz';
+
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase environment variables are missing');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     // 1. Fetch products from Supabase
     const { data: products, error } = await supabase
       .from('products')
       .select('*');
 
-    if (error) {
-      console.error('Supabase fetch error:', error);
-      throw error;
+    if (error) throw error;
+
+    if (!products || products.length === 0) {
+      console.warn('No products found in database');
     }
 
-    // 2. Base URL of your shop
-    const BASE_URL = 'https://paketshop.uz';
-
-    // 3. Generate XML
-    const xmlItems = products.map((product) => `
+    // 2. Generate XML
+    const xmlItems = (products || []).map((product) => `
     <item>
       <g:id>${product.id}</g:id>
       <g:title><![CDATA[${product.name}]]></g:title>
@@ -42,12 +49,19 @@ export default async function handler(req, res) {
   </channel>
 </rss>`;
 
-    // 4. Send Response
+    // 3. Send Response
     res.setHeader('Content-Type', 'text/xml');
     res.status(200).send(xmlFeed);
 
   } catch (err) {
-    console.error('Feed generation error:', err);
-    res.status(500).json({ error: 'Failed to generate feed' });
+    console.error('Catalog Feed Error:', err);
+    res.status(500).json({
+      error: 'Failed to generate feed',
+      details: err instanceof Error ? err.message : 'Unknown error',
+      env: {
+        url: !!supabaseUrl,
+        key: !!supabaseKey
+      }
+    });
   }
 }
