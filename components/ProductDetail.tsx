@@ -11,6 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import Breadcrumbs from './Breadcrumbs';
 import ProductCard from './ProductCard';
+import QuickBuyModal from './QuickBuyModal';
 import * as fpixel from '../lib/fpixel';
 
 interface ProductDetailProps {
@@ -32,6 +33,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const [activeImage, setActiveImage] = useState<string>(product.image);
   const [showVideo, setShowVideo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isQuickBuyOpen, setIsQuickBuyOpen] = useState(false);
 
   const isLiked = isInWishlist(product.id);
 
@@ -242,7 +244,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   <Heart size={22} className={isLiked ? 'fill-black' : ''} />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3">
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
@@ -256,10 +258,19 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   disabled={product.stock === 0}
                   className="bg-gold-400 text-black font-bold py-3 md:py-4 rounded-xl hover:bg-gold-500 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
-                  <Zap size={18} className="md:w-[20px] md:h-[20px]" fill="currentColor" />
+                  <ShoppingBag size={18} className="md:w-[20px] md:h-[20px]" />
                   {t('buy_now')}
                 </button>
               </div>
+
+              <button
+                onClick={() => setIsQuickBuyOpen(true)}
+                disabled={product.stock === 0}
+                className={`w-full py-3.5 md:py-4 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-sm md:text-base border-2 border-dashed ${isDark ? 'border-gold-400/50 text-gold-400 bg-gold-400/5 hover:bg-gold-400/10' : 'border-gold-500/50 text-gold-600 bg-gold-400/5 hover:bg-gold-500/10'}`}
+              >
+                <Zap size={18} className="md:w-[20px] md:h-[20px]" fill="currentColor" />
+                Bitta bosishda xarid qilish
+              </button>
             </div>
 
             <div className="mb-6 md:mb-8 relative">
@@ -411,6 +422,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           </div>
         )}
       </AnimatePresence>
+      <QuickBuyModal
+        isOpen={isQuickBuyOpen}
+        onClose={() => setIsQuickBuyOpen(false)}
+        product={product}
+        quantity={1}
+      />
     </div>
   );
 };
