@@ -126,7 +126,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         try {
           const ai = new GoogleGenAI({ apiKey });
           const chat = ai.chats.create({
-            model: 'gemini-2.5-flash-lite-preview-09-2025',
+            model: 'gemini-3.1-flash',
             config: {
               systemInstruction: getSystemInstruction(),
             }
@@ -182,7 +182,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       const ai = new GoogleGenAI({ apiKey });
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+        model: 'gemini-3.1-flash-live-preview',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
