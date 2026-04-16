@@ -159,8 +159,18 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           </button>
         </div>
 
-        {/* Mobile Spacer */}
-        <div className="md:hidden w-8"></div>
+        {/* Mobile Language Switcher */}
+        <div className="md:hidden flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-lg border border-gray-200 dark:border-white/10">
+          {languages.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => setLang(l.code)}
+              className={`px-2 py-1.5 text-[10px] font-bold rounded-md transition-all ${lang === l.code ? 'bg-gold-400 text-black shadow-sm' : isDark ? 'text-gray-400' : 'text-gray-500'}`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
       </motion.nav >
 
       {/* Mobile Menu Drawer */}
@@ -223,21 +233,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
 
-                  {/* Mobile Language Switcher */}
-                  <div className={`mt-4 p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-light-card border-gray-100'}`}>
-                    <p className={`text-[10px] uppercase tracking-widest font-bold mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('choose_language') || 'Tilni tanlang'}</p>
-                    <div className="flex gap-2">
-                      {languages.map((l) => (
-                        <button
-                          key={l.code}
-                          onClick={() => setLang(l.code)}
-                          className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${lang === l.code ? 'bg-gold-400 text-black shadow-lg shadow-gold-400/20' : isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}
-                        >
-                          {l.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Tillar bosh sahifaga (navbar-ga) olingan */}
                 </div>
 
                 {/* Social Media & Footer Info */}
