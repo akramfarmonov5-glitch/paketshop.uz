@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       <g:id>${product.id}</g:id>
       <g:title><![CDATA[${product.name}]]></g:title>
       <g:description><![CDATA[${product.shortDescription || product.name}]]></g:description>
-      <g:link>${BASE_URL}?product_id=${product.id}</g:link>
+      <g:link>${BASE_URL}/product/${product.id}</g:link>
       <g:image_link>${product.image}</g:image_link>
       <g:brand>PaketShop</g:brand>
       <g:condition>new</g:condition>
