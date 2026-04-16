@@ -159,17 +159,28 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           </button>
         </div>
 
-        {/* Mobile Language Switcher */}
-        <div className="md:hidden flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-lg border border-gray-200 dark:border-white/10">
-          {languages.map((l) => (
-            <button
-              key={l.code}
-              onClick={() => setLang(l.code)}
-              className={`px-2 py-1.5 text-[10px] font-bold rounded-md transition-all ${lang === l.code ? 'bg-gold-400 text-black shadow-sm' : isDark ? 'text-gray-400' : 'text-gray-500'}`}
-            >
-              {l.label}
-            </button>
-          ))}
+        {/* Mobile Tools (Theme + Lang) */}
+        <div className="md:hidden flex items-center gap-2">
+          {/* Mobile Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`p-1.5 flex items-center justify-center rounded-lg transition-all border ${isDark ? 'bg-white/5 border-white/10 text-yellow-500' : 'bg-gray-100 border-gray-200 text-amber-600'}`}
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          {/* Mobile Language Switcher */}
+          <div className="flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-lg border border-gray-200 dark:border-white/10">
+            {languages.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${lang === l.code ? 'bg-gold-400 text-black shadow-sm' : isDark ? 'text-gray-400' : 'text-gray-500'}`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
         </div>
       </motion.nav >
 
@@ -198,13 +209,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                     Paket<span className="text-gold-400">Shop</span>
                   </h2>
                   <div className="flex items-center gap-2">
-                    {/* Mobile Theme Toggle */}
-                    <button
-                      onClick={toggleTheme}
-                      className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/5 text-yellow-400' : 'bg-light-card text-amber-600'}`}
-                    >
-                      {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
                     <button
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`p-2 rounded-full ${isDark ? 'bg-white/5 text-gray-400 hover:text-white' : 'bg-light-card text-light-muted hover:text-light-text'}`}
