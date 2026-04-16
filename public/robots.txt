@@ -3,11 +3,17 @@
 
 User-agent: *
 Allow: /
+Allow: /product/
+Allow: /category/
+Allow: /blog/
 Disallow: /admin
 Disallow: /admin/
+Disallow: /checkout
+Disallow: /tracking
+Disallow: /api/
 
 # Crawl delay (optional, be nice to bots)
 Crawl-delay: 1
 
-# Sitemap location
+# Sitemap location (dynamic)
 Sitemap: https://paketshop.uz/sitemap.xml

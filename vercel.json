@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -10,6 +11,13 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml" },
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
       ]
     }
   ]
