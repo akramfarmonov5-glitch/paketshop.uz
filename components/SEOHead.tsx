@@ -84,6 +84,16 @@ const SEOHead: React.FC<SEOProps> = ({
     setMeta('og:site_name', 'PaketShop.uz', true);
     setMeta('og:locale', 'uz_UZ', true);
 
+    // === FB Product Catalog Microdata ===
+    if (product) {
+      setMeta('product:price:amount', product.price.toString(), true);
+      setMeta('product:price:currency', 'UZS', true);
+      setMeta('product:brand', 'PaketShop', true);
+      setMeta('product:availability', (!product.stock || product.stock > 0) ? 'in stock' : 'out of stock', true);
+      setMeta('product:condition', 'new', true);
+      setMeta('product:retailer_item_id', product.id.toString(), true);
+    }
+
     // === Twitter Card ===
     setMeta('twitter:card', 'summary_large_image', true);
     setMeta('twitter:title', title || "PaketShop.uz | Online Do'kon", true);
