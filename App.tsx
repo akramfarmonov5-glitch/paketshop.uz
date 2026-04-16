@@ -18,6 +18,7 @@ import Wishlist from './components/Wishlist';
 import MetaPixel from './components/MetaPixel';
 import SearchModal from './components/SearchModal';
 import SEOHead from './components/SEOHead';
+import InstallPWA from './components/InstallPWA';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATION } from './constants';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -539,6 +540,8 @@ const AppContent: React.FC = () => {
       {currentRoute.name !== 'CHECKOUT' && currentRoute.name !== 'ADMIN' && currentRoute.name !== 'TRACKING' && currentRoute.name !== 'BLOG_POST' && currentRoute.name !== 'WISHLIST' && (
         <Footer onAdminClick={navigateToAdmin} />
       )}
+
+      <InstallPWA />
     </div>
   );
 };
