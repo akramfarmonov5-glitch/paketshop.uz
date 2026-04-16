@@ -90,6 +90,15 @@ export interface ChatLead {
   last_message?: string;
 }
 
+export interface Review {
+  id: string;
+  product_id: number;
+  user_name: string;
+  rating: number; // 1 to 5
+  comment: string;
+  created_at: string;
+}
+
 declare global {
   interface ImportMeta {
     env: any;

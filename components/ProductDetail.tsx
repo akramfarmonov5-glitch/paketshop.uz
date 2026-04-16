@@ -12,6 +12,7 @@ import { useLanguage } from '../context/LanguageContext';
 import Breadcrumbs from './Breadcrumbs';
 import ProductCard from './ProductCard';
 import QuickBuyModal from './QuickBuyModal';
+import ProductReviews from './ProductReviews';
 import * as fpixel from '../lib/fpixel';
 
 interface ProductDetailProps {
@@ -324,6 +325,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               </div>
             </div>
           </motion.div>
+        </div>
+
+        {/* Product Reviews */}
+        <div className="mt-8 lg:mt-12 border-t border-white/10 pt-8" id="reviews-section">
+          <ProductReviews productId={product.id} />
         </div>
 
         {relatedProducts.length > 0 && (
