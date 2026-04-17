@@ -152,7 +152,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           >
             <ShoppingBag size={22} strokeWidth={1.5} />
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold text-black bg-gold-400 rounded-full animate-bounce">
+              <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 text-xs font-bold text-black bg-gold-400 rounded-full">
                 {cartCount}
               </span>
             )}

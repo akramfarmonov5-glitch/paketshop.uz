@@ -47,7 +47,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onNavigateHome, onSearchClick, on
         <div className="relative">
           <ShoppingBag size={20} strokeWidth={1.5} />
           {cartCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-3.5 h-3.5 text-[9px] font-bold text-black bg-gold-400 rounded-full animate-bounce">
+            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-3.5 h-3.5 text-[9px] font-bold text-black bg-gold-400 rounded-full">
               {cartCount}
             </span>
           )}
