@@ -61,14 +61,14 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       const ai = new GoogleGenAI({ apiKey: env.VITE_GEMINI_API_KEY || '' });
 
       const prompt = `
-            You are a fashion blog writer for a luxury store.
+            You are an expert content writer for a packaging materials and wholesale store in Uzbekistan.
             Topic: "${formData.title}"
             
             Generate a blog post in **Uzbek** language:
-            1. Content: Engaging, sophisticated content (approx 150 words).
+            1. Content: Engaging, informative content about packaging, business, or wholesale (approx 150 words).
             2. SEO Title: Short catchy title.
             3. SEO Description: Meta description.
-            4. Keywords: Array of 5 strings.
+            4. Keywords: Array of 5 strings related to the topic.
 
             Return JSON:
             {
