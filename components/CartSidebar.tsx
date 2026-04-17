@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -11,6 +11,13 @@ interface CartSidebarProps {
 const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
   const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    if (cart.length === 0 && isCartOpen) {
+      closeCart();
+    }
+  }, [cart.length, isCartOpen, closeCart]);
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
