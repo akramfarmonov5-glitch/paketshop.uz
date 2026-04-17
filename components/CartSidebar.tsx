@@ -9,7 +9,7 @@ interface CartSidebarProps {
 }
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
-  const { cart, isCartOpen, toggleCart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const { isDark } = useTheme();
 
   const formatPrice = (price: number) => {
@@ -25,7 +25,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={toggleCart}
+            onClick={closeCart}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
           />
 
@@ -47,7 +47,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                 </span>
               </div>
               <button
-                onClick={toggleCart}
+                onClick={closeCart}
                 className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-light-card text-light-muted hover:text-light-text'}`}
               >
                 <X size={24} />
@@ -62,7 +62,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                     <ShoppingBag size={32} className={isDark ? 'text-gray-600' : 'text-light-muted'} />
                   </div>
                   <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Savatchangiz bo'sh</p>
-                  <button onClick={toggleCart} className="text-gold-400 hover:text-gold-500 underline underline-offset-4">
+                  <button onClick={closeCart} className="text-gold-400 hover:text-gold-500 underline underline-offset-4">
                     Xaridni davom ettirish
                   </button>
                 </div>
@@ -137,7 +137,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
 
                 <button
                   onClick={() => {
-                    toggleCart();
+                    closeCart();
                     onCheckout();
                   }}
                   className="w-full py-4 bg-gold-400 text-black font-bold rounded-xl hover:bg-gold-500 transition-colors flex items-center justify-center gap-2 group"
