@@ -67,8 +67,8 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
         <div className={`border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs ${isDark ? 'border-white/5 text-gray-600' : 'border-light-border text-light-muted'}`}>
           <p>&copy; 2026 PaketShop.uz. {t('all_rights_reserved')}.</p>
           <div className="flex gap-6 mt-4 md:mt-0 items-center">
-            <a href="#" className="hover:text-gold-400 transition-colors">Maxfiylik siyosati</a>
-            <a href="#" className="hover:text-gold-400 transition-colors">Foydalanish shartlari</a>
+            <a href="#!" className="hover:text-gold-400 transition-colors">Maxfiylik siyosati</a>
+            <a href="#!" className="hover:text-gold-400 transition-colors">Foydalanish shartlari</a>
             {/* Secret Admin Link */}
             {onAdminClick && (
               <button onClick={onAdminClick} className="flex items-center gap-1 hover:text-gold-400 transition-colors ml-4 opacity-50 hover:opacity-100">
