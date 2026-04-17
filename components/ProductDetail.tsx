@@ -139,15 +139,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 mb-12">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-7"
+            className="lg:col-span-6"
           >
             <div className="sticky top-24 md:top-28 space-y-3">
-              <div className="aspect-[3/4] md:aspect-[4/5] lg:aspect-[3/4] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
+              <div className="aspect-square md:aspect-[4/3] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-gold-500/20 to-purple-500/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                 <img
                   src={activeImage}
@@ -166,12 +166,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 )}
               </div>
 
-              <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 custom-scrollbar">
+              <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 custom-scrollbar">
                 {galleryImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-gold-400 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 transition-all ${activeImage === img ? 'border-gold-400 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
                     <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
                   </button>
@@ -180,7 +180,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 {hasVideo && (
                   <button
                     onClick={handleOpenVideo}
-                    className="w-16 h-20 md:w-20 md:h-24 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 border-white/10 bg-dark-800 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
+                    className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-lg md:rounded-xl overflow-hidden border-2 border-white/10 bg-dark-800 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
                   >
                     <Youtube size={20} className="text-red-500 group-hover:scale-110 transition-transform md:w-[24px] md:h-[24px]" />
                     <span className="text-[10px] font-medium">VIDEO</span>
@@ -194,7 +194,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-5 flex flex-col justify-center"
+            className="lg:col-span-6 flex flex-col justify-center"
           >
             <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
               <span className="text-gold-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
