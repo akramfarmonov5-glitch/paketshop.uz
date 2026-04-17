@@ -139,15 +139,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-20 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 mb-12">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="lg:col-span-7"
           >
-            <div className="sticky top-24 md:top-28 space-y-4">
-              <div className="aspect-[4/5] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
+            <div className="sticky top-24 md:top-28 space-y-3">
+              <div className="aspect-[3/4] md:aspect-[4/5] lg:aspect-[3/4] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-gold-500/20 to-purple-500/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                 <img
                   src={activeImage}
@@ -196,11 +196,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             transition={{ delay: 0.2 }}
             className="lg:col-span-5 flex flex-col justify-center"
           >
-            <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
+            <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
               <span className="text-gold-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
                 {product.category}
               </span>
-              <h1 className={`text-3xl md:text-5xl lg:text-6xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
+              <h1 className={`text-2xl md:text-4xl lg:text-5xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
                 {product.name}
               </h1>
 
@@ -232,8 +232,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               )}
             </div>
 
-            <div className="py-6 md:py-8 border-t border-white/10 border-b border-white/10 mb-6 md:mb-8">
-              <div className="flex items-end justify-between mb-4 md:mb-6">
+            <div className="py-4 md:py-6 border-t border-white/10 border-b border-white/10 mb-4 md:mb-6">
+              <div className="flex items-end justify-between mb-3 md:mb-4">
                 <div>
                   <p className="text-gray-400 text-xs mb-1">{t('total_sum')}</p>
                   <p className={`text-2xl md:text-3xl font-light ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.formattedPrice}</p>
@@ -274,7 +274,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               </button>
             </div>
 
-            <div className="mb-6 md:mb-8 relative">
+            <div className="mb-4 md:mb-6 relative">
               <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-gold-400 to-transparent rounded-full"></div>
               <div className="pl-4 md:pl-6">
                 <div className="flex items-center gap-2 mb-2 md:mb-3">
@@ -310,7 +310,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               </div>
             </div>
 
-            <div className="mt-6 md:mt-8 flex flex-wrap gap-4 items-center justify-between text-gray-400 text-xs md:text-sm px-1">
+            <div className="mt-4 md:mt-6 flex flex-wrap gap-4 items-center justify-between text-gray-400 text-xs md:text-sm px-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={16} className="text-gold-400 md:w-[18px] md:h-[18px]" />
                 <span>{t('premium_warranty')}</span>
@@ -328,7 +328,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         </div>
 
         {/* Product Reviews */}
-        <div className="mt-8 lg:mt-12 border-t border-white/10 pt-8" id="reviews-section">
+        <div className="mt-6 lg:mt-8 border-t border-white/10 pt-6" id="reviews-section">
           <ProductReviews productId={product.id} />
         </div>
 
@@ -337,7 +337,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-20 border-t border-white/10 pt-12"
+            className="mt-12 border-t border-white/10 pt-8"
           >
             <div className="flex justify-between items-end mb-8">
               <div>
