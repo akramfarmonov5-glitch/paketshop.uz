@@ -181,15 +181,13 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       const ai = new GoogleGenAI({ apiKey });
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-3.1-flash-live-preview',
+        model: 'gemini-2.0-flash-exp',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
           },
-          systemInstruction: getSystemInstruction(),
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
+          systemInstruction: { parts: [{ text: getSystemInstruction() }] },
         },
         callbacks: {
           onopen: () => {
@@ -204,8 +202,21 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
               const inputData = e.inputBuffer.getChannelData(0);
               const pcmBlob = createBlob(inputData);
 
-              sessionPromise.then(session => {
-                session.sendRealtimeInput({ media: pcmBlob });
+              sessionPromise.then((session: any) => {
+                try {
+                  if (typeof session.send === 'function') {
+                    session.send({ realtimeInput: { mediaChunks: [pcmBlob] } });
+                  } else if (typeof session.sendRealtimeInput === 'function') {
+                    // Try array format or direct object format based on typical SDKs
+                    try {
+                      session.sendRealtimeInput([pcmBlob]);
+                    } catch (err) {
+                      session.sendRealtimeInput({ media: pcmBlob });
+                    }
+                  }
+                } catch (err) {
+                  console.error("Error sending audio", err);
+                }
               });
             };
 
@@ -266,12 +277,13 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
               currentOutputTranscription.current = '';
             }
           },
-          onclose: () => {
-            console.log("Live session closed");
-            setMessages(prev => [...prev, { role: 'model', text: "⚠️ Ovozli aloqa uzildi." }]);
+          onclose: (event: any) => {
+            console.log("Live session closed", event);
+            const reason = event?.reason || event?.code || '';
+            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Ovozli aloqa uzildi. ${reason}` }]);
             disconnectLive();
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             console.error("Live session error", err);
             setMessages(prev => [...prev, { role: 'model', text: `⚠️ Tarmoq xatoligi yuz berdi: Ovozli aloqaga ulanib bo'lmadi.` }]);
             disconnectLive();
