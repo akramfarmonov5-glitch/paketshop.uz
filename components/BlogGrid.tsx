@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 
 interface BlogGridProps {
   posts: BlogPost[];
-  onPostClick: (id: string) => void;
+  onPostClick: (id: number) => void;
 }
 
 const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick }) => {

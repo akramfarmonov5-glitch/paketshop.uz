@@ -42,7 +42,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Bu kategoriyani o'chirmoqchimisiz?")) {
       try {
         const { error } = await supabase.from('categories').delete().eq('id', id);
@@ -131,11 +131,10 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
           setCategories(prev => prev.map(c => c.id === formData.id ? (data[0] as Category) : c));
         }
       } else {
-        // Insert - generate ID since DB doesn't auto-generate
-        const newId = `cat_${Date.now()}`;
+        // Insert - DB will auto-generate ID
         const { data, error } = await supabase
           .from('categories')
-          .insert([{ id: newId, ...dataToSave }])
+          .insert([dataToSave])
           .select();
 
         if (error) throw error;

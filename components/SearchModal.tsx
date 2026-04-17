@@ -4,6 +4,7 @@ import { Search, X, ArrowRight, TrendingUp, XCircle, SearchX } from 'lucide-reac
 import { Product, Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import * as fpixel from '../lib/fpixel';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -38,6 +39,16 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
+
+  // Track search
+  useEffect(() => {
+    if (query.trim().length > 2) {
+      const timer = setTimeout(() => {
+        fpixel.trackSearch(query.trim());
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [query]);
 
   const filteredProducts = query.trim()
     ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase())).slice(0, 5)

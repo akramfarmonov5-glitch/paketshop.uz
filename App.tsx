@@ -22,6 +22,9 @@ import MetaPixel from './components/MetaPixel';
 import SearchModal from './components/SearchModal';
 import SEOHead from './components/SEOHead';
 import InstallPWA from './components/InstallPWA';
+import AuthModal from './components/AuthModal';
+import UserProfile from './components/UserProfile';
+import { useAuth } from './context/AuthContext';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATION } from './constants';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -30,6 +33,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { supabase } from './lib/supabaseClient';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from './types';
 import { productSlug, getIdFromSlug, blogSlug, getBlogIdFromSlug, slugify } from './lib/slugify';
+import * as fpixel from './lib/fpixel';
 
 const BASE_URL = 'https://paketshop.uz';
 
@@ -41,7 +45,8 @@ type Route =
   | { name: 'ADMIN' }
   | { name: 'TRACKING' }
   | { name: 'WISHLIST' }
-  | { name: 'BLOG_POST'; postId: string };
+  | { name: 'PROFILE' }
+  | { name: 'BLOG_POST'; postId: number };
 
 /**
  * URL dan Route aniqlash
@@ -73,6 +78,7 @@ function parseRouteFromURL(): Route {
   if (path === '/admin') return { name: 'ADMIN' };
   if (path === '/tracking') return { name: 'TRACKING' };
   if (path === '/wishlist') return { name: 'WISHLIST' };
+  if (path === '/profile') return { name: 'PROFILE' };
 
   return { name: 'HOME' };
 }
@@ -102,6 +108,8 @@ function routeToURL(route: Route, products: Product[], blogPosts: BlogPost[]): s
       return '/tracking';
     case 'WISHLIST':
       return '/wishlist';
+    case 'PROFILE':
+      return '/profile';
     default:
       return '/';
   }
@@ -115,10 +123,12 @@ const AppContent: React.FC = () => {
   const [navigationSettings, setNavigationSettings] = useState<NavigationSettings>(DEFAULT_NAVIGATION);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user } = useAuth();
 
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
     {
-      id: '1',
+      id: 1,
       title: '2026-yilgi Premium Soatlar Trendi',
       image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1000&auto=format&fit=crop',
       content: 'Bu yil minimalizm va retro uslubining qaytishi kuzatilmoqda. Hashamatli brendlar yupqa korpuslar va klassik dizaynlarga urg\'u bermoqda. Ranglar palitrasi ko\'proq to\'q ko\'k, yashil va metall tuslarda namoyon bo\'lmoqda.\n\nShuningdek, mexanik soatlar yana urfga kirmoqda. Raqamli texnologiyalar davrida klassik mexanika o\'zining qadrini yo\'qotgani yo\'q, aksincha, haqiqiy san\'at asari sifatida qadrlanmoqda.',
@@ -126,7 +136,7 @@ const AppContent: React.FC = () => {
       date: '2025-05-10'
     },
     {
-      id: '2',
+      id: 2,
       title: 'Charm Sumkalar: Sifat va Uslub',
       image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop',
       content: 'Haqiqiy charm sumka nafaqat aksessuar, balki investitsiyadir. Italiya charm maktabining an\'analari zamonaviy texnologiyalar bilan uyg\'unlashib, uzoq yillar xizmat qiladigan san\'at asarlarini yaratmoqda.\n\nSifatli charm vaqt o\'tishi bilan yanada chiroyli tusga kiradi. Bu mavsumda katta o\'lchamli va funksional sumkalar trendda.',
@@ -262,12 +272,13 @@ const AppContent: React.FC = () => {
   const navigateToAdmin = () => navigate({ name: 'ADMIN' });
   const navigateToTracking = () => navigate({ name: 'TRACKING' });
   const navigateToWishlist = () => navigate({ name: 'WISHLIST' });
-  const navigateToBlogPost = (id: string) => navigate({ name: 'BLOG_POST', postId: id });
+  const navigateToBlogPost = (id: number) => navigate({ name: 'BLOG_POST', postId: id });
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   const handleCategorySelect = (categoryName: string) => {
     setActiveCategory(categoryName);
+    fpixel.trackViewCategory(categoryName);
     // Agar boshqa sahifada bo'lsa, bosh sahifaga qaytib keyin kategoriyaga scroll
     if (currentRoute.name !== 'HOME') {
       navigate({ name: 'HOME' });
@@ -290,6 +301,14 @@ const AppContent: React.FC = () => {
   const handleAdminLogin = () => {
     setIsAdminAuthenticated(true);
     localStorage.setItem('paketshop_admin_session', 'active');
+  };
+
+  const handleProfileClick = () => {
+    if (user) {
+      navigate({ name: 'PROFILE' });
+    } else {
+      setIsAuthModalOpen(true);
+    }
   };
 
   const handleAdminLogout = () => {
@@ -399,6 +418,17 @@ const AppContent: React.FC = () => {
       );
     }
 
+    if (currentRoute.name === 'PROFILE') {
+      return (
+        <SEOHead
+          title="Mening Profilim"
+          description="Foydalanuvchi profili. PaketShop.uz"
+          canonical={`${BASE_URL}/profile`}
+          noindex={true}
+        />
+      );
+    }
+
     if (currentRoute.name === 'ADMIN') {
       return <SEOHead title="Admin Panel" noindex={true} />;
     }
@@ -448,6 +478,10 @@ const AppContent: React.FC = () => {
 
     if (currentRoute.name === 'TRACKING') {
       return <OrderTracker onBack={navigateToHome} />;
+    }
+
+    if (currentRoute.name === 'PROFILE') {
+      return <UserProfile onBack={navigateToHome} onNavigateToProduct={navigateToProduct} />;
     }
 
     if (currentRoute.name === 'WISHLIST') {
@@ -515,7 +549,7 @@ const AppContent: React.FC = () => {
         <Navbar
           onNavigateHome={navigateToHome}
           navigationSettings={navigationSettings}
-          onProfileClick={navigateToTracking}
+          onProfileClick={handleProfileClick}
           onSearchClick={() => setIsSearchOpen(true)}
           onWishlistClick={navigateToWishlist}
         />
@@ -530,7 +564,7 @@ const AppContent: React.FC = () => {
           onNavigateHome={navigateToHome}
           onCartClick={toggleCart}
           onSearchClick={() => setIsSearchOpen(true)}
-          onProfileClick={navigateToTracking}
+          onProfileClick={handleProfileClick}
           onWishlistClick={navigateToWishlist}
         />
       )}

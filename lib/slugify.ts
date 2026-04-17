@@ -35,14 +35,15 @@ export function getIdFromSlug(slug: string): number | null {
 /**
  * Blog post uchun slug yaratish
  */
-export function blogSlug(post: { id: string; title: string }): string {
+export function blogSlug(post: { id: number; title: string }): string {
   return `${slugify(post.title)}-${post.id}`;
 }
 
 /**
  * Blog slug dan ID olish
  */
-export function getBlogIdFromSlug(slug: string): string | null {
+export function getBlogIdFromSlug(slug: string): number | null {
   const parts = slug.split('-');
-  return parts.length > 0 ? parts[parts.length - 1] : null;
+  const id = parseInt(parts[parts.length - 1], 10);
+  return isNaN(id) ? null : id;
 }

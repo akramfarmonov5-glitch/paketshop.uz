@@ -184,11 +184,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
           setProducts(prev => prev.map(p => p.id === formData.id ? (data[0] as Product) : p));
         }
       } else {
-        // Insert - generate ID since DB doesn't auto-generate
-        const newId = `prod_${Date.now()}`;
+        // Insert - DB will auto-generate ID
         const { data, error } = await supabase
           .from('products')
-          .insert([{ id: newId, ...dataToSave }])
+          .insert([dataToSave])
           .select();
 
         if (error) throw error;

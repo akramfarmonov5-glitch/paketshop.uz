@@ -193,18 +193,23 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
           },
-          systemInstruction: getSystemInstruction(),
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
+          systemInstruction: { parts: [{ text: getSystemInstruction() }] },
         },
         callbacks: {
           onopen: () => {
             console.log(`Live session connected via ${modelName}`);
+            
+            if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+              audioContextRef.current.resume();
+            }
+            if (inputAudioContextRef.current && inputAudioContextRef.current.state === 'suspended') {
+              inputAudioContextRef.current.resume();
+            }
 
             sessionPromise.then((session: any) => {
               try {
                 if (typeof session.send === 'function') {
-                  session.send({ clientContent: { turns: [{ role: 'user', parts: [{ text: `Salom, men siz bilan ulandim. Qisqacha ovozli tarzda salomlashing va do'konimizdan nima qidirayotganimni so'rang.` }] }] } });
+                  session.send({ clientContent: { turns: [{ role: 'user', parts: [{ text: `Salom, men siz bilan ulandim. Qisqacha ovozli tarzda salomlashing va do'konimizdan nima qidirayotganimni so'rang.` }] }], turnComplete: true } });
                 }
               } catch (err) {
                 console.error("Failed to send initial prompt", err);
@@ -244,6 +249,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
             const parts = message.serverContent?.modelTurn?.parts;
             if (parts && parts.length > 0) {
               for (const part of parts) {
+                if (part.text) {
+                  currentOutputTranscription.current += part.text;
+                }
                 const base64Audio = part.inlineData?.data;
                 if (base64Audio && audioContextRef.current) {
                   const ctx = audioContextRef.current;
@@ -261,9 +269,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                     source.buffer = audioBuffer;
                     source.connect(ctx.destination);
 
-                    source.addEventListener('ended', () => {
+                    source.onended = () => {
                       sourceNodesRef.current.delete(source);
-                    });
+                    };
 
                     source.start(nextStartTimeRef.current);
                     nextStartTimeRef.current += audioBuffer.duration;
@@ -407,7 +415,8 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     sampleRate: number,
     numChannels: number,
   ): Promise<AudioBuffer> {
-    const dataInt16 = new Int16Array(data.buffer, data.byteOffset, Math.floor(data.byteLength / 2));
+    const sliced = data.slice();
+    const dataInt16 = new Int16Array(sliced.buffer);
     const frameCount = dataInt16.length / numChannels;
     const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 

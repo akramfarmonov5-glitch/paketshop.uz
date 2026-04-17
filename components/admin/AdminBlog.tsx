@@ -38,7 +38,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Bu maqolani o'chirmoqchimisiz?")) {
       try {
         await supabase.from('blog_posts').delete().eq('id', id);
@@ -107,27 +107,27 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const postData = {
-      ...formData,
-      id: formData.id || `blog_${Date.now()}`
-    } as BlogPost;
+    const postData = { ...formData };
 
     try {
-      if (formData.id) {
+      if (postData.id) {
         // Update existing
         const { error } = await supabase
           .from('blog_posts')
           .update(postData)
-          .eq('id', formData.id);
+          .eq('id', postData.id);
         if (error) throw error;
-        setPosts(prev => prev.map(p => p.id === formData.id ? postData : p));
+        setPosts(prev => prev.map(p => p.id === postData.id ? (postData as BlogPost) : p));
       } else {
         // Insert new
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('blog_posts')
-          .insert([postData]);
+          .insert([postData])
+          .select();
         if (error) throw error;
-        setPosts(prev => [postData, ...prev]);
+        if (data && data.length > 0) {
+          setPosts(prev => [(data[0] as BlogPost), ...prev]);
+        }
       }
       setIsModalOpen(false);
     } catch (error) {

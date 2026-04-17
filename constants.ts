@@ -14,20 +14,20 @@ export const DEFAULT_HERO_CONTENT: HeroContent = {
 
 export const DEFAULT_NAVIGATION: NavigationSettings = {
   menuItems: [
-    { id: 'nav_1', label: "Yangi To'plam", href: "#" },
-    { id: 'nav_2', label: "Erkaklar", href: "#" },
-    { id: 'nav_3', label: "Ayollar", href: "#" },
-    { id: 'nav_4', label: "Aksessuarlar", href: "#" }
+    { id: 1, label: "Yangi To'plam", href: "#" },
+    { id: 2, label: "Erkaklar", href: "#" },
+    { id: 3, label: "Ayollar", href: "#" },
+    { id: 4, label: "Aksessuarlar", href: "#" }
   ],
   socialLinks: [
-    { id: 'soc_1', platform: 'instagram', url: 'https://instagram.com' },
-    { id: 'soc_2', platform: 'telegram', url: 'https://t.me' }
+    { id: 1, platform: 'instagram', url: 'https://instagram.com' },
+    { id: 2, platform: 'telegram', url: 'https://t.me' }
   ]
 };
 
 export const MOCK_CATEGORIES: Category[] = [
   {
-    id: 'cat_1',
+    id: 1,
     name: 'Soatlar',
     slug: 'soatlar',
     image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1000&auto=format&fit=crop',
@@ -35,7 +35,7 @@ export const MOCK_CATEGORIES: Category[] = [
     googleProductCategory: 'Apparel & Accessories > Jewelry > Watches'
   },
   {
-    id: 'cat_2',
+    id: 2,
     name: 'Sumkalar',
     slug: 'sumkalar',
     image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop',
@@ -43,7 +43,7 @@ export const MOCK_CATEGORIES: Category[] = [
     googleProductCategory: 'Apparel & Accessories > Handbags, Wallets & Cases'
   },
   {
-    id: 'cat_3',
+    id: 3,
     name: 'Ko\'zoynaklar',
     slug: 'kozoynaklar',
     image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop',
@@ -51,7 +51,7 @@ export const MOCK_CATEGORIES: Category[] = [
     googleProductCategory: 'Apparel & Accessories > Clothing Accessories > Sunglasses'
   },
   {
-    id: 'cat_4',
+    id: 4,
     name: 'Parfyumeriya',
     slug: 'parfyumeriya',
     image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop',
@@ -59,7 +59,7 @@ export const MOCK_CATEGORIES: Category[] = [
     googleProductCategory: 'Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne'
   },
   {
-    id: 'cat_5',
+    id: 5,
     name: 'Aksessuarlar',
     slug: 'aksessuarlar',
     image: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=1000&auto=format&fit=crop',

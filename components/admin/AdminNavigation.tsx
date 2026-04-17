@@ -17,7 +17,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
     const addMenuItem = () => {
         setFormData(prev => ({
             ...prev,
-            menuItems: [...prev.menuItems, { id: `nav_${Date.now()}`, label: '', href: '#' }]
+            menuItems: [...prev.menuItems, { id: Date.now(), label: '', href: '#' }]
         }));
     };
 
@@ -37,7 +37,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
     const addSocialLink = () => {
         setFormData(prev => ({
             ...prev,
-            socialLinks: [...prev.socialLinks, { id: `soc_${Date.now()}`, platform: 'instagram', url: '' }]
+            socialLinks: [...prev.socialLinks, { id: Date.now(), platform: 'instagram', url: '' }]
         }));
     };
 
