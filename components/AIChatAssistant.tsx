@@ -187,7 +187,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
           },
-          systemInstruction: { parts: [{ text: getSystemInstruction() }] },
+          systemInstruction: getSystemInstruction(),
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
         },
         callbacks: {
           onopen: () => {
