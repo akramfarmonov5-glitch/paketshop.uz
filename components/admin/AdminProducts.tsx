@@ -155,7 +155,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     const mainImage = validImages.length > 0 ? validImages[0] : (formData.image || 'https://via.placeholder.com/400');
 
     // Tayyorlash
-    const dataToSave = {
+    const dataToSave: Record<string, any> = {
       name: formData.name,
       category: formData.category,
       price: Number(formData.price),
@@ -166,6 +166,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       "itemsPerPackage": Number(formData.itemsPerPackage || 1),
       specifications: formData.specs
     };
+
+    // videoUrl mavjud bo'lsa qo'shamiz
+    if (formData.videoUrl && formData.videoUrl.trim() !== '') {
+      dataToSave["videoUrl"] = formData.videoUrl.trim();
+    } else {
+      dataToSave["videoUrl"] = null;
+    }
 
     try {
       if (formData.id) {
@@ -183,7 +190,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
             ...data[0],
             formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(data[0].price)) + ' UZS',
             shortDescription: data[0].description || '',
-            specs: data[0].specifications || []
+            specs: data[0].specifications || [],
+            videoUrl: data[0].videoUrl || ''
           };
           setProducts(prev => prev.map(p => p.id === formData.id ? (newProduct as Product) : p));
         }
@@ -201,7 +209,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
             ...data[0],
             formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(data[0].price)) + ' UZS',
             shortDescription: data[0].description || '',
-            specs: data[0].specifications || []
+            specs: data[0].specifications || [],
+            videoUrl: data[0].videoUrl || ''
           };
           setProducts(prev => [(newProduct as Product), ...prev]);
         }

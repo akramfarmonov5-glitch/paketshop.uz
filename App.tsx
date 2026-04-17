@@ -211,7 +211,8 @@ const AppContent: React.FC = () => {
             ...p,
             formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(p.price)) + ' UZS',
             shortDescription: p.description || '',
-            specs: p.specifications || []
+            specs: p.specifications || [],
+            videoUrl: p.videoUrl || ''
           }));
           setProducts(mappedProducts as Product[]);
         } else {
