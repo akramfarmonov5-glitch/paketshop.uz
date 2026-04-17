@@ -33,24 +33,19 @@ export default async function handler(req, res) {
     // Fallback mock data if DB is empty
     if (products.length === 0) {
       products = [
-        { id: 1, name: 'Midnight Chronograph', category: 'Soatlar', image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Eksklyuziv soat' },
-        { id: 2, name: 'Royal Leather Bag', category: 'Sumkalar', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Premium charm sumka' },
-        { id: 3, name: 'Aviator Elite', category: "Ko'zoynaklar", image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Aviator ko\'zoynak' },
-        { id: 4, name: 'Essence No. 5', category: 'Parfyumeriya', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Premium parfyum' },
-        { id: 5, name: 'Golden Horizon Heels', category: 'Poyabzal', image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Zamonaviy tufli' },
-        { id: 6, name: 'Obsidian Cufflinks', category: 'Aksessuarlar', image: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Premium tugmalar' },
-        { id: 7, name: 'Silk Monarch Scarf', category: 'Aksessuarlar', image: 'https://images.unsplash.com/photo-1584030373081-f37b7bb4fa8e?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Ipak sharf' },
-        { id: 8, name: 'Titan Smart Ring', category: 'Texnologiya', image: 'https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000&auto=format&fit=crop', shortDescription: 'Aqlli uzuk' }
+        { id: 1, name: 'Chiqindi uchun qoplar 70x90 sm 20 dona', category: 'Chiqindi paketlari', image: 'https://res.cloudinary.com/dkc6rlyeo/image/upload/v1776180967/xmpekaing8zqafdzu42k.webp', shortDescription: 'Optombazar.uz sizga 70x90 sm o\'lchamdagi 20 dona chiqindi qoplarini ulgurji narxlarda taklif etadi.' },
+        { id: 2, name: 'Mikrofibrlar', category: 'Salfetka va lattalar', image: 'https://res.cloudinary.com/dkc6rlyeo/image/upload/v1767876157/d2zvjnucolbig9axjj2j.avif', shortDescription: 'Yuqori sifatli mikrofibr matolar' },
+        { id: 3, name: 'Plastik oziq-ovqat konteyneri 1000 ml', category: 'Konteynerlar va idishlar', image: 'https://res.cloudinary.com/dkc6rlyeo/image/upload/v1766339063/xigshqt4xkrrt9qwjes2.png', shortDescription: '1000 ml hajmli yuqori sifatli plastik konteynerlar to\'plami' },
+        { id: 4, name: 'Ziplock paketlar 6x9 sm, 200 dona', category: 'Zip-Lock paketlar', image: 'https://res.cloudinary.com/dkc6rlyeo/image/upload/v1766332558/kf8kk10hofivdo7mbtas.jpg', shortDescription: 'Ushbu 6x9 sm o\'lchamdagi 200 dona qulflanadigan Ziplock paketlar' },
       ];
     }
 
     if (categories.length === 0) {
       categories = [
-        { slug: 'soatlar', name: 'Soatlar' },
-        { slug: 'sumkalar', name: 'Sumkalar' },
-        { slug: 'kozoynaklar', name: "Ko'zoynaklar" },
-        { slug: 'parfyumeriya', name: 'Parfyumeriya' },
-        { slug: 'aksessuarlar', name: 'Aksessuarlar' }
+        { slug: 'paketlar', name: 'Paketlar' },
+        { slug: 'idishlar', name: 'Idishlar va Konteynerlar' },
+        { slug: 'xojalik-mollari', name: 'Xo\'jalik mollari' },
+        { slug: 'qadoqlash', name: 'Qadoqlash materiallari' }
       ];
     }
 

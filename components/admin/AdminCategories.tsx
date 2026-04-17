@@ -111,10 +111,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
     const dataToSave = {
       name: formData.name,
-      slug,
-      image: formData.image || 'https://via.placeholder.com/400',
-      description: formData.description,
-      googleProductCategory: formData.googleProductCategory
+      image: formData.image || 'https://via.placeholder.com/400'
     };
 
     try {
@@ -128,7 +125,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
         if (error) throw error;
         if (data && data.length > 0) {
-          setCategories(prev => prev.map(c => c.id === formData.id ? (data[0] as Category) : c));
+          const newCategory = {
+            ...data[0],
+            slug: slug || data[0].name.toLowerCase().replace(/\s+/g, '-')
+          };
+          setCategories(prev => prev.map(c => c.id === formData.id ? (newCategory as Category) : c));
         }
       } else {
         // Insert - DB will auto-generate ID
@@ -139,7 +140,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
         if (error) throw error;
         if (data && data.length > 0) {
-          setCategories(prev => [(data[0] as Category), ...prev]);
+          const newCategory = {
+            ...data[0],
+            slug: slug || data[0].name.toLowerCase().replace(/\s+/g, '-')
+          };
+          setCategories(prev => [(newCategory as Category), ...prev]);
         }
       }
       setIsModalOpen(false);

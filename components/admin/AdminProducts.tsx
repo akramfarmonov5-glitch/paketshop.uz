@@ -159,14 +159,12 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       name: formData.name,
       category: formData.category,
       price: Number(formData.price),
-      formattedPrice,
       image: mainImage,
       images: validImages,
-      videoUrl: formData.videoUrl?.trim(),
-      shortDescription: formData.shortDescription,
+      description: formData.shortDescription,
       stock: Number(formData.stock),
-      itemsPerPackage: Number(formData.itemsPerPackage || 1),
-      specs: formData.specs
+      "itemsPerPackage": Number(formData.itemsPerPackage || 1),
+      specifications: formData.specs
     };
 
     try {
@@ -181,7 +179,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
         if (error) throw error;
 
         if (data && data.length > 0) {
-          setProducts(prev => prev.map(p => p.id === formData.id ? (data[0] as Product) : p));
+          const newProduct = {
+            ...data[0],
+            formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(data[0].price)) + ' UZS',
+            shortDescription: data[0].description || '',
+            specs: data[0].specifications || []
+          };
+          setProducts(prev => prev.map(p => p.id === formData.id ? (newProduct as Product) : p));
         }
       } else {
         // Insert - DB will auto-generate ID
@@ -193,7 +197,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
         if (error) throw error;
 
         if (data && data.length > 0) {
-          setProducts(prev => [(data[0] as Product), ...prev]);
+          const newProduct = {
+            ...data[0],
+            formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(data[0].price)) + ' UZS',
+            shortDescription: data[0].description || '',
+            specs: data[0].specifications || []
+          };
+          setProducts(prev => [(newProduct as Product), ...prev]);
         }
       }
       setIsModalOpen(false);
