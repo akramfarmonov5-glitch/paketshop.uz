@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, Twitter, Facebook, Mail, Lock } from 'lucide-react';
+import { Instagram, Twitter, Facebook, Mail, Lock, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -28,38 +28,62 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_categories')}</h4>
             <ul className={`space-y-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">Paketlar</a></li>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">Stakanlar</a></li>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">Aksessuarlar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Paketlar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Stakanlar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Aksessuarlar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Tozalash inventarlari</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_help')}</h4>
             <ul className={`space-y-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">Yetkazib berish</a></li>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">To'lov usullari</a></li>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">Qaytarish siyosati</a></li>
-              <li><a href="#" className="hover:text-gold-400 transition-colors">FAQ</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Yetkazib berish</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">To'lov usullari</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Qaytarish siyosati</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">FAQ</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_contact')}</h4>
-            <div className="flex gap-4 mb-6">
-              <a href="#" className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
-                <Instagram size={18} />
+
+            {/* Contact Info */}
+            <div className="space-y-4 mb-6">
+              <a href="tel:+998901234567" className={`flex items-center gap-3 text-sm group ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-light-bg'}`}>
+                  <Phone size={14} className="text-gold-400" />
+                </div>
+                <span className="group-hover:text-gold-400 transition-colors">+998 90 123 45 67</span>
               </a>
-              <a href="#" className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
-                <Twitter size={18} />
-              </a>
-              <a href="#" className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
-                <Facebook size={18} />
-              </a>
+              <div className={`flex items-center gap-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-light-bg'}`}>
+                  <MapPin size={14} className="text-gold-400" />
+                </div>
+                <span>Toshkent sh., O'zbekiston</span>
+              </div>
+              <div className={`flex items-center gap-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-light-bg'}`}>
+                  <Clock size={14} className="text-gold-400" />
+                </div>
+                <span>Dush–Shan: 09:00 – 20:00</span>
+              </div>
             </div>
-            <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <Mail size={16} />
-              <span>support@paketshop.uz</span>
+
+            {/* Social Links */}
+            <div className="flex gap-3">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
+                <Instagram size={16} />
+              </a>
+              <a href="https://t.me/paketshopuz" target="_blank" rel="noopener noreferrer" className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
+                <Send size={16} />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
+                <Facebook size={16} />
+              </a>
+              <a href="mailto:support@paketshop.uz" className={`w-9 h-9 rounded-full flex items-center justify-center hover:bg-gold-400 hover:text-black transition-all ${isDark ? 'bg-white/5 text-gray-400' : 'bg-light-bg text-light-muted'}`}>
+                <Mail size={16} />
+              </a>
             </div>
           </div>
         </div>

@@ -4,6 +4,9 @@ import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
 import CategoryGrid from './components/CategoryGrid';
 import Footer from './components/Footer';
+import TrustBadges from './components/TrustBadges';
+import Testimonials from './components/Testimonials';
+import PromoBanner from './components/PromoBanner';
 import ProductDetail from './components/ProductDetail';
 import CartSidebar from './components/CartSidebar';
 import Checkout from './components/Checkout';
@@ -483,10 +486,12 @@ const AppContent: React.FC = () => {
     return (
       <main className="pb-20">
         <Hero content={heroContent} />
+        <TrustBadges />
         <CategoryGrid
           categories={categories}
           onSelectCategory={handleCategorySelect}
         />
+        <PromoBanner />
         <FeaturedProducts
           products={products}
           categories={categories}
@@ -494,6 +499,7 @@ const AppContent: React.FC = () => {
           onNavigateToProduct={navigateToProduct}
           isLoading={isLoading}
         />
+        <Testimonials />
         <BlogGrid posts={blogPosts} onPostClick={navigateToBlogPost} />
       </main>
     );
