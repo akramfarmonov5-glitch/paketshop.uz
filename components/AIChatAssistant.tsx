@@ -160,9 +160,13 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     if (e.key === 'Enter') handleSend();
   };
 
-  const connectLive = async () => {
+  const connectLive = async (isFallback = false) => {
     const env = import.meta.env || {};
-    const apiKey = env.VITE_GEMINI_API_KEY;
+    const mainKey = env.VITE_GEMINI_API_KEY;
+    const backupKey = env.VITE_GEMINI_API_KEY1 || mainKey;
+    const apiKey = isFallback ? backupKey : mainKey;
+    const modelName = isFallback ? 'gemini-2.5-flash-live' : 'gemini-3.1-flash-live-preview';
+
     if (!apiKey) {
       setMessages(prev => [...prev, { role: 'model', text: "⚠️ API kalit topilmadi." }]);
       return;
@@ -181,7 +185,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       const ai = new GoogleGenAI({ apiKey });
 
       const sessionPromise = ai.live.connect({
-        model: 'gemini-3.1-flash-live-preview',
+        model: modelName,
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -193,7 +197,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         },
         callbacks: {
           onopen: () => {
-            console.log("Live session connected");
+            console.log(`Live session connected via ${modelName}`);
 
             if (!inputAudioContextRef.current || !streamRef.current) return;
 
@@ -209,7 +213,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                   if (typeof session.send === 'function') {
                     session.send({ realtimeInput: { mediaChunks: [pcmBlob] } });
                   } else if (typeof session.sendRealtimeInput === 'function') {
-                    // Try array format or direct object format based on typical SDKs
                     try {
                       session.sendRealtimeInput([pcmBlob]);
                     } catch (err) {
@@ -281,14 +284,27 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           },
           onclose: (event: any) => {
             console.log("Live session closed", event);
-            const reason = event?.reason || event?.code || '';
-            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Ovozli aloqa uzildi. ${reason}` }]);
-            disconnectLive();
+            if (!isFallback && event?.code !== 1000) {
+              // Standard close is 1000, if not 1000 and not fallback, try fallback
+              console.log("Abnormal close, trying fallback model...");
+              disconnectLive();
+              setTimeout(() => connectLive(true), 500);
+            } else {
+              const reason = event?.reason || event?.code || '';
+              setMessages(prev => [...prev, { role: 'model', text: `⚠️ Ovozli aloqa uzildi. ${reason}` }]);
+              disconnectLive();
+            }
           },
           onerror: (err: any) => {
             console.error("Live session error", err);
-            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Tarmoq xatoligi yuz berdi: Ovozli aloqaga ulanib bo'lmadi.` }]);
-            disconnectLive();
+            if (!isFallback) {
+              console.log("Error occurred, trying fallback model...");
+              disconnectLive();
+              setTimeout(() => connectLive(true), 500);
+            } else {
+              setMessages(prev => [...prev, { role: 'model', text: `⚠️ Tarmoq xatoligi yuz berdi: Ovozli aloqaga ulanib bo'lmadi.` }]);
+              disconnectLive();
+            }
           }
         }
       });
@@ -297,8 +313,14 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     } catch (e: any) {
       console.error("Failed to connect live", e);
-      setIsLive(false);
-      setMessages(prev => [...prev, { role: 'model', text: `⚠️ Xatolik: ${e.message || "Ovozli aloqaga ulanib bo'lmadi."}` }]);
+      if (!isFallback) {
+        console.log("Connection failed, trying fallback model...");
+        disconnectLive();
+        setTimeout(() => connectLive(true), 500);
+      } else {
+        setIsLive(false);
+        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Xatolik: ${e.message || "Ovozli aloqaga ulanib bo'lmadi."}` }]);
+      }
     }
   };
 
@@ -405,7 +427,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
               <div className="flex gap-2">
                 {isRegistered && (
                   <button
-                    onClick={isLive ? disconnectLive : connectLive}
+                    onClick={() => isLive ? disconnectLive() : connectLive()}
                     className={`p-2 rounded-full transition-colors ${isLive ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'hover:bg-white/10 text-gray-400 hover:text-white'}`}
                     title={isLive ? "Tugatish" : "Ovozli suhbat"}
                   >
