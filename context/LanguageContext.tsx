@@ -102,6 +102,35 @@ const translations: Translations = {
     'Likpachalar': { uz: 'Likpachalar', ru: 'Тарелки', en: 'Plates' },
     'Likopchalar': { uz: 'Likopchalar', ru: 'Тарелки', en: 'Plates' },
     'Maishiy kimyo (Umumiy assortiment)': { uz: 'Maishiy kimyo (Umumiy assortiment)', ru: 'Бытовая химия (Общий ассортимент)', en: 'Household Chemicals (General assortment)' },
+
+    // Trust Badges
+    trust_badge_label: { uz: 'Kafolatlar', ru: 'Гарантии', en: 'Guarantees' },
+    trust_title: { uz: 'Nima uchun bizni', ru: 'Почему выбирают', en: 'Why choose' },
+    trust_title_highlight: { uz: 'tanlashadi?', ru: 'нас?', en: 'us?' },
+    trust_delivery_title: { uz: 'Bepul yetkazish', ru: 'Бесплатная доставка', en: 'Free Delivery' },
+    trust_delivery_desc: { uz: '1 mln so\'mdan yuqori buyurtmalar uchun butun O\'zbekiston bo\'ylab', ru: 'Для заказов свыше 1 млн сум по всему Узбекистану', en: 'For orders over 1M UZS across Uzbekistan' },
+    trust_quality_title: { uz: 'Sifat kafolati', ru: 'Гарантия качества', en: 'Quality Guarantee' },
+    trust_quality_desc: { uz: 'Barcha mahsulotlar sertifikatlangan va sifat nazoratidan o\'tgan', ru: 'Вся продукция сертифицирована и прошла контроль качества', en: 'All products are certified and quality controlled' },
+    trust_payment_title: { uz: 'Xavfsiz to\'lov', ru: 'Безопасная оплата', en: 'Secure Payment' },
+    trust_payment_desc: { uz: 'Payme, Click, Naqd va boshqa qulay usullar', ru: 'Payme, Click, наличные и другие удобные способы', en: 'Payme, Click, Cash and other convenient methods' },
+    trust_return_title: { uz: '14 kun qaytarish', ru: 'Возврат 14 дней', en: '14 Day Returns' },
+    trust_return_desc: { uz: 'Mahsulot yoqmasa, 14 kun ichida qaytarishingiz mumkin', ru: 'Если товар не подошел, вернуть можно в течение 14 дней', en: 'Return within 14 days if you\'re not satisfied' },
+
+    // Testimonials
+    testimonials_label: { uz: 'Mijozlar fikrlari', ru: 'Отзывы клиентов', en: 'Customer Reviews' },
+    testimonials_title: { uz: 'Xaridorlarimiz', ru: 'Что говорят', en: 'What our customers' },
+    testimonials_highlight: { uz: 'nima deydi?', ru: 'клиенты?', en: 'say?' },
+
+    // Promo Banner
+    promo_label: { uz: 'Maxsus aksiya', ru: 'Специальная акция', en: 'Special Offer' },
+    promo_title: { uz: 'Katta chegirmalar!', ru: 'Большие скидки!', en: 'Big Discounts!' },
+    promo_desc: { uz: 'Tanlangan mahsulotlarga 20% gacha chegirma. Vaqt cheklangan!', ru: 'Скидки до 20% на выбранные товары. Время ограничено!', en: 'Up to 20% off selected products. Limited time!' },
+    promo_days: { uz: 'Kun', ru: 'Дней', en: 'Days' },
+    promo_hours: { uz: 'Soat', ru: 'Часов', en: 'Hours' },
+    promo_minutes: { uz: 'Daqiqa', ru: 'Минут', en: 'Minutes' },
+    promo_seconds: { uz: 'Soniya', ru: 'Секунд', en: 'Seconds' },
+    promo_shop: { uz: 'Xarid qilish', ru: 'Купить', en: 'Shop Now' },
+
     'Soatlar': { uz: 'Soatlar', ru: 'Часы', en: 'Watches' },
     'Sumkalar': { uz: 'Sumkalar', ru: 'Сумки', en: 'Bags' },
     'Ko\'zoynaklar': { uz: 'Ko\'zoynaklar', ru: 'Очки', en: 'Glasses' },
