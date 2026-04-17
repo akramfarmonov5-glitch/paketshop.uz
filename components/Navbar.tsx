@@ -14,9 +14,10 @@ interface NavbarProps {
   onProfileClick?: () => void;
   onSearchClick?: () => void;
   onWishlistClick?: () => void;
+  onTrackingClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DEFAULT_NAVIGATION, onProfileClick, onSearchClick, onWishlistClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DEFAULT_NAVIGATION, onProfileClick, onSearchClick, onWishlistClick, onTrackingClick }) => {
   const { cartCount, toggleCart } = useCart();
   const { wishlist } = useWishlist();
   const { isDark, toggleTheme } = useTheme();
@@ -72,13 +73,13 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           <button onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
             {t('nav_home')}
           </button>
-          <button onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
+          <button onClick={() => { onNavigateHome(); setTimeout(() => { const el = document.getElementById('featured-products'); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: y, behavior: 'smooth' }); }}, 150); }} className="hover:text-gold-400 transition-colors">
             {t('nav_catalog')}
           </button>
-          <button onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
+          <button onClick={() => { onNavigateHome(); setTimeout(() => { const el = document.querySelector('section:last-of-type'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); }} className="hover:text-gold-400 transition-colors">
             {t('nav_blog')}
           </button>
-          <button onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
+          <button onClick={onTrackingClick} className="hover:text-gold-400 transition-colors">
             {t('nav_tracking')}
           </button>
         </div>
@@ -254,7 +255,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                     <span className="font-medium">{t('nav_blog')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
-                  <button key="tracking" onClick={handleMobileLinkClick} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
+                  <button key="tracking" onClick={() => { setIsMobileMenuOpen(false); if (onTrackingClick) onTrackingClick(); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
                     <span className="font-medium">{t('nav_tracking')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>

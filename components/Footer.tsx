@@ -28,10 +28,10 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_categories')}</h4>
             <ul className={`space-y-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Paketlar</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Stakanlar</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Aksessuarlar</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Tozalash inventarlari</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Chiqindi paketlari</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Salfetka va lattalar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Zip-Lock paketlar</a></li>
+              <li><a href="#!" className="hover:text-gold-400 transition-colors">Konteynerlar va idishlar</a></li>
             </ul>
           </div>
 

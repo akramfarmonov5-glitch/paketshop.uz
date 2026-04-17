@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import FeaturedProducts from './components/FeaturedProducts';
@@ -206,7 +207,13 @@ const AppContent: React.FC = () => {
         if (productError) throw productError;
 
         if (productData && productData.length > 0) {
-          setProducts(productData as Product[]);
+          const mappedProducts = productData.map(p => ({
+            ...p,
+            formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(p.price)) + ' UZS',
+            shortDescription: p.description || '',
+            specs: p.specifications || []
+          }));
+          setProducts(mappedProducts as Product[]);
         } else {
           setProducts(MOCK_PRODUCTS);
         }
@@ -219,7 +226,11 @@ const AppContent: React.FC = () => {
         if (categoryError) throw categoryError;
 
         if (categoryData && categoryData.length > 0) {
-          setCategories(categoryData as Category[]);
+          const mappedCategories = categoryData.map(c => ({
+            ...c,
+            slug: slugify(c.name)
+          }));
+          setCategories(mappedCategories as Category[]);
         } else {
           setCategories(MOCK_CATEGORIES);
         }
@@ -293,6 +304,16 @@ const AppContent: React.FC = () => {
   const navigateToBlogPost = (id: number) => navigate({ name: 'BLOG_POST', postId: id });
 
   const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  // CATEGORY route uchun activeCategory ni useEffect orqali o'rnatish (render ichida setState oldini olish)
+  useEffect(() => {
+    if (currentRoute.name === 'CATEGORY') {
+      const cat = categories.find(c => slugify(c.name) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
+      if (cat && activeCategory !== cat.name) {
+        setActiveCategory(cat.name);
+      }
+    }
+  }, [currentRoute, categories]);
 
   const handleCategorySelect = (categoryName: string) => {
     setActiveCategory(categoryName);
@@ -507,6 +528,14 @@ const AppContent: React.FC = () => {
     }
 
     if (currentRoute.name === 'PRODUCT') {
+      if (isLoading) {
+        return (
+          <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
+            <div className="w-12 h-12 border-4 border-gold-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className={isDark ? 'text-gray-400' : 'text-light-muted'}>Yuklanmoqda...</p>
+          </div>
+        );
+      }
       const product = products.find(p => p.id === currentRoute.productId);
       if (product) {
         return (
@@ -519,6 +548,15 @@ const AppContent: React.FC = () => {
           />
         );
       }
+      // 404 — Mahsulot topilmadi
+      return (
+        <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-6 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
+          <div className={`text-6xl mb-4`}>📦</div>
+          <h2 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-light-text'}`}>Mahsulot topilmadi</h2>
+          <p className={`mb-8 max-w-md ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Kechirasiz, siz qidirayotgan mahsulot mavjud emas yoki o'chirilgan bo'lishi mumkin.</p>
+          <button onClick={navigateToHome} className="px-8 py-3 bg-gold-400 text-black font-bold rounded-full hover:bg-gold-500 transition-colors">Bosh sahifaga qaytish</button>
+        </div>
+      );
     }
 
     if (currentRoute.name === 'BLOG_POST') {
@@ -526,13 +564,15 @@ const AppContent: React.FC = () => {
       if (post) {
         return <BlogPostDetail post={post} onBack={navigateToHome} />;
       }
-    }
-
-    if (currentRoute.name === 'CATEGORY') {
-      const cat = categories.find(c => slugify(c.name) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
-      if (cat) {
-        setActiveCategory(cat.name);
-      }
+      // 404 — Blog post topilmadi
+      return (
+        <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-6 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
+          <div className={`text-6xl mb-4`}>📝</div>
+          <h2 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-light-text'}`}>Maqola topilmadi</h2>
+          <p className={`mb-8 max-w-md ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Kechirasiz, siz qidirayotgan blog maqolasi mavjud emas.</p>
+          <button onClick={navigateToHome} className="px-8 py-3 bg-gold-400 text-black font-bold rounded-full hover:bg-gold-500 transition-colors">Bosh sahifaga qaytish</button>
+        </div>
+      );
     }
 
     return (
@@ -570,6 +610,7 @@ const AppContent: React.FC = () => {
           onProfileClick={handleProfileClick}
           onSearchClick={() => setIsSearchOpen(true)}
           onWishlistClick={navigateToWishlist}
+          onTrackingClick={navigateToTracking}
         />
       )}
 
@@ -601,12 +642,13 @@ const AppContent: React.FC = () => {
         <Footer onAdminClick={navigateToAdmin} />
       )}
 
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <InstallPWA />
     </div>
   );
 };
 
-import { LanguageProvider } from './context/LanguageContext'; // Added import for LanguageProvider
+// LanguageProvider import moved to top of file
 
 const App: React.FC = () => {
   return (
