@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>${product.image ? `
     <image:image>
-      <image:loc>${product.image}</image:loc>
+      <image:loc>${escapeXml(product.image)}</image:loc>
       <image:title>${escapeXml(product.name)}</image:title>
       <image:caption>${escapeXml(product.shortDescription || product.name)}</image:caption>
     </image:image>` : ''}
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>${post.image ? `
     <image:image>
-      <image:loc>${post.image}</image:loc>
+      <image:loc>${escapeXml(post.image)}</image:loc>
       <image:title>${escapeXml(post.title)}</image:title>
     </image:image>` : ''}
   </url>`;
