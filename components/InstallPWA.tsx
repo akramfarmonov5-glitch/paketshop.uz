@@ -23,14 +23,20 @@ const InstallPWA: React.FC = () => {
     setIsIOS(isIOSDevice);
 
     // Listen for Android/Chrome install prompt
+    const isDismissedRecently = () => {
+      const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
+      if (!dismissedAt) return false;
+      const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+      return daysSince < 7; // Show again after 7 days
+    };
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       
       // Delay showing the prompt slightly so it's not too intrusive on first load
       setTimeout(() => {
-        const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
-        if (!hasDismissed) {
+        if (!isDismissedRecently()) {
           setShowPrompt(true);
         }
       }, 5000);
@@ -41,8 +47,7 @@ const InstallPWA: React.FC = () => {
     // For iOS we just show it if not dismissed
     if (isIOSDevice) {
       setTimeout(() => {
-        const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
-        if (!hasDismissed) {
+        if (!isDismissedRecently()) {
           setShowPrompt(true);
         }
       }, 5000);
@@ -69,7 +74,7 @@ const InstallPWA: React.FC = () => {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa_prompt_dismissed', 'true');
+    localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
   };
 
   if (!showPrompt) return null;

@@ -1,0 +1,35 @@
+{
+  "name": "PaketShop.uz - Online Do'kon",
+  "short_name": "PaketShop",
+  "description": "O'zbekistondagi ishonchli onlayn do'kon. Sifatli mahsulotlar, qulay narxlar.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#D4A574",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "uz",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo-light.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
