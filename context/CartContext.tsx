@@ -57,7 +57,13 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const removeFromCart = (productId: number) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+    setCart((prevCart) => {
+      const newCart = prevCart.filter((item) => item.id !== productId);
+      if (newCart.length === 0) {
+        setIsCartOpen(false);
+      }
+      return newCart;
+    });
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
