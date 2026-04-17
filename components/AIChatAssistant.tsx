@@ -169,7 +169,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     }
 
     setIsLive(true);
-    setMessages(prev => [...prev, { role: 'model', text: "📞 Ovozli aloqa o'rnatilmoqda..." }]);
 
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
