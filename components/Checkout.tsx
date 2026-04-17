@@ -243,7 +243,7 @@ ${discountInfo}
                 <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Telefon raqam</label>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>+998</span>
-                  <input required name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="90 123 45 67" />
+                  <input required name="phone" type="tel" pattern="[0-9 ]{9,12}" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="90 123 45 67" />
                 </div>
               </div>
 
