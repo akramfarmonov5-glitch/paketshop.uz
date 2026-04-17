@@ -146,7 +146,7 @@ const AppContent: React.FC = () => {
       window.history.pushState({ route }, '', url);
     }
     if (route.name !== 'ADMIN') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
     }
   }, [products, blogPosts]);
 
@@ -271,13 +271,15 @@ const AppContent: React.FC = () => {
       setTimeout(() => {
         const element = document.getElementById('featured-products');
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
+          const y = element.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
         }
-      }, 100);
+      }, 150);
     } else {
       const element = document.getElementById('featured-products');
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        const y = element.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: y, behavior: 'smooth' });
       }
     }
   };
