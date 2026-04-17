@@ -201,6 +201,16 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           onopen: () => {
             console.log(`Live session connected via ${modelName}`);
 
+            sessionPromise.then((session: any) => {
+              try {
+                if (typeof session.send === 'function') {
+                  session.send({ clientContent: { turns: [{ role: 'user', parts: [{ text: `Salom, men siz bilan ulandim. Qisqacha ovozli tarzda salomlashing va do'konimizdan nima qidirayotganimni so'rang.` }] }] } });
+                }
+              } catch (err) {
+                console.error("Failed to send initial prompt", err);
+              }
+            });
+
             if (!inputAudioContextRef.current || !streamRef.current) return;
 
             const source = inputAudioContextRef.current.createMediaStreamSource(streamRef.current);
@@ -231,32 +241,37 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
             scriptProcessor.connect(inputAudioContextRef.current.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio && audioContextRef.current) {
-              const ctx = audioContextRef.current;
-              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+            const parts = message.serverContent?.modelTurn?.parts;
+            if (parts && parts.length > 0) {
+              for (const part of parts) {
+                const base64Audio = part.inlineData?.data;
+                if (base64Audio && audioContextRef.current) {
+                  const ctx = audioContextRef.current;
+                  nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
 
-              try {
-                const audioBuffer = await decodeAudioData(
-                  decode(base64Audio),
-                  ctx,
-                  24000,
-                  1
-                );
+                  try {
+                    const audioBuffer = await decodeAudioData(
+                      decode(base64Audio),
+                      ctx,
+                      24000,
+                      1
+                    );
 
-                const source = ctx.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(ctx.destination);
+                    const source = ctx.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(ctx.destination);
 
-                source.addEventListener('ended', () => {
-                  sourceNodesRef.current.delete(source);
-                });
+                    source.addEventListener('ended', () => {
+                      sourceNodesRef.current.delete(source);
+                    });
 
-                source.start(nextStartTimeRef.current);
-                nextStartTimeRef.current += audioBuffer.duration;
-                sourceNodesRef.current.add(source);
-              } catch (e) {
-                console.error("Audio decode error", e);
+                    source.start(nextStartTimeRef.current);
+                    nextStartTimeRef.current += audioBuffer.duration;
+                    sourceNodesRef.current.add(source);
+                  } catch (e) {
+                    console.error("Audio decode error", e);
+                  }
+                }
               }
             }
 
@@ -392,7 +407,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     sampleRate: number,
     numChannels: number,
   ): Promise<AudioBuffer> {
-    const dataInt16 = new Int16Array(data.buffer);
+    const dataInt16 = new Int16Array(data.buffer, data.byteOffset, Math.floor(data.byteLength / 2));
     const frameCount = dataInt16.length / numChannels;
     const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
