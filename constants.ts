@@ -28,165 +28,173 @@ export const DEFAULT_NAVIGATION: NavigationSettings = {
 export const MOCK_CATEGORIES: Category[] = [
   {
     id: 1,
-    name: 'Soatlar',
-    slug: 'soatlar',
-    image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1000&auto=format&fit=crop',
-    description: 'Vaqtni qadrlaydiganlar uchun eksklyuziv shveytsariya soatlari.',
-    googleProductCategory: 'Apparel & Accessories > Jewelry > Watches'
+    name: 'Chiqindi paketlari',
+    slug: 'chiqindi-paketlari',
+    image: 'https://images.unsplash.com/photo-1610555356070-d1fb336f13b1?q=80&w=1000&auto=format&fit=crop',
+    description: 'Sifatli va mustahkam chiqindi qoplari.',
+    googleProductCategory: 'Home & Garden > Household Supplies > Waste Containment'
   },
   {
     id: 2,
-    name: 'Sumkalar',
-    slug: 'sumkalar',
-    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop',
-    description: 'Italiya charmidan tayyorlangan premium sumkalar.',
-    googleProductCategory: 'Apparel & Accessories > Handbags, Wallets & Cases'
+    name: 'Salfetka va lattalar',
+    slug: 'salfetka-lattalar',
+    image: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?q=80&w=1000&auto=format&fit=crop',
+    description: 'Tozalash ishlari uchun universal va mikrofibra lattalar.',
+    googleProductCategory: 'Home & Garden > Household Supplies > Cleaning Supplies'
   },
   {
     id: 3,
-    name: 'Ko\'zoynaklar',
-    slug: 'kozoynaklar',
-    image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop',
-    description: 'Quyoshdan himoya va betakror uslub.',
-    googleProductCategory: 'Apparel & Accessories > Clothing Accessories > Sunglasses'
+    name: 'Zip-Lock paketlar',
+    slug: 'zip-lock',
+    image: 'https://images.unsplash.com/photo-1605600659908-0befcd3d6331?q=80&w=1000&auto=format&fit=crop',
+    description: 'Zich yopiladigan, shaffof zip-paketlar.',
+    googleProductCategory: 'Business & Industrial > Material Handling > Packaging & Shipping'
   },
   {
     id: 4,
-    name: 'Parfyumeriya',
-    slug: 'parfyumeriya',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop',
-    description: 'Betakror iforlar kolleksiyasi.',
-    googleProductCategory: 'Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne'
-  },
-  {
-    id: 5,
-    name: 'Aksessuarlar',
-    slug: 'aksessuarlar',
-    image: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=1000&auto=format&fit=crop',
-    description: 'Obrazingizni to\'ldiruvchi muhim detallar.',
-    googleProductCategory: 'Apparel & Accessories > Clothing Accessories'
+    name: 'Konteynerlar va idishlar',
+    slug: 'konteynerlar',
+    image: 'https://images.unsplash.com/photo-1596649811779-16a70a8d67c5?q=80&w=1000&auto=format&fit=crop',
+    description: 'Oziq-ovqat konteynerlari va bir martalik idishlar.',
+    googleProductCategory: 'Home & Garden > Kitchen & Dining > Food Storage'
   }
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
   {
     id: 1,
-    name: "Midnight Chronograph",
-    price: 12500000,
-    formattedPrice: "12 500 000 UZS",
-    category: "Soatlar",
-    image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Tungi osmon ilhomi bilan yaratilgan, olmos qoplamali eksklyuziv soat.",
+    name: "Musor paketlari Professional 50x70 sm",
+    price: 8500,
+    formattedPrice: "8 500 UZS",
+    category: "Chiqindi paketlari",
+    image: "https://images.unsplash.com/photo-1610555356070-d1fb336f13b1?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Sifatli va mustahkam qora rangli chiqindi qoplari, kundalik foydalanish uchun qulay.",
+    stock: 500,
+    itemsPerPackage: 25,
     specs: [
-      { label: "Mexanizm", value: "Swiss Automatic" },
-      { label: "Korpus", value: "Titanium Grade 5" },
-      { label: "Suvga chidamli", value: "100m" },
-      { label: "Oyna", value: "Safir kristal" }
+      { label: "O'lcham", value: "50x70 sm" },
+      { label: "Soni", value: "25 dona" },
+      { label: "Rang", value: "Qora" },
+      { label: "Material", value: "Zich polietilen" }
     ]
   },
   {
     id: 2,
-    name: "Royal Leather Bag",
-    price: 4800000,
-    formattedPrice: "4 800 000 UZS",
-    category: "Sumkalar",
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Italiya charmidan qo'lda tikilgan, aslzodalar uchun maxsus dizayn.",
+    name: "Chiqindi uchun qoplar 70x90 sm",
+    price: 8000,
+    formattedPrice: "8 000 UZS",
+    category: "Chiqindi paketlari",
+    image: "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Katta hajmli va baquvvat chiqindi qoplari, ofis va xo'jalik ishlari uchun mos.",
+    stock: 300,
+    itemsPerPackage: 20,
     specs: [
-      { label: "Material", value: "Haqiqiy charm" },
-      { label: "O'lchami", value: "35x25x15 sm" },
-      { label: "Rang", value: "Konyak" },
-      { label: "Furnitura", value: "Oltin qoplama" }
+      { label: "O'lcham", value: "70x90 sm" },
+      { label: "Soni", value: "20 dona" },
+      { label: "Hajm", value: "120L" },
+      { label: "Turi", value: "Mustahkamlangan" }
     ]
   },
   {
     id: 3,
-    name: "Aviator Elite",
-    price: 2100000,
-    formattedPrice: "2 100 000 UZS",
-    category: "Ko'zoynaklar",
-    image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Klassik uslub va zamonaviy himoya texnologiyalari uyg'unligi.",
+    name: "Verita universal tozalash lattalari",
+    price: 8000,
+    formattedPrice: "8 000 UZS",
+    category: "Salfetka va lattalar",
+    image: "https://images.unsplash.com/photo-1584820927498-cafe2c1c6e1e?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Yuqori sifatli universal lattalar, har qanday yuzani tozalash uchun ideal.",
+    stock: 150,
+    itemsPerPackage: 3,
     specs: [
-      { label: "Linza", value: "Polarized UV400" },
-      { label: "Ramka", value: "Aviatsiya alyuminiysi" },
-      { label: "Uslub", value: "Vintage Pilot" },
-      { label: "Og'irligi", value: "24g" }
+      { label: "Turi", value: "Universal latta" },
+      { label: "Soni", value: "3 dona" },
+      { label: "Ishlab chiqaruvchi", value: "Verita (Germaniya)" },
+      { label: "Xususiyat", value: "Namlikni yaxshi tortadi" }
     ]
   },
   {
     id: 4,
-    name: "Essence No. 5",
-    price: 3500000,
-    formattedPrice: "3 500 000 UZS",
-    category: "Parfyumeriya",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Noyob gullar va sharq ziravorlarining sehrli aralashmasi.",
+    name: "Mikrofibra lattalar",
+    price: 17000,
+    formattedPrice: "17 000 UZS",
+    category: "Salfetka va lattalar",
+    image: "https://images.unsplash.com/photo-1585421514738-01798e348b17?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Uy va avtomobil uchun mikrofibra matoli lattalar, suvni yaxshi tortadi.",
+    stock: 200,
+    itemsPerPackage: 1,
     specs: [
-      { label: "Hajmi", value: "100ml" },
-      { label: "Turi", value: "Eau de Parfum" },
-      { label: "Nota", value: "Jasmine, Sandalwood" },
-      { label: "Davomiyligi", value: "12 soat+" }
+      { label: "Material", value: "Mikrofibra" },
+      { label: "Qo'llanilishi", value: "Uy va Avtomobil" },
+      { label: "Afzalligi", value: "Dog' qoldirmaydi" },
+      { label: "Hajmi", value: "40x40 sm" }
     ]
   },
   {
     id: 5,
-    name: "Golden Horizon Heels",
-    price: 1800000,
-    formattedPrice: "1 800 000 UZS",
-    category: "Poyabzal",
-    image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Har bir qadamingizda o'zingizga bo'lgan ishonch va nafosat.",
+    name: "Ziplock paketlar 6x9 sm",
+    price: 5000,
+    formattedPrice: "5 000 UZS",
+    category: "Zip-Lock paketlar",
+    image: "https://images.unsplash.com/photo-1605600659908-0befcd3d6331?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Mayda buyumlarni saqlash uchun qulay qulflanadigan kichik paketlar.",
+    stock: 1000,
+    itemsPerPackage: 200,
     specs: [
-      { label: "Material", value: "Zamsh" },
-      { label: "Balandligi", value: "10sm" },
-      { label: "Taglik", value: "Qizil lak" },
-      { label: "Ishlab chiqarilgan", value: "Fransiya" }
+      { label: "O'lcham", value: "6x9 sm" },
+      { label: "Soni", value: "200 dona" },
+      { label: "Turi", value: "Shaffof Zip-lock" },
+      { label: "Material", value: "Polietilen" }
     ]
   },
   {
     id: 6,
-    name: "Obsidian Cufflinks",
-    price: 950000,
-    formattedPrice: "950 000 UZS",
-    category: "Aksessuarlar",
-    image: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Ishbilarmon erkaklar uchun minimalist va jiddiy uslubdagi tugmalar.",
+    name: "Ziplock paketlar 5x7 sm",
+    price: 4000,
+    formattedPrice: "4 000 UZS",
+    category: "Zip-Lock paketlar",
+    image: "https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Zich yopiladigan, shaffof va sifatli polietilen zip-paketlar.",
+    stock: 1200,
+    itemsPerPackage: 200,
     specs: [
-      { label: "Tosh", value: "Qora Oniks" },
-      { label: "Metall", value: "Kumush 925" },
-      { label: "Shakli", value: "Kvadrat" },
-      { label: "To'plam", value: "Sovg'a qutisi bilan" }
+      { label: "O'lcham", value: "5x7 sm" },
+      { label: "Soni", value: "200 dona" },
+      { label: "Zichligi", value: "Standart" },
+      { label: "Qulf turi", value: "Germetik" }
     ]
   },
   {
     id: 7,
-    name: "Silk Monarch Scarf",
-    price: 1200000,
-    formattedPrice: "1 200 000 UZS",
-    category: "Aksessuarlar",
-    image: "https://images.unsplash.com/photo-1584030373081-f37b7bb4fa8e?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "100% tabiiy ipakdan to'qilgan, yumshoq va nafis sharf.",
+    name: "Plastik oziq-ovqat konteyneri 1000ml",
+    price: 230000,
+    formattedPrice: "230 000 UZS",
+    category: "Konteynerlar va idishlar",
+    image: "https://images.unsplash.com/photo-1596649811779-16a70a8d67c5?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Issiq va sovuq taomlar uchun mo'ljallangan plastik idishlar to'plami.",
+    stock: 50,
+    itemsPerPackage: 200,
     specs: [
-      { label: "Material", value: "100% Ipak" },
-      { label: "O'lchami", value: "90x90 sm" },
-      { label: "Naqsh", value: "Barokko" },
-      { label: "Mavsum", value: "Barcha mavsum" }
+      { label: "Hajmi", value: "1000 ml" },
+      { label: "Soni", value: "200 dona" },
+      { label: "Turi", value: "Oziq-ovqat uchun" },
+      { label: "Material", value: "Oziq-ovqat plastigi" }
     ]
   },
   {
     id: 8,
-    name: "Titan Smart Ring",
-    price: 3200000,
-    formattedPrice: "3 200 000 UZS",
-    category: "Texnologiya",
-    image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000&auto=format&fit=crop",
-    shortDescription: "Salomatlikni kuzatuvchi kelajak uzugi. Ko'rinmas texnologiya.",
+    name: "Plastik sanchqilar (PS)",
+    price: 13000,
+    formattedPrice: "13 000 UZS",
+    category: "Konteynerlar va idishlar",
+    image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=1000&auto=format&fit=crop",
+    shortDescription: "Bir marta ishlatiladigan sifatli plastik sanchqilar.",
+    stock: 800,
+    itemsPerPackage: 100,
     specs: [
-      { label: "Batareya", value: "7 kun" },
-      { label: "Sensorlar", value: "Yurak urishi, Uyqu" },
-      { label: "Material", value: "Titan" },
-      { label: "Suvga chidamli", value: "IP68" }
+      { label: "Turi", value: "Sanchqi" },
+      { label: "Soni", value: "100 dona" },
+      { label: "Material", value: "Polistirol (PS)" },
+      { label: "Rang", value: "Oq" }
     ]
   }
 ];
