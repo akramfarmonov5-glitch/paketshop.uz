@@ -170,16 +170,38 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           </button>
 
           {/* Mobile Language Switcher */}
-          <div className="flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-lg border border-gray-200 dark:border-white/10">
-            {languages.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => setLang(l.code)}
-                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${lang === l.code ? 'bg-gold-400 text-black shadow-sm' : isDark ? 'text-gray-400' : 'text-gray-500'}`}
-              >
-                {l.label}
-              </button>
-            ))}
+          <div className="relative">
+            <button
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-100 border-gray-200'}`}
+            >
+              <span className="text-gold-400 uppercase">{lang}</span>
+              <ChevronRight size={12} className={`transition-transform duration-300 ${isLangOpen ? 'rotate-90' : 'rotate-0'}`} />
+            </button>
+
+            <AnimatePresence>
+              {isLangOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className={`absolute top-full right-0 mt-2 p-1.5 rounded-xl border backdrop-blur-xl shadow-2xl min-w-[70px] ${isDark ? 'bg-dark-800/90 border-white/10' : 'bg-white/90 border-gray-200'}`}
+                >
+                  {languages.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => {
+                        setLang(l.code);
+                        setIsLangOpen(false);
+                      }}
+                      className={`w-full text-center px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${lang === l.code ? 'bg-gold-400 text-black' : isDark ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </motion.nav >
