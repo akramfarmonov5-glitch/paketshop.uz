@@ -268,10 +268,12 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           },
           onclose: () => {
             console.log("Live session closed");
+            setMessages(prev => [...prev, { role: 'model', text: "⚠️ Ovozli aloqa uzildi." }]);
             disconnectLive();
           },
           onerror: (err) => {
             console.error("Live session error", err);
+            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Tarmoq xatoligi yuz berdi: Ovozli aloqaga ulanib bo'lmadi.` }]);
             disconnectLive();
           }
         }
@@ -279,10 +281,10 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
       sessionRef.current = sessionPromise;
 
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to connect live", e);
       setIsLive(false);
-      setMessages(prev => [...prev, { role: 'model', text: "⚠️ Ovozli aloqaga ulanib bo'lmadi." }]);
+      setMessages(prev => [...prev, { role: 'model', text: `⚠️ Xatolik: ${e.message || "Ovozli aloqaga ulanib bo'lmadi."}` }]);
     }
   };
 
