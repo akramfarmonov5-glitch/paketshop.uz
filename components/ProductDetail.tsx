@@ -67,7 +67,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         const prompt = `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description MUST BE in ${languageName} language. It should feel like an Apple product description: minimalist, impactful, and premium. Focus on craftsmanship and lifestyle. Max 3 sentences.`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-preview-09-2025',
+          model: 'gemini-2.5-flash',
           contents: prompt,
         });
 

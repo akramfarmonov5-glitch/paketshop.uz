@@ -83,7 +83,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
         `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-09-2025',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: { responseMimeType: 'application/json' }
       });

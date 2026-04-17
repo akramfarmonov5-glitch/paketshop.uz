@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Send, MessageCircle, Mic, PhoneOff, User, Phone, ChevronRight } from 'lucide-react';
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { Product } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -27,21 +27,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLive, setIsLive] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const inputAudioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const sessionRef = useRef<any>(null);
-  const nextStartTimeRef = useRef<number>(0);
-  const sourceNodesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-
-  const currentInputTranscription = useRef<string>('');
-  const currentOutputTranscription = useRef<string>('');
-  const userDisconnectedRef = useRef<boolean>(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,7 +37,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen, isLive, isRegistered]);
+  }, [messages, isOpen, isRegistered]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('paketshop_chat_user');
@@ -58,9 +46,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       const user = JSON.parse(savedUser);
       setFormData(user);
     }
-    return () => {
-      disconnectLive();
-    };
   }, []);
 
   const handleRegistration = async (e: React.FormEvent) => {
@@ -78,7 +63,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           phone: formData.phone,
           created_at: new Date().toISOString()
         });
-        console.log('Lead saved successfully');
       } catch (error) {
         console.error("Error saving lead:", error);
       }
@@ -114,23 +98,32 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     const userMessage = input;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
       const env = import.meta.env || {};
-      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean); // Get available keys
+      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean);
 
       let lastError;
+
+      // Prepare conversation history skipping the initial greeting if needed, or mapping properly
+      const history = newMessages.slice(1, -1).map(msg => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.text }]
+      }));
 
       for (const apiKey of keys) {
         try {
           const ai = new GoogleGenAI({ apiKey });
+          
           const chat = ai.chats.create({
-            model: 'gemini-3.1-flash-lite-preview',
+            model: 'gemini-2.5-flash',
             config: {
               systemInstruction: getSystemInstruction(),
-            }
+            },
+            history: history.length > 0 ? history : undefined
           });
 
           const response = await chat.sendMessage({ message: userMessage });
@@ -138,20 +131,18 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
           setMessages(prev => [...prev, { role: 'model', text }]);
           setIsLoading(false);
-          return; // Success, exit function
+          return; 
         } catch (error: any) {
           console.error(`Error with API key ${apiKey.substring(0, 5)}...:`, error);
           lastError = error;
-          // Continue to next key if loop isn't finished
         }
       }
 
-      // If all keys failed
       throw lastError;
 
     } catch (error: any) {
       console.error("All API Keys Failed:", error);
-      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, barcha urinishlar besamar ketdi. Xatolik: ${error.message || error}` }]);
+      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, xatolik yuz berdi: ${error.message || error}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -160,274 +151,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSend();
   };
-
-  const connectLive = async (isFallback = false) => {
-    const env = import.meta.env || {};
-    const mainKey = env.VITE_GEMINI_API_KEY;
-    const backupKey = env.VITE_GEMINI_API_KEY1 || mainKey;
-    const apiKey = isFallback ? backupKey : mainKey;
-    const modelName = isFallback ? 'models/gemini-2.5-flash-live-preview' : 'models/gemini-3.1-flash-live-preview';
-
-    if (!apiKey) {
-      setMessages(prev => [...prev, { role: 'model', text: "⚠️ API kalit topilmadi." }]);
-      return;
-    }
-
-    setIsLive(true);
-    userDisconnectedRef.current = false;
-
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-      inputAudioContextRef.current = new AudioContext({ sampleRate: 16000 });
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      const sessionPromise = ai.live.connect({
-        model: modelName,
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
-          },
-          systemInstruction: { parts: [{ text: getSystemInstruction() }] },
-        },
-        callbacks: {
-          onopen: () => {
-            console.log(`Live session connected via ${modelName}`);
-            
-            if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-              audioContextRef.current.resume();
-            }
-            if (inputAudioContextRef.current && inputAudioContextRef.current.state === 'suspended') {
-              inputAudioContextRef.current.resume();
-            }
-
-            sessionPromise.then((session: any) => {
-              try {
-                if (typeof session.send === 'function') {
-                  session.send({ clientContent: { turns: [{ role: 'user', parts: [{ text: `Salom, men siz bilan ulandim. Qisqacha ovozli tarzda salomlashing va do'konimizdan nima qidirayotganimni so'rang.` }] }], turnComplete: true } });
-                }
-              } catch (err) {
-                console.error("Failed to send initial prompt", err);
-              }
-            });
-
-            if (!inputAudioContextRef.current || !streamRef.current) return;
-
-            const source = inputAudioContextRef.current.createMediaStreamSource(streamRef.current);
-            const scriptProcessor = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
-
-            scriptProcessor.onaudioprocess = (e) => {
-              const inputData = e.inputBuffer.getChannelData(0);
-              const pcmBlob = createBlob(inputData);
-
-              sessionPromise.then((session: any) => {
-                try {
-                  if (typeof session.send === 'function') {
-                    session.send({ realtimeInput: { mediaChunks: [pcmBlob] } });
-                  } else if (typeof session.sendRealtimeInput === 'function') {
-                    try {
-                      session.sendRealtimeInput([pcmBlob]);
-                    } catch (err) {
-                      session.sendRealtimeInput({ media: pcmBlob });
-                    }
-                  }
-                } catch (err) {
-                  console.error("Error sending audio", err);
-                }
-              });
-            };
-
-            source.connect(scriptProcessor);
-            scriptProcessor.connect(inputAudioContextRef.current.destination);
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const parts = message.serverContent?.modelTurn?.parts;
-            if (parts && parts.length > 0) {
-              for (const part of parts) {
-                if (part.text) {
-                  currentOutputTranscription.current += part.text;
-                }
-                const base64Audio = part.inlineData?.data;
-                if (base64Audio && audioContextRef.current) {
-                  const ctx = audioContextRef.current;
-                  nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
-
-                  try {
-                    const audioBuffer = await decodeAudioData(
-                      decode(base64Audio),
-                      ctx,
-                      24000,
-                      1
-                    );
-
-                    const source = ctx.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(ctx.destination);
-
-                    source.onended = () => {
-                      sourceNodesRef.current.delete(source);
-                    };
-
-                    source.start(nextStartTimeRef.current);
-                    nextStartTimeRef.current += audioBuffer.duration;
-                    sourceNodesRef.current.add(source);
-                  } catch (e) {
-                    console.error("Audio decode error", e);
-                  }
-                }
-              }
-            }
-
-            if (message.serverContent?.outputTranscription) {
-              currentOutputTranscription.current += message.serverContent.outputTranscription.text;
-            } else if (message.serverContent?.inputTranscription) {
-              currentInputTranscription.current += message.serverContent.inputTranscription.text;
-            }
-
-            if (message.serverContent?.turnComplete) {
-              if (currentInputTranscription.current.trim()) {
-                setMessages(prev => [...prev, { role: 'user', text: currentInputTranscription.current }]);
-                currentInputTranscription.current = '';
-              }
-              if (currentOutputTranscription.current.trim()) {
-                setMessages(prev => [...prev, { role: 'model', text: currentOutputTranscription.current }]);
-                currentOutputTranscription.current = '';
-              }
-            }
-
-            if (message.serverContent?.interrupted) {
-              sourceNodesRef.current.forEach(node => node.stop());
-              sourceNodesRef.current.clear();
-              nextStartTimeRef.current = 0;
-              currentOutputTranscription.current = '';
-            }
-          },
-          onclose: (event: any) => {
-            console.log("Live session closed", event);
-            if (!isFallback && !userDisconnectedRef.current) {
-              console.log("Abnormal close, trying fallback model...");
-              disconnectLive();
-              setTimeout(() => connectLive(true), 500);
-            } else if (!userDisconnectedRef.current) {
-              const reason = event?.reason || event?.code || '';
-              setMessages(prev => [...prev, { role: 'model', text: `⚠️ Ovozli aloqa uzildi. ${reason}` }]);
-              disconnectLive();
-            } else {
-              disconnectLive();
-            }
-          },
-          onerror: (err: any) => {
-            console.error("Live session error", err);
-            if (!isFallback) {
-              console.log("Error occurred, trying fallback model...");
-              disconnectLive();
-              setTimeout(() => connectLive(true), 500);
-            } else {
-              setMessages(prev => [...prev, { role: 'model', text: `⚠️ Tarmoq xatoligi yuz berdi: Ovozli aloqaga ulanib bo'lmadi.` }]);
-              disconnectLive();
-            }
-          }
-        }
-      });
-
-      sessionRef.current = sessionPromise;
-
-    } catch (e: any) {
-      console.error("Failed to connect live", e);
-      if (!isFallback) {
-        console.log("Connection failed, trying fallback model...");
-        disconnectLive();
-        setTimeout(() => connectLive(true), 500);
-      } else {
-        setIsLive(false);
-        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Xatolik: ${e.message || "Ovozli aloqaga ulanib bo'lmadi."}` }]);
-      }
-    }
-  };
-
-  const disconnectLive = () => {
-    setIsLive(false);
-    userDisconnectedRef.current = true;
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    if (inputAudioContextRef.current) {
-      inputAudioContextRef.current.close();
-      inputAudioContextRef.current = null;
-    }
-
-    if (sessionRef.current) {
-      sessionRef.current.then((session: any) => {
-        if (session.close) session.close();
-      }).catch(() => { });
-      sessionRef.current = null;
-    }
-
-    sourceNodesRef.current.clear();
-  };
-
-  function createBlob(data: Float32Array): { data: string, mimeType: string } {
-    const l = data.length;
-    const int16 = new Int16Array(l);
-    for (let i = 0; i < l; i++) {
-      int16[i] = Math.max(-1, Math.min(1, data[i])) * 32767;
-    }
-    return {
-      data: encode(new Uint8Array(int16.buffer)),
-      mimeType: 'audio/pcm;rate=16000',
-    };
-  }
-
-  function encode(bytes: Uint8Array) {
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
-  function decode(base64: string) {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-  }
-
-  async function decodeAudioData(
-    data: Uint8Array,
-    ctx: AudioContext,
-    sampleRate: number,
-    numChannels: number,
-  ): Promise<AudioBuffer> {
-    const sliced = data.slice();
-    const dataInt16 = new Int16Array(sliced.buffer);
-    const frameCount = dataInt16.length / numChannels;
-    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-    for (let channel = 0; channel < numChannels; channel++) {
-      const channelData = buffer.getChannelData(channel);
-      for (let i = 0; i < frameCount; i++) {
-        channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-      }
-    }
-    return buffer;
-  }
 
   return (
     <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[80] flex flex-col items-end">
@@ -447,26 +170,14 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                 <div>
                   <h3 className="text-white font-bold text-sm">PaketShop Assistant</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-red-500 animate-pulse' : 'bg-green-500'} `}></span>
-                    <span className="text-xs text-gray-400">{isLive ? 'Voice Live' : 'Online | Gemini AI'}</span>
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-xs text-gray-400">Online | Gemini AI</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                {isRegistered && (
-                  <button
-                    onClick={() => isLive ? disconnectLive() : connectLive()}
-                    className={`p-2 rounded-full transition-colors ${isLive ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'hover:bg-white/10 text-gray-400 hover:text-white'}`}
-                    title={isLive ? "Tugatish" : "Ovozli suhbat"}
-                  >
-                    {isLive ? <PhoneOff size={20} /> : <Mic size={20} />}
-                  </button>
-                )}
                 <button
-                  onClick={() => {
-                    disconnectLive();
-                    setIsOpen(false);
-                  }}
+                  onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
                 >
                   <X size={20} />
@@ -551,7 +262,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                       </div>
                     </div>
                   ))}
-                  {isLoading && !isLive && (
+                  {isLoading && (
                     <div className="flex justify-start">
                       <div className="bg-white/5 p-4 rounded-2xl rounded-tl-sm flex gap-1.5 items-center">
                         <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
@@ -560,45 +271,27 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                       </div>
                     </div>
                   )}
-                  {isLive && (
-                    <div className="flex justify-center py-4">
-                      <div className="flex items-center gap-1">
-                        <span className="w-1 h-3 bg-gold-400 animate-[pulse_1s_ease-in-out_infinite]"></span>
-                        <span className="w-1 h-5 bg-gold-400 animate-[pulse_1.1s_ease-in-out_infinite]"></span>
-                        <span className="w-1 h-8 bg-gold-400 animate-[pulse_1.2s_ease-in-out_infinite]"></span>
-                        <span className="w-1 h-5 bg-gold-400 animate-[pulse_1.3s_ease-in-out_infinite]"></span>
-                        <span className="w-1 h-3 bg-gold-400 animate-[pulse_1.4s_ease-in-out_infinite]"></span>
-                      </div>
-                    </div>
-                  )}
                   <div ref={messagesEndRef} />
                 </div>
 
                 <div className="p-4 border-t border-white/10 bg-dark-900/50">
-                  {isLive ? (
-                    <div className="flex items-center justify-center gap-3 text-sm text-gold-400">
-                      <Mic className="animate-pulse" size={16} />
-                      <span>Tinglanmoqda...</span>
-                    </div>
-                  ) : (
-                    <div className="relative flex items-center">
-                      <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder="Masalan: Menga soat kerak..."
-                        className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-12 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
-                      />
-                      <button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="absolute right-2 p-2 bg-gold-400 text-black rounded-full hover:bg-gold-500 disabled:opacity-50 disabled:hover:bg-gold-400 transition-colors"
-                      >
-                        <Send size={16} />
-                      </button>
-                    </div>
-                  )}
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder="Xabaringizni yozing..."
+                      className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-12 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
+                    />
+                    <button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      className="absolute right-2 p-2 bg-gold-400 text-black rounded-full hover:bg-gold-500 disabled:opacity-50 disabled:hover:bg-gold-400 transition-colors"
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
                 </div>
               </>
             )}
