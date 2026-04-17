@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ArrowRight, TrendingUp } from 'lucide-react';
+import { Search, X, ArrowRight, TrendingUp, XCircle, SearchX } from 'lucide-react';
 import { Product, Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -47,8 +47,13 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
     ? categories.filter(c => c.name.toLowerCase().includes(query.toLowerCase()))
     : [];
 
-  // Popular searches suggestions
-  const suggestions = ['Soatlar', 'Sumkalar', 'Titan', 'Sovg\'a'];
+  // Popular searches suggestions based on actual categories
+  const suggestions = [
+    t('Paketlar (Polietilen va qog\'oz mahsulotlari)')?.split(' ')[0] || 'Paketlar', 
+    t('Stakanlar (Keng assortiment)')?.split(' ')[0] || 'Stakanlar', 
+    t('Oshxona sarflov materiallari')?.split(' ')[0] || 'Oshxona', 
+    t('Tozalash inventarlari (Cleaning)')?.split(' ')[0] || 'Tozalash'
+  ];
 
   const handleProductClick = (id: number) => {
     onNavigateToProduct(id);
@@ -76,21 +81,32 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
             className={`relative w-full max-w-2xl border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
           >
             {/* Header / Input */}
-            <div className={`flex items-center gap-4 p-6 border-b ${isDark ? 'border-white/10' : 'border-light-border'}`}>
-              <Search className="text-gold-400" size={24} />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={t('search_placeholder')}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className={`flex-1 bg-transparent text-xl focus:outline-none ${isDark ? 'text-white placeholder:text-gray-600' : 'text-light-text placeholder:text-light-muted'}`}
-              />
+            <div className={`p-6 border-b flex items-center gap-4 ${isDark ? 'border-white/10' : 'border-light-border'}`}>
+              <div className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${isDark ? 'bg-dark-800 border-white/10 focus-within:border-gold-400 focus-within:ring-1 focus-within:ring-gold-400 text-white' : 'bg-gray-100 border-transparent focus-within:bg-white focus-within:border-gold-400 focus-within:ring-1 focus-within:ring-gold-400 text-light-text'}`}>
+                <Search className={isDark ? 'text-gray-400' : 'text-gray-500'} size={22} />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={t('search_placeholder')}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-lg focus:outline-none w-full placeholder:text-gray-400"
+                />
+                {query && (
+                  <button 
+                    onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+                    className={`p-1 rounded-full hover:bg-black/10 transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
+                  >
+                    <XCircle size={18} />
+                  </button>
+                )}
+              </div>
+              
               <button
                 onClick={onClose}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-light-card hover:bg-gray-200 text-light-muted hover:text-light-text'}`}
+                className={`p-3 rounded-xl transition-colors shrink-0 ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-light-muted hover:text-light-text'}`}
               >
-                <X size={20} />
+                <X size={24} />
               </button>
             </div>
 
@@ -118,8 +134,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
               {query.trim() && (
                 <div className="space-y-8">
                   {filteredProducts.length === 0 && filteredCategories.length === 0 && (
-                    <div className="text-center text-gray-500 py-8">
-                      {t('nothing_found')}
+                    <div className="flex flex-col items-center justify-center text-center py-12 px-4">
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                        <SearchX size={32} className={isDark ? 'text-gray-600' : 'text-gray-400'} />
+                      </div>
+                      <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('nothing_found')}</h3>
+                      <p className={`text-sm max-w-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>Boshqa so'z bilan qidirib ko'ring yoki toifalardan foydalaning.</p>
                     </div>
                   )}
 
