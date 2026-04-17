@@ -41,6 +41,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   const currentInputTranscription = useRef<string>('');
   const currentOutputTranscription = useRef<string>('');
+  const userDisconnectedRef = useRef<boolean>(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -173,6 +174,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     }
 
     setIsLive(true);
+    userDisconnectedRef.current = false;
 
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -284,14 +286,15 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
           },
           onclose: (event: any) => {
             console.log("Live session closed", event);
-            if (!isFallback && event?.code !== 1000) {
-              // Standard close is 1000, if not 1000 and not fallback, try fallback
+            if (!isFallback && !userDisconnectedRef.current) {
               console.log("Abnormal close, trying fallback model...");
               disconnectLive();
               setTimeout(() => connectLive(true), 500);
-            } else {
+            } else if (!userDisconnectedRef.current) {
               const reason = event?.reason || event?.code || '';
               setMessages(prev => [...prev, { role: 'model', text: `⚠️ Ovozli aloqa uzildi. ${reason}` }]);
+              disconnectLive();
+            } else {
               disconnectLive();
             }
           },
@@ -326,6 +329,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   const disconnectLive = () => {
     setIsLive(false);
+    userDisconnectedRef.current = true;
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
