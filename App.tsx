@@ -224,34 +224,52 @@ const AppContent: React.FC = () => {
           setCategories(MOCK_CATEGORIES);
         }
 
-        // Fetch hero content
-        const { data: heroData } = await supabase
-          .from('hero_content')
-          .select('*')
-          .single();
-
-        if (heroData) {
-          setHeroContent(heroData as HeroContent);
+        // Fetch hero content (independent - won't crash other fetches)
+        try {
+          const { data: heroData } = await supabase
+            .from('hero_content')
+            .select('*')
+            .single();
+          if (heroData && (heroData.badge || heroData.title)) {
+            setHeroContent({
+              badge: heroData.badge || 'Yangi Mavsum',
+              title: heroData.title || 'Premium Collection 2026',
+              description: heroData.description || '',
+              buttonText: heroData.buttonText || heroData.button_text || 'Sotib olish',
+              images: heroData.images || [],
+            });
+          }
+        } catch (e) {
+          console.warn('Hero content fetch failed, using defaults:', e);
         }
 
-        // Fetch blog posts
-        const { data: blogData } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .order('date', { ascending: false });
-
-        if (blogData && blogData.length > 0) {
-          setBlogPosts(blogData as BlogPost[]);
+        // Fetch blog posts (independent)
+        try {
+          const { data: blogData } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .order('date', { ascending: false });
+          if (blogData && blogData.length > 0) {
+            setBlogPosts(blogData as BlogPost[]);
+          }
+        } catch (e) {
+          console.warn('Blog posts fetch failed, using defaults:', e);
         }
 
-        // Fetch navigation settings
-        const { data: navData } = await supabase
-          .from('navigation_settings')
-          .select('*')
-          .single();
-
-        if (navData) {
-          setNavigationSettings(navData as NavigationSettings);
+        // Fetch navigation settings (independent)
+        try {
+          const { data: navData } = await supabase
+            .from('navigation_settings')
+            .select('*')
+            .single();
+          if (navData) {
+            setNavigationSettings({
+              menuItems: navData.menuItems || navData.menu_items || [],
+              socialLinks: navData.socialLinks || navData.social_links || [],
+            });
+          }
+        } catch (e) {
+          console.warn('Navigation settings fetch failed, using defaults:', e);
         }
 
       } catch (error) {
