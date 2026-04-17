@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Sparkles, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import { useCart } from '../context/CartContext';
@@ -274,25 +274,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               </button>
             </div>
 
-            <div className="mb-4 md:mb-6 relative">
-              <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-gold-400 to-transparent rounded-full"></div>
-              <div className="pl-4 md:pl-6">
-                <div className="flex items-center gap-2 mb-2 md:mb-3">
-                  <Sparkles size={14} className="text-gold-400 animate-pulse md:w-[16px] md:h-[16px]" />
-                  <h3 className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-xs md:text-sm font-semibold tracking-wide`}>{t('ai_analysis')}</h3>
+            <div className="mb-4 md:mb-6">
+              <h3 className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-xs md:text-sm font-semibold tracking-wide mb-2 md:mb-3`}>{t('description_label') || 'Tavsif'}</h3>
+              {loading ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className={`h-4 rounded w-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}></div>
+                  <div className={`h-4 rounded w-5/6 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}></div>
                 </div>
-                {loading ? (
-                  <div className="space-y-2 animate-pulse">
-                    <div className="h-4 bg-white/10 rounded w-full"></div>
-                    <div className="h-4 bg-white/10 rounded w-5/6"></div>
-                    <div className="h-4 bg-white/10 rounded w-4/6"></div>
-                  </div>
-                ) : (
-                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-base md:text-lg leading-relaxed font-light italic`}>
-                    "{aiDescription}"
-                  </p>
-                )}
-              </div>
+              ) : (
+                <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm md:text-base leading-relaxed`}>
+                  {aiDescription}
+                </p>
+              )}
             </div>
 
             <div className={`${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-100 border-gray-200'} rounded-2xl p-4 md:p-6 backdrop-blur-md border`}>
