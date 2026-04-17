@@ -166,7 +166,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     const mainKey = env.VITE_GEMINI_API_KEY;
     const backupKey = env.VITE_GEMINI_API_KEY1 || mainKey;
     const apiKey = isFallback ? backupKey : mainKey;
-    const modelName = isFallback ? 'models/gemini-2.5-flash-live-preview' : 'models/gemini-3.1-flash-live';
+    const modelName = isFallback ? 'models/gemini-2.5-flash-live-preview' : 'models/gemini-3.1-flash-live-preview';
 
     if (!apiKey) {
       setMessages(prev => [...prev, { role: 'model', text: "⚠️ API kalit topilmadi." }]);
