@@ -1,5 +1,5 @@
-// PaketShop Service Worker v1.0
-const CACHE_NAME = 'paketshop-v1';
+// PaketShop Service Worker v1.1
+const CACHE_NAME = 'paketshop-v1.1';
 const OFFLINE_URL = '/';
 
 // Assets to cache on install
@@ -8,6 +8,14 @@ const PRECACHE_URLS = [
   '/logo.png',
   '/logo-light.png',
   '/manifest.json'
+];
+
+// Domains to cache images from
+const IMAGE_DOMAINS = [
+  'images.unsplash.com',
+  'picsum.photos',
+  'supabase.co',
+  'paketshop.uz'
 ];
 
 // Install event - precache critical assets
@@ -39,28 +47,55 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip API calls and external requests
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+  
+  // Skip API calls
   if (url.pathname.startsWith('/api/')) return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Clone and cache successful responses
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+  // Logic for caching images (even from other origins)
+  const isImageRequest = 
+    event.request.destination === 'image' || 
+    IMAGE_DOMAINS.some(domain => url.hostname.includes(domain));
+
+  if (isImageRequest) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const networked = fetch(event.request)
+          .then((response) => {
+            if (response.status === 200) {
+              const cacheCopy = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, cacheCopy);
+              });
+            }
+            return response;
+          })
+          .catch(() => cached);
+
+        return cached || networked;
+      })
+    );
+    return;
+  }
+
+  // Logic for internal pages / assets
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => {
+            return cached || caches.match(OFFLINE_URL);
           });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache
-        return caches.match(event.request).then((cached) => {
-          return cached || caches.match(OFFLINE_URL);
-        });
-      })
-  );
+        })
+    );
+  }
 });

@@ -112,6 +112,7 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
                 transition={{ duration: 0.7 }}
                 alt={displayContent.title}
                 className="absolute inset-0 w-full h-full object-cover"
+                fetchPriority="high"
               />
             </AnimatePresence>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, ShieldCheck, CreditCard, Truck, Send, Wallet, Banknote, X, Smartphone, ExternalLink, Ticket, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -40,6 +40,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const PAYNET_URL = "https://app.paynet.uz/?m=49156&i=4805742d-d76c-4b39-8c02-8ddf1c450f33&branchId=&actTypeId=144";
   const PAYNET_QR_IMAGE = "/images/paynet-qr.jpg";
   const QR_FALLBACK = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(PAYNET_URL)}&color=000000&bgcolor=ffffff`;
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      const productIds = cart.map(item => item.id.toString());
+      fpixel.trackInitiateCheckout(cartTotal, productIds);
+    }
+  }, []);
 
   const cities = [
     'city_toshkent',

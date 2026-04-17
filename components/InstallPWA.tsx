@@ -45,7 +45,7 @@ const InstallPWA: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // For iOS we just show it if not dismissed
-    if (isIOSDevice) {
+    if (isIOSDevice && !isAppStandalone) {
       setTimeout(() => {
         if (!isDismissedRecently()) {
           setShowPrompt(true);

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Product } from '../types';
+import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 interface WishlistContextType {
   wishlist: Product[];
@@ -14,35 +16,59 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [wishlist, setWishlist] = useState<Product[]>([]);
+  const { user } = useAuth();
 
-  // Load from local storage
+  // Load from local storage or DB
   useEffect(() => {
-    const saved = localStorage.getItem('paketshop_wishlist');
-    if (saved) {
-      try {
-        setWishlist(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse wishlist", e);
+    if (user) {
+      supabase
+        .from('wishlists')
+        .select('product_id')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const ids = data.map(w => w.product_id);
+            supabase.from('products').select('*').in('id', ids).then((res) => {
+               if (res.data) setWishlist(res.data as Product[]);
+            });
+          }
+        });
+    } else {
+      const saved = localStorage.getItem('paketshop_wishlist');
+      if (saved) {
+        try {
+          setWishlist(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse wishlist", e);
+        }
       }
     }
-  }, []);
+  }, [user]);
 
   // Save to local storage
   useEffect(() => {
     localStorage.setItem('paketshop_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const addToWishlist = (product: Product) => {
+  const addToWishlist = async (product: Product) => {
     setWishlist((prev) => {
       if (!prev.find(item => item.id === product.id)) {
         return [...prev, product];
       }
       return prev;
     });
+
+    if (user) {
+      await supabase.from('wishlists').insert([{ user_id: user.id, product_id: product.id }]);
+    }
   };
 
-  const removeFromWishlist = (productId: number) => {
+  const removeFromWishlist = async (productId: number) => {
     setWishlist((prev) => prev.filter((item) => item.id !== productId));
+    
+    if (user) {
+      await supabase.from('wishlists').delete().match({ user_id: user.id, product_id: productId });
+    }
   };
 
   const toggleWishlist = (product: Product) => {

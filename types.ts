@@ -15,7 +15,7 @@ export interface Product {
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   image: string;
@@ -32,13 +32,13 @@ export interface HeroContent {
 }
 
 export interface MenuItem {
-  id: string;
+  id: number;
   label: string;
   href: string; // Masalan: "#" yoki "/category/soatlar"
 }
 
 export interface SocialLink {
-  id: string;
+  id: number;
   platform: 'instagram' | 'telegram' | 'facebook' | 'youtube' | 'twitter';
   url: string;
 }
@@ -70,7 +70,7 @@ export interface Order {
 }
 
 export interface BlogPost {
-  id: string;
+  id: number;
   title: string;
   image: string;
   content: string;

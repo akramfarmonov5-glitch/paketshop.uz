@@ -53,3 +53,25 @@ export const trackPurchase = (orderId: string, value: number, productIds: string
     currency: currency,
   });
 };
+
+export const trackInitiateCheckout = (value: number, productIds: string[] = [], currency: string = 'UZS') => {
+  event('InitiateCheckout', {
+    content_ids: productIds,
+    content_type: 'product',
+    value: value,
+    currency: currency,
+  });
+};
+
+export const trackSearch = (searchString: string) => {
+  event('Search', {
+    search_string: searchString,
+  });
+};
+
+export const trackViewCategory = (categoryName: string) => {
+  event('ViewCategory', {
+    content_name: categoryName,
+    content_category: categoryName,
+  });
+};

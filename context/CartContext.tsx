@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Product, CartItem } from '../types';
+import { trackAddToCart } from '../lib/fpixel';
 
 interface CartContextType {
   cart: CartItem[];
@@ -48,6 +49,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       return [...prevCart, { ...product, quantity: qtyToAdd }];
     });
+    
+    // Pixel Tracking
+    trackAddToCart(product);
+    
     setIsCartOpen(true); // Open cart when adding item
   };
 
