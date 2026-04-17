@@ -26,24 +26,25 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
   return (
     <AnimatePresence>
       {isCartOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeCart}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-          />
+        <motion.div
+          key="cart-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeCart}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+        />
+      )}
 
-          {/* Sidebar */}
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed top-0 right-0 h-full w-full md:w-[450px] border-l z-[70] shadow-2xl flex flex-col transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
-          >
+      {isCartOpen && (
+        <motion.div
+          key="cart-sidebar"
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className={`fixed top-0 right-0 h-full w-full md:w-[450px] border-l z-[70] shadow-2xl flex flex-col transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
+        >
             {/* Header */}
             <div className={`flex items-center justify-between p-6 border-b backdrop-blur-md ${isDark ? 'border-white/10 bg-dark-900/50' : 'border-light-border bg-white/50'}`}>
               <div className="flex items-center gap-3">
@@ -155,7 +156,6 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
               </div>
             )}
           </motion.div>
-        </>
       )}
     </AnimatePresence>
   );
