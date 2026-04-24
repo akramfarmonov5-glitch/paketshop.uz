@@ -13,23 +13,23 @@ export default defineConfig({
         short_name: 'PaketShop',
         description: 'O\'zbekistondagi eng yaxshi online do\'kon - sifatli mahsulotlar, tez yetkazib berish',
         theme_color: '#DC2626',
-        background_color: '#050505',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
           {
-            src: '/logo.png',
+            src: '/logo-light.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/logo.png',
+            src: '/logo-light.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/logo.png',
+            src: '/logo-light.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'

@@ -146,7 +146,7 @@ function renderProductPage(slug, products, categories, BASE_URL) {
   <script type="application/ld+json">${productSchema}</script>
   <script type="application/ld+json">${breadcrumbSchema}</script>
   
-  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="icon" type="image/png" href="/logo-light.png">
 </head>
 <body>
   <header>
@@ -247,7 +247,7 @@ function renderBlogPage(slug, blogPosts, BASE_URL) {
     "publisher": {
       "@type": "Organization",
       "name": "PaketShop.uz",
-      "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo.png` }
+      "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo-light.png` }
     },
     "description": description,
     "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl }
@@ -277,7 +277,7 @@ function renderBlogPage(slug, blogPosts, BASE_URL) {
   <meta name="twitter:image" content="${post.image}">
   
   <script type="application/ld+json">${blogSchema}</script>
-  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="icon" type="image/png" href="/logo-light.png">
 </head>
 <body>
   <header><nav><a href="${BASE_URL}/">PaketShop.uz</a></nav></header>
@@ -348,10 +348,10 @@ function renderCategoryPage(catSlug, products, categories, BASE_URL) {
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${canonicalUrl}">
-  <meta property="og:image" content="${category?.image || `${BASE_URL}/logo.png`}">
+  <meta property="og:image" content="${category?.image || `${BASE_URL}/logo-light.png`}">
   
   <script type="application/ld+json">${itemListSchema}</script>
-  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="icon" type="image/png" href="/logo-light.png">
 </head>
 <body>
   <header><nav><a href="${BASE_URL}/">PaketShop.uz</a></nav></header>
@@ -406,7 +406,7 @@ function renderHomePage(products, categories, blogPosts, BASE_URL) {
     "@type": "Organization",
     "name": "PaketShop.uz",
     "url": BASE_URL,
-    "logo": `${BASE_URL}/logo.png`,
+    "logo": `${BASE_URL}/logo-light.png`,
     "description": "O'zbekistondagi ishonchli onlayn do'kon",
     "sameAs": ["https://instagram.com/paketshop_uz", "https://t.me/paketshop_uz"]
   });
@@ -416,7 +416,7 @@ function renderHomePage(products, categories, blogPosts, BASE_URL) {
     "@type": "Store",
     "name": "PaketShop.uz Online Do'kon",
     "url": BASE_URL,
-    "image": `${BASE_URL}/logo.png`,
+    "image": `${BASE_URL}/logo-light.png`,
     "description": "Sifatli soatlar, sumkalar, parfyumeriya va aksessuarlar",
     "priceRange": "$$$",
     "address": { "@type": "PostalAddress", "addressCountry": "UZ" }
@@ -437,11 +437,11 @@ function renderHomePage(products, categories, blogPosts, BASE_URL) {
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${BASE_URL}/">
-  <meta property="og:image" content="${BASE_URL}/logo.png">
+  <meta property="og:image" content="${BASE_URL}/logo-light.png">
   
   <script type="application/ld+json">${orgSchema}</script>
   <script type="application/ld+json">${storeSchema}</script>
-  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="icon" type="image/png" href="/logo-light.png">
 </head>
 <body>
   <header><nav><a href="${BASE_URL}/">PaketShop.uz</a></nav></header>

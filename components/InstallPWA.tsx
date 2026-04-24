@@ -96,8 +96,8 @@ const InstallPWA: React.FC = () => {
           </button>
 
           <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-black flex items-center justify-center p-1">
-              <img src="/logo.png" alt="PaketShop App" className="w-full h-full object-contain" />
+            <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-white flex items-center justify-center p-1">
+              <img src="/logo-light.png" alt="PaketShop App" className="w-full h-full object-contain" />
             </div>
             
             <div>
