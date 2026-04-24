@@ -80,7 +80,7 @@ const SEOHead: React.FC<SEOProps> = ({
     setMeta('og:description', desc, true);
     setMeta('og:url', canonical || `${BASE_URL}/`, true);
     setMeta('og:type', ogType === 'product' ? 'product' : ogType === 'article' ? 'article' : 'website', true);
-    setMeta('og:image', ogImage || `${BASE_URL}/logo.png`, true);
+    setMeta('og:image', ogImage || `${BASE_URL}/logo-light.png`, true);
     setMeta('og:site_name', 'PaketShop.uz', true);
     setMeta('og:locale', 'uz_UZ', true);
 
@@ -98,7 +98,7 @@ const SEOHead: React.FC<SEOProps> = ({
     setMeta('twitter:card', 'summary_large_image', true);
     setMeta('twitter:title', title || "PaketShop.uz | Online Do'kon", true);
     setMeta('twitter:description', desc, true);
-    setMeta('twitter:image', ogImage || `${BASE_URL}/logo.png`, true);
+    setMeta('twitter:image', ogImage || `${BASE_URL}/logo-light.png`, true);
 
     // === JSON-LD Structured Data ===
     // Clean up previous dynamic schemas
@@ -167,7 +167,7 @@ const SEOHead: React.FC<SEOProps> = ({
           "name": "PaketShop.uz",
           "logo": {
             "@type": "ImageObject",
-            "url": `${BASE_URL}/logo.png`
+            "url": `${BASE_URL}/logo-light.png`
           }
         },
         "description": blogPost.seo?.description || blogPost.content.substring(0, 160),

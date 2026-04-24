@@ -1,12 +1,12 @@
-// PaketShop Service Worker v1.1
-const CACHE_NAME = 'paketshop-v1.1';
+// PaketShop Service Worker v1.2
+const CACHE_NAME = 'paketshop-v1.2';
 const OFFLINE_URL = '/';
 
 // Assets to cache on install
 const PRECACHE_URLS = [
   '/',
-  '/logo.png',
   '/logo-light.png',
+  '/logo.png',
   '/manifest.json'
 ];
 
