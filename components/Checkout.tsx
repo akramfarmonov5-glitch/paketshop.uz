@@ -128,15 +128,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   };
 
   const sendTelegramNotification = async () => {
-    const env = import.meta.env || {};
-    const token = env.VITE_TELEGRAM_BOT_TOKEN;
-    const chatId = env.VITE_TELEGRAM_CHAT_ID;
-
-    if (!token || !chatId) {
-      console.warn("Telegram credentials not found.");
-      return;
-    }
-
     const itemsList = cart.map((item, index) =>
       `${index + 1}. ${item.name} (x${item.quantity}) - ${new Intl.NumberFormat('uz-UZ').format(item.price * item.quantity)} UZS`
     ).join('\n');
@@ -163,13 +154,13 @@ ${discountInfo}
     `;
 
     try {
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      await fetch('/api/telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+        body: JSON.stringify({ message }),
       });
     } catch (error) {
-      console.error("Failed to send Telegram message", error);
+      console.error("Failed to send Telegram message via API", error);
     }
   };
 
