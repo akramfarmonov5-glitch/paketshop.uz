@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart } from 'lucide-react';
 import { Product } from '../types';
-import { GoogleGenAI } from "@google/genai";
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +13,7 @@ import ProductCard from './ProductCard';
 import QuickBuyModal from './QuickBuyModal';
 import ProductReviews from './ProductReviews';
 import * as fpixel from '../lib/fpixel';
+import { requestGeminiText } from '../lib/geminiApi';
 
 interface ProductDetailProps {
   product: Product;
@@ -54,24 +54,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
 
     const generateAIDescription = async () => {
       try {
-        const env = import.meta.env || {};
-        const apiKey = env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-          setAiDescription(`${product.name} - bu ${product.category} olamidagi haqiqiy inqilob. Har bir detalda mukammallik va hashamat ufurib turadi.`);
-          setLoading(false);
-          return;
-        }
-
-        const ai = new GoogleGenAI({ apiKey });
         const languageName = lang === 'uz' ? 'Uzbek (Cyrillic or Latin as common)' : lang === 'ru' ? 'Russian' : 'English';
-        const prompt = `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description MUST BE in ${languageName} language. It should feel like an Apple product description: minimalist, impactful, and premium. Focus on craftsmanship and lifestyle. Max 3 sentences.`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
+        const text = await requestGeminiText({
+          systemInstruction: 'You write elegant but concise product copy for e-commerce product pages.',
+          message: `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description must be in ${languageName}. Keep it premium, minimal, and limited to 3 sentences.`,
         });
 
-        const text = response.text;
         setAiDescription(text || "Ma'lumot yuklanmadi.");
       } catch (error) {
         console.error("AI Error:", error);

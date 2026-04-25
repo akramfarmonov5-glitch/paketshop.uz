@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles, Box } from 'lucide-react';
 import { Product, Category } from '../../types';
-import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../../lib/supabaseClient';
 import CloudinaryUpload from '../CloudinaryUpload';
+import { requestGeminiJson } from '../../lib/geminiApi';
 
 interface AdminProductsProps {
   products: Product[];
@@ -84,63 +84,37 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
     setIsGenerating(true);
     try {
-      const env = import.meta.env || {};
-      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean);
+      const data = await requestGeminiJson<{
+        shortDescription: string;
+        specs: { label: string; value: string }[];
+      }>({
+        systemInstruction: 'You are a luxury product expert for an online store. Always answer in valid JSON.',
+        message: `
+          Product name: "${formData.name}"
+          Category: "${formData.category}"
 
-      let lastError;
-      let success = false;
+          Generate in Uzbek language (Latin script):
+          1. A short premium description (max 2 sentences).
+          2. 4 key technical specifications relevant to this product.
 
-      for (const apiKey of keys) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-
-          const prompt = `
-            You are a luxury product expert for an online store.
-            Product Name: "${formData.name}"
-            Category: "${formData.category}"
-            
-            Generate the following in Uzbek language (Latin script):
-            1. A short, premium, and catchy description (max 2 sentences).
-            2. 4 key technical specifications (specs) relevant to this product.
-
-            Return JSON format:
-            {
-                "shortDescription": "...",
-                "specs": [
-                    {"label": "Material", "value": "..."},
-                    {"label": "...", "value": "..."}
-                ]
-            }
-        `;
-
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: { responseMimeType: 'application/json' }
-          });
-
-          const text = response.text;
-          if (text) {
-            const data = JSON.parse(text);
-            setFormData(prev => ({
-              ...prev,
-              shortDescription: data.shortDescription,
-              specs: data.specs
-            }));
-            success = true;
-            break; // Stop loop on success
+          Return JSON with this exact shape:
+          {
+            "shortDescription": "...",
+            "specs": [
+              { "label": "...", "value": "..." }
+            ]
           }
-        } catch (error) {
-          console.error(`Error with API key ${apiKey.substring(0, 5)}...:`, error);
-          lastError = error;
-        }
-      }
+        `,
+      });
 
-      if (!success) throw lastError;
-
+      setFormData(prev => ({
+        ...prev,
+        shortDescription: data.shortDescription,
+        specs: data.specs
+      }));
     } catch (error) {
       console.error("AI Error:", error);
-      alert("AI ma'lumot yaratishda xatolik yuz berdi. Barcha kalitlar limitdan chiqgan bo'lishi mumkin.");
+      alert("AI ma'lumot yaratishda xatolik yuz berdi.");
     } finally {
       setIsGenerating(false);
     }

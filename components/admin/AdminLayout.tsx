@@ -11,7 +11,7 @@ import AdminLeads from './AdminLeads'; // New component
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from '../../types';
 
 interface AdminLayoutProps {
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
   products: Product[];
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   categories: Category[];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, User, MessageCircle, Send, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { Review } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -51,8 +51,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      const env = import.meta.env || {};
-      if (!env.VITE_SUPABASE_URL) {
+      if (!hasSupabaseCredentials) {
         setReviews(FAKE_REVIEWS);
         setLoading(false);
         return;
@@ -96,8 +95,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     };
 
     try {
-      const env = import.meta.env || {};
-      if (env.VITE_SUPABASE_URL) {
+      if (hasSupabaseCredentials) {
         const { error } = await supabase.from('product_reviews').insert(newReview);
         if (error) {
           console.error("Error saving review:", error);

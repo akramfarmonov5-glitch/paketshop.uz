@@ -3,15 +3,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const token = process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID || process.env.VITE_TELEGRAM_CHAT_ID;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
     return res.status(500).json({ error: 'Telegram credentials missing on server' });
   }
 
   try {
-    const { message } = req.body;
+    const { message } = req.body || {};
     
     if (!message) {
       return res.status(400).json({ error: 'Message content is required' });

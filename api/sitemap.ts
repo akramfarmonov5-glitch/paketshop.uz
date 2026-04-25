@@ -6,8 +6,8 @@ import { createClient } from '@supabase/supabase-js';
  * Google uchun to'liq sitemap.xml yaratadi.
  */
 export default async function handler(req, res) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.VITE_SUPABASE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;
   const BASE_URL = 'https://paketshop.uz';
   const TODAY = new Date().toISOString().split('T')[0];
 

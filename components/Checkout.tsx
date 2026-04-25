@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, ShieldCheck, CreditCard, Truck, Send, Wallet, Banknote, X, Smartphone, ExternalLink, Ticket, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import * as fpixel from '../lib/fpixel';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
@@ -107,8 +107,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   };
 
   const saveOrderToDatabase = async () => {
-    const env = import.meta.env || {};
-    if (!env.VITE_SUPABASE_URL) return;
+    if (!hasSupabaseCredentials) return;
 
     const orderId = `ORD-${Date.now()}`;
     const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -121,7 +120,15 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
         total: finalTotal,
         status: 'Kutilmoqda',
         date: dateStr,
-        "paymentMethod": paymentMethod === 'paynet' ? 'Paynet' : 'Naqd'
+        "paymentMethod": paymentMethod === 'paynet' ? 'Paynet' : 'Naqd',
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        shipping_address: formData.address,
+        city: formData.city,
       };
 
       if (user) {
