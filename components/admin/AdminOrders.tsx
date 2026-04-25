@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '../../types';
-import { Clock, CheckCircle, Truck, Package, Search } from 'lucide-react';
+import { Clock, CheckCircle, Truck, Package, Search, Download } from 'lucide-react';
 
 import { supabase } from '../../lib/supabaseClient';
 
@@ -74,11 +74,48 @@ const AdminOrders: React.FC = () => {
 
   const formatPrice = (price: number) => new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
 
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Sana', 'Mijoz', 'Telefon', 'To\'lov turi', 'Summa', 'Holat'];
+    const rows = orders.map(o => [
+        o.id,
+        o.date,
+        `"${o.customerName || ''}"`,
+        `"${o.phone || ''}"`,
+        o.paymentMethod,
+        o.total,
+        o.status
+    ]);
+    
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.join(','))
+    ].join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `buyurtmalar-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-white mb-2">Buyurtmalar (CRM)</h2>
-        <p className="text-gray-400">Mijozlar buyurtmalarini boshqarish va kuzatish tizimi.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-2">Buyurtmalar (CRM)</h2>
+          <p className="text-gray-400">Mijozlar buyurtmalarini boshqarish va kuzatish tizimi.</p>
+        </div>
+        <button 
+            onClick={handleExportCSV} 
+            disabled={orders.length === 0}
+            className="flex items-center gap-2 bg-gold-400 hover:bg-gold-500 text-black px-4 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+        >
+            <Download size={18} />
+            Excel yuklab olish
+        </button>
       </div>
 
       <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden">

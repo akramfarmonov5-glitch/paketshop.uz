@@ -1,36 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Users, DollarSign, Package } from 'lucide-react';
-import { Product } from '../../types';
+import { Product, Order } from '../../types';
+import { supabase } from '../../lib/supabaseClient';
 
 interface AdminDashboardProps {
   products: Product[];
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
-  // Mock Data for Charts
-  const salesData = [
-    { name: 'Mon', sales: 4000 },
-    { name: 'Tue', sales: 3000 },
-    { name: 'Wed', sales: 2000 },
-    { name: 'Thu', sales: 2780 },
-    { name: 'Fri', sales: 1890 },
-    { name: 'Sat', sales: 2390 },
-    { name: 'Sun', sales: 3490 },
-  ];
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [totalSales, setTotalSales] = useState(0);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const { data: ordersData } = await supabase.from('orders').select('*');
+    if (ordersData) {
+      setOrders(ordersData as Order[]);
+      const total = ordersData.reduce((acc, order) => acc + Number(order.total || 0), 0);
+      setTotalSales(total);
+    }
+  };
+
+  const processSalesData = () => {
+      const last7Days = Array.from({length: 7}, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split('T')[0];
+      }).reverse();
+
+      return last7Days.map(date => {
+          const dayOrders = orders.filter(o => o.date && o.date.startsWith(date));
+          const dailyTotal = dayOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+          const displayDate = new Date(date).toLocaleDateString('uz-UZ', { weekday: 'short' });
+          return { name: displayDate, sales: dailyTotal };
+      });
+  };
+
+  const salesData = processSalesData();
 
   const categoryData = [
-    { name: 'Soatlar', count: products.filter(p => p.category === 'Soatlar').length + 5 },
-    { name: 'Sumkalar', count: products.filter(p => p.category === 'Sumkalar').length + 3 },
-    { name: 'Texno', count: products.filter(p => p.category === 'Texnologiya').length + 8 },
-    { name: 'Aksessuar', count: products.filter(p => p.category === 'Aksessuarlar').length + 10 },
+    { name: 'Soatlar', count: products.filter(p => p.category === 'Soatlar').length },
+    { name: 'Sumkalar', count: products.filter(p => p.category === 'Sumkalar').length },
+    { name: 'Texno', count: products.filter(p => p.category === 'Texnologiya').length },
+    { name: 'Aksessuar', count: products.filter(p => p.category === 'Aksessuarlar').length },
   ];
 
+  const formatPrice = (price: number) => {
+      if (price >= 1000000) return (price / 1000000).toFixed(1) + 'M UZS';
+      if (price >= 1000) return (price / 1000).toFixed(1) + 'K UZS';
+      return price + ' UZS';
+  };
+
+  const uniqueCustomers = new Set(orders.map(o => o.phone)).size;
+
   const stats = [
-    { label: 'Jami Savdo', value: '145.2M UZS', icon: DollarSign, change: '+12.5%' },
-    { label: 'Yangi Mijozlar', value: '1,234', icon: Users, change: '+3.2%' },
-    { label: 'Buyurtmalar', value: '456', icon: TrendingUp, change: '+28.4%' },
-    { label: 'Mahsulotlar', value: products.length, icon: Package, change: '0%' },
+    { label: 'Jami Savdo', value: formatPrice(totalSales), icon: DollarSign, change: '100%' },
+    { label: 'Yangi Mijozlar', value: uniqueCustomers, icon: Users, change: '100%' },
+    { label: 'Buyurtmalar', value: orders.length, icon: TrendingUp, change: '100%' },
+    { label: 'Mahsulotlar', value: products.length, icon: Package, change: '100%' },
   ];
 
   return (
