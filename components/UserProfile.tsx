@@ -67,9 +67,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ onBack, onNavigateToProduct }
   if (!user) return null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row items-start gap-8">
-        {/* Sidebar */}
+    <div className="min-h-screen pt-28 pb-12 transition-colors duration-300">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row items-start gap-8">
+          {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 rounded-2xl p-6">
           <div className="flex flex-col items-center mb-8">
             <div className="w-20 h-20 bg-gold-400/20 text-gold-500 rounded-full flex items-center justify-center mb-4">
@@ -174,6 +175,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onBack, onNavigateToProduct }
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
