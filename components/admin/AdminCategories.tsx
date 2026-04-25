@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Edit, Trash2, Plus, Search, X, Save, Image as ImageIcon, Globe, Type, Layout, Sparkles } from 'lucide-react';
 import { Category } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 
 interface AdminCategoriesProps {
@@ -11,6 +12,7 @@ interface AdminCategoriesProps {
 }
 
 const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCategories }) => {
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -50,14 +52,14 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
         setCategories(prev => prev.filter(c => c.id !== id));
       } catch (error) {
         console.error("Delete error:", error);
-        alert("O'chirishda xatolik: " + (error as any).message);
+        showToast("O'chirishda xatolik: " + (error as any).message, 'error');
       }
     }
   };
 
   const generateCategoryDetails = async () => {
     if (!formData.name) {
-      alert("Iltimos, avval Kategoriya nomini yozing.");
+      showToast("Iltimos, avval Kategoriya nomini yozing.", 'warning');
       return;
     }
 
@@ -144,7 +146,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       setIsModalOpen(false);
     } catch (error) {
       console.error("Save error:", error);
-      alert("Saqlashda xatolik: " + (error as any).message);
+      showToast("Saqlashda xatolik: " + (error as any).message, 'error');
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavigationSettings, MenuItem, SocialLink, Category } from '../../types';
 import { Plus, Trash2, Menu, Share2, Save, GripVertical, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 
 interface AdminNavigationProps {
     navigationSettings: NavigationSettings;
@@ -10,6 +11,7 @@ interface AdminNavigationProps {
 }
 
 const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, setNavigationSettings, categories }) => {
+    const { showToast } = useToast();
     const [formData, setFormData] = useState<NavigationSettings>({ ...navigationSettings });
     const [isSaved, setIsSaved] = useState(false);
 
@@ -72,7 +74,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
             setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
             console.error('Save error:', error);
-            alert('Saqlashda xatolik: ' + (error as any).message);
+            showToast('Saqlashda xatolik: ' + (error as any).message, 'error');
         } finally {
             setIsSaving(false);
         }

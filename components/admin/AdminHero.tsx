@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HeroContent } from '../../types';
 import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 
 interface AdminHeroProps {
     heroContent: HeroContent;
@@ -9,6 +10,7 @@ interface AdminHeroProps {
 }
 
 const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) => {
+    const { showToast } = useToast();
     // Ensure images array is initialized if coming from old state
     const [formData, setFormData] = useState<HeroContent>({
         ...heroContent,
@@ -34,7 +36,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
             setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
             console.error('Save error:', error);
-            alert('Saqlashda xatolik: ' + (error as any).message);
+            showToast('Saqlashda xatolik: ' + (error as any).message, 'error');
         } finally {
             setIsSaving(false);
         }

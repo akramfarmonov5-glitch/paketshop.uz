@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BlogPost } from '../../types';
 import { Sparkles, Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Edit, X, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 
 interface AdminBlogProps {
@@ -10,6 +11,7 @@ interface AdminBlogProps {
 }
 
 const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -54,7 +56,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
   const generateContent = async () => {
     if (!formData.title) {
-      alert("Iltimos, avval maqola mavzusi (Title)ni yozing.");
+      showToast("Iltimos, avval maqola mavzusi (Title)ni yozing.", 'warning');
       return;
     }
 
@@ -97,7 +99,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       }));
     } catch (error) {
       console.error("AI Gen Error", error);
-      alert("AI xatolik yuz berdi. API kalitini tekshiring.");
+      showToast("AI xatolik yuz berdi. API kalitini tekshiring.", 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -131,7 +133,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       setIsModalOpen(false);
     } catch (error) {
       console.error('Save error:', error);
-      alert('Saqlashda xatolik: ' + (error as any).message);
+      showToast('Saqlashda xatolik: ' + (error as any).message, 'error');
     }
   };
 

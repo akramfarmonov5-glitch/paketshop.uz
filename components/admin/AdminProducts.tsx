@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles, Box } from 'lucide-react';
 import { Product, Category } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { requestGeminiJson } from '../../lib/geminiApi';
 
@@ -13,6 +14,7 @@ interface AdminProductsProps {
 }
 
 const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, categories }) => {
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,7 +67,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
         if (error) {
           console.error('Error deleting product:', error);
-          alert("O'chirishda xatolik yuz berdi");
+          showToast("O'chirishda xatolik yuz berdi", 'error');
           return;
         }
 
@@ -78,7 +80,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
   const generateProductDetails = async () => {
     if (!formData.name || !formData.category) {
-      alert("Iltimos, avval Mahsulot nomi va Kategoriyani tanlang.");
+      showToast("Iltimos, avval Mahsulot nomi va Kategoriyani tanlang.", 'warning');
       return;
     }
 
@@ -114,7 +116,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       }));
     } catch (error) {
       console.error("AI Error:", error);
-      alert("AI ma'lumot yaratishda xatolik yuz berdi.");
+      showToast("AI ma'lumot yaratishda xatolik yuz berdi.", 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -192,7 +194,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error saving product:', error);
-      alert("Saqlashda xatolik yuz berdi: " + (error as any).message);
+      showToast("Saqlashda xatolik yuz berdi: " + (error as any).message, 'error');
     }
   };
 
