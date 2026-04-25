@@ -204,6 +204,39 @@ const SEOHead: React.FC<SEOProps> = ({
       });
     }
 
+    // Base WebSite Schema (For Sitelinks Search Box)
+    addJsonLd({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "PaketShop.uz",
+      "url": BASE_URL,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${BASE_URL}/?search={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    });
+
+    // Base Organization Schema (For Knowledge Panel)
+    addJsonLd({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "PaketShop.uz",
+      "url": BASE_URL,
+      "logo": `${BASE_URL}/logo.png`,
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+998-90-123-45-67",
+        "contactType": "customer service",
+        "areaServed": "UZ",
+        "availableLanguage": ["Uzbek", "Russian", "English"]
+      },
+      "sameAs": [
+        "https://instagram.com/paketshop.uz",
+        "https://t.me/paketshop_uz"
+      ]
+    });
+
     // Cleanup on unmount
     return () => {
       document.querySelectorAll('script[data-seo-dynamic]').forEach(el => el.remove());
