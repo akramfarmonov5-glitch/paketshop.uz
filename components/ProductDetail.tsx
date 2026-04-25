@@ -14,6 +14,7 @@ import QuickBuyModal from './QuickBuyModal';
 import ProductReviews from './ProductReviews';
 import * as fpixel from '../lib/fpixel';
 import { requestGeminiText } from '../lib/geminiApi';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface ProductDetailProps {
   product: Product;
@@ -50,14 +51,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     setIsPlaying(false);
 
     // Track Facebook Pixel ViewContent
-    fpixel.trackViewContent(product);
+    fpixel.trackViewContent({
+      ...product,
+      name: getLocalizedText(product.name, lang),
+      category: getLocalizedText(product.category, lang)
+    });
 
     const generateAIDescription = async () => {
       try {
         const languageName = lang === 'uz' ? 'Uzbek (Cyrillic or Latin as common)' : lang === 'ru' ? 'Russian' : 'English';
         const text = await requestGeminiText({
           systemInstruction: 'You write elegant but concise product copy for e-commerce product pages.',
-          message: `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${product.name}" in the "${product.category}" category. The description must be in ${languageName}. Keep it premium, minimal, and limited to 3 sentences.`,
+          message: `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${getLocalizedText(product.name, 'uz')}" in the "${getLocalizedText(product.category, 'uz')}" category. The description must be in ${languageName}. Keep it premium, minimal, and limited to 3 sentences.`,
         });
 
         setAiDescription(text || "Ma'lumot yuklanmadi.");
@@ -75,7 +80,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const handleAddToCart = () => {
     addToCart(product);
     showToast(t('toast_added_to_cart'), 'success');
-    fpixel.trackAddToCart(product);
+    fpixel.trackAddToCart({
+      ...product,
+      name: getLocalizedText(product.name, lang),
+      category: getLocalizedText(product.category, lang)
+    });
   };
 
   const handleToggleWishlist = () => {
@@ -89,7 +98,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
 
   const handleBuyNow = () => {
     addToCart(product);
-    fpixel.trackAddToCart(product);
+    fpixel.trackAddToCart({
+      ...product,
+      name: getLocalizedText(product.name, lang),
+      category: getLocalizedText(product.category, lang)
+    });
     onCheckout();
   };
 
@@ -121,8 +134,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           <Breadcrumbs
             onHomeClick={onBack}
             items={[
-              { label: product.category, onClick: onBack },
-              { label: product.name, active: true }
+              { label: typeof product.category === 'string' && product.category.includes('{') ? getLocalizedText(product.category, lang) : product.category, onClick: onBack },
+              { label: typeof product.name === 'string' && product.name.includes('{') ? getLocalizedText(product.name, lang) : product.name, active: true }
             ]}
           />
         </div>
@@ -135,11 +148,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             className="lg:col-span-6"
           >
             <div className="sticky top-24 md:top-28 space-y-3">
-              <div className="aspect-square md:aspect-[4/3] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
+              <div className="aspect-[4/5] w-full rounded-2xl md:rounded-3xl overflow-hidden border border-white/5 shadow-2xl bg-dark-800 relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-gold-500/20 to-purple-500/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                 <img
                   src={activeImage}
-                  alt={product.name}
+                  alt={getLocalizedText(product.name, lang)}
                   className="relative w-full h-full object-cover z-10 transition-opacity duration-300"
                 />
 
@@ -186,10 +199,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           >
             <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
               <span className="text-gold-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
-                {product.category}
+                {getLocalizedText(product.category, lang)}
               </span>
               <h1 className={`text-2xl md:text-4xl lg:text-5xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
-                {product.name}
+                {getLocalizedText(product.name, lang)}
               </h1>
 
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
@@ -258,7 +271,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 className={`w-full py-3.5 md:py-4 rounded-xl flex items-center justify-center gap-2 transition-all font-bold text-sm md:text-base border-2 border-dashed ${isDark ? 'border-gold-400/50 text-gold-400 bg-gold-400/5 hover:bg-gold-400/10' : 'border-gold-500/50 text-gold-600 bg-gold-400/5 hover:bg-gold-500/10'}`}
               >
                 <Zap size={18} className="md:w-[20px] md:h-[20px]" fill="currentColor" />
-                Bitta bosishda xarid qilish
+                {t('quick_buy')}
               </button>
             </div>
 
@@ -284,8 +297,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
                 {product.specs.map((spec, index) => (
                   <div key={index}>
-                    <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-[10px] md:text-xs uppercase tracking-wider mb-1`}>{spec.label}</p>
-                    <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-xs md:text-sm font-medium`}>{spec.value}</p>
+                    <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-[10px] md:text-xs uppercase tracking-wider mb-1`}>{getLocalizedText(spec.label, lang)}</p>
+                    <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-xs md:text-sm font-medium`}>{getLocalizedText(spec.value, lang)}</p>
                   </div>
                 ))}
               </div>

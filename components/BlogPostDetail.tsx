@@ -1,6 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Calendar, User, Share2 } from 'lucide-react';
 import { BlogPost } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface BlogPostDetailProps {
   post: BlogPost;
@@ -8,6 +10,7 @@ interface BlogPostDetailProps {
 }
 
 const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
+  const { lang, t } = useLanguage();
   return (
     <div className="pt-24 pb-20 min-h-screen bg-black text-white">
       <article className="container mx-auto px-4 md:px-6 max-w-4xl">
@@ -21,7 +24,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
 
         <div className="mb-8">
            <span className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-3 block">Blog</span>
-           <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-6">{post.title}</h1>
+           <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-6">{getLocalizedText(post.title, lang)}</h1>
            
            <div className="flex items-center gap-6 text-sm text-gray-400 border-b border-white/10 pb-8">
               <div className="flex items-center gap-2">
@@ -36,11 +39,11 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
         </div>
 
         <div className="aspect-video w-full rounded-2xl overflow-hidden mb-10 bg-zinc-900 border border-white/10">
-           <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+           <img src={post.image} alt={getLocalizedText(post.title, lang)} className="w-full h-full object-cover" />
         </div>
 
         <div className="prose prose-invert prose-lg max-w-none">
-           <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+           <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{getLocalizedText(post.content, lang)}</p>
         </div>
         
         {/* Share / Footer of post */}

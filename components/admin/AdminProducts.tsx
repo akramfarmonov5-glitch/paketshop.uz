@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles, Box } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Check, X, Save, PlusCircle, MinusCircle, Image as ImageIcon, Youtube, Wand2, Sparkles, Box, Globe } from 'lucide-react';
 import { Product, Category } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { requestGeminiJson } from '../../lib/geminiApi';
+import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
 
 interface AdminProductsProps {
   products: Product[];
@@ -19,7 +20,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [formData, setFormData] = useState<Partial<Product>>({
+  const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
+  const [formData, setFormData] = useState<any>({
     name: '',
     category: '',
     price: 0,
@@ -92,7 +94,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       }>({
         systemInstruction: 'You are a luxury product expert for an online store. Always answer in valid JSON.',
         message: `
-          Product name: "${formData.name}"
+          Product name: "${formData.name?.uz || formData.name}"
           Category: "${formData.category}"
 
           Generate in Uzbek language (Latin script):
@@ -229,8 +231,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   };
 
   const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (typeof p.name === 'string' ? p.name : JSON.stringify(p.name)).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (typeof p.category === 'string' ? p.category : JSON.stringify(p.category)).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -277,8 +279,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
             {filteredProducts.map((product) => (
               <tr key={product.id} className="hover:bg-white/5 transition-colors">
                 <td className="p-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 overflow-hidden relative">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="w-12 aspect-[4/5] rounded-lg bg-gray-800 overflow-hidden relative">
+                    <img src={product.image} alt={getLocalizedText(product.name, 'uz')} className="w-full h-full object-cover" />
                     {product.images && product.images.length > 1 && (
                       <div className="absolute bottom-0 right-0 bg-black/60 text-white text-[10px] px-1 rounded-tl">
                         +{product.images.length - 1}
@@ -286,10 +288,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                     )}
                   </div>
                 </td>
-                <td className="p-4 font-medium text-white">{product.name}</td>
+                <td className="p-4 font-medium text-white">{getLocalizedText(product.name, 'uz')}</td>
                 <td className="p-4 text-gray-400 text-sm">
                   <span className="bg-white/5 px-2 py-1 rounded text-xs border border-white/10">
-                    {product.category}
+                    {getLocalizedText(product.category, 'uz')}
                   </span>
                 </td>
                 <td className="p-4 text-gold-400 text-sm">{product.formattedPrice}</td>
@@ -340,20 +342,34 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                   AI To'ldirish
                 </button>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-black p-1 rounded-xl border border-white/10">
+                  {(['uz', 'ru', 'en'] as const).map(l => (
+                    <button key={l} type="button" onClick={() => setActiveLang(l)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${activeLang === l ? 'bg-gold-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                    >{l}</button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm mb-4">
+              <Globe size={18} />
+              <span>Siz hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kiritmoqdasiz.</span>
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Nomi</label>
+                  <label className="text-sm text-gray-400">Nomi ({activeLang.toUpperCase()})</label>
                   <input
-                    required
+                    required={activeLang === 'uz'}
                     type="text"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.name?.[activeLang] || ''}
+                    onChange={e => setFormData({ ...formData, name: { ...formData.name, [activeLang]: e.target.value } })}
                     className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none"
                     placeholder="Masalan: Rolex Submariner"
                   />
@@ -368,7 +384,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                   >
                     <option className="bg-zinc-900 text-white" value="" disabled>Tanlang</option>
                     {categories.map(cat => (
-                      <option className="bg-zinc-900 text-white" key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option className="bg-zinc-900 text-white" key={cat.id} value={typeof cat.name === 'string' ? cat.name : cat.name?.uz}>{getLocalizedText(cat.name, 'uz')}</option>
                     ))}
                   </select>
                 </div>
@@ -462,16 +478,16 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <label className="text-sm text-gray-400">Qisqa Tavsif</label>
-                  {formData.shortDescription && (
+                  <label className="text-sm text-gray-400">Qisqa Tavsif ({activeLang.toUpperCase()})</label>
+                  {formData.shortDescription?.[activeLang] && (
                     <span className="text-[10px] text-purple-400 flex items-center gap-1">
                       <Wand2 size={10} /> AI Assisted
                     </span>
                   )}
                 </div>
                 <textarea
-                  value={formData.shortDescription}
-                  onChange={e => setFormData({ ...formData, shortDescription: e.target.value })}
+                  value={formData.shortDescription?.[activeLang] || ''}
+                  onChange={e => setFormData({ ...formData, shortDescription: { ...formData.shortDescription, [activeLang]: e.target.value } })}
                   className="w-full h-24 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none resize-none"
                   placeholder="Tavsif yozing yoki 'AI To'ldirish' tugmasini bosing..."
                 />
@@ -490,15 +506,23 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                       <input
                         type="text"
                         placeholder="Nomi"
-                        value={spec.label}
-                        onChange={(e) => updateSpec(index, 'label', e.target.value)}
+                        value={spec.label?.[activeLang] || ''}
+                        onChange={(e) => {
+                          const newSpecs = [...(formData.specs || [])];
+                          newSpecs[index] = { ...newSpecs[index], label: { ...newSpecs[index].label, [activeLang]: e.target.value } };
+                          setFormData({ ...formData, specs: newSpecs });
+                        }}
                         className="flex-1 bg-black border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                       <input
                         type="text"
                         placeholder="Qiymati"
-                        value={spec.value}
-                        onChange={(e) => updateSpec(index, 'value', e.target.value)}
+                        value={spec.value?.[activeLang] || ''}
+                        onChange={(e) => {
+                          const newSpecs = [...(formData.specs || [])];
+                          newSpecs[index] = { ...newSpecs[index], value: { ...newSpecs[index].value, [activeLang]: e.target.value } };
+                          setFormData({ ...formData, specs: newSpecs });
+                        }}
                         className="flex-1 bg-black border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                       <button type="button" onClick={() => removeSpec(index)} className="text-red-400 hover:text-red-300 p-2">

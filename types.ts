@@ -1,25 +1,30 @@
+export interface LocalizedString {
+  uz: string;
+  ru: string;
+  en: string;
+}
 
 export interface Product {
   id: number;
-  name: string;
+  name: string | LocalizedString;
   price: number;
   formattedPrice: string;
   category: string; // This will link to Category.slug or name
   image: string;
   images?: string[]; // Qo'shimcha rasmlar (max 4)
   videoUrl?: string; // YouTube video link
-  shortDescription: string;
-  specs: { label: string; value: string }[];
+  shortDescription: string | LocalizedString;
+  specs: { label: string | LocalizedString; value: string | LocalizedString }[];
   stock?: number;
   itemsPerPackage?: number;
 }
 
 export interface Category {
   id: number;
-  name: string;
+  name: string | LocalizedString;
   slug: string;
   image: string;
-  description?: string;
+  description?: string | LocalizedString;
   googleProductCategory?: string; // For FB/Google Catalog mapping
 }
 
@@ -33,7 +38,7 @@ export interface HeroContent {
 
 export interface MenuItem {
   id: number;
-  label: string;
+  label: string | LocalizedString;
   href: string; // Masalan: "#" yoki "/category/soatlar"
 }
 
@@ -49,7 +54,7 @@ export interface NavigationSettings {
 }
 
 export interface NavItem {
-  label: string;
+  label: string | LocalizedString;
   href: string;
 }
 
@@ -61,7 +66,7 @@ export type OrderStatus = 'Kutilmoqda' | 'To\'landi' | 'Yetkazilmoqda' | 'Yakunl
 
 export interface OrderItem {
   id?: number;
-  name: string;
+  name: string | LocalizedString;
   quantity: number;
   price?: number;
 }
@@ -80,13 +85,13 @@ export interface Order {
 
 export interface BlogPost {
   id: number;
-  title: string;
+  title: string | LocalizedString;
   image: string;
-  content: string;
+  content: string | LocalizedString;
   seo: {
-    title: string;
-    description: string;
-    keywords: string[];
+    title: string | LocalizedString;
+    description: string | LocalizedString;
+    keywords: string[] | LocalizedString; // LocalizedString can contain stringified arrays if needed
   };
   date: string;
 }

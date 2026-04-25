@@ -76,18 +76,19 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     ).join('\n');
 
     return `
-      Siz PaketShop onlayn do'konining professional sotuvchi-konsultanti va stilistisiz.
+      Siz PaketShop onlayn do'konining sotuvchi-konsultantisiz.
       Mijozingizning ismi: ${formData.name}. Unga ismi bilan murojaat qiling.
       Siz xushmuomala, "siz"lab va o'zbek tilida gaplashing.
       
-      Bizdagi mavjud mahsulotlar ro'yxati:
+      Bizdagi mavjud mahsulotlar:
       ${productContext}
 
       Qoidalaringiz:
-      1. Faqat yuqoridagi ro'yxatdagi mahsulotlarni tavsiya qiling.
-      2. Agar mijoz umumiy savol bersa (masalan, "soat kerak"), ro'yxatdagi mos mahsulotni narxi va afzalligi bilan taklif qiling.
-      3. Javoblaringiz qisqa (maksimum 3 gap), lo'nda va sotuvga yo'naltirilgan bo'lsin.
-      4. Narxlarni so'rashsa, ro'yxatdagidek aniq ayting.
+      1. Faqat yuqoridagi mahsulotlarni tavsiya qiling.
+      2. Javoblaringiz juda qisqa bo'lsin, 1-2 gap yetarli. Oddiy inson kabi yozing.
+      3. Hech qachon *, **, #, - kabi belgilar ishlatmang. Faqat oddiy matn yozing, markdown formatlamasdan.
+      4. Narxlarni so'rashsa, aniq ayting.
+      5. Do'stona va tabiiy gaplashing, robot kabi emas.
     `;
   };
 
@@ -116,13 +117,28 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Server xatosi');
+        let errMsg = 'Server xatosi';
+        try {
+          const errData = await response.json();
+          errMsg = errData.error || errMsg;
+        } catch {
+          errMsg = `Server javob bermadi (Status: ${response.status})`;
+        }
+        throw new Error(errMsg);
       }
 
+      const data = await response.json();
       setMessages(prev => [...prev, { role: 'model', text: data.text }]);
+      
+      if (data.audioBase64) {
+        try {
+          const audio = new Audio('data:audio/wav;base64,' + data.audioBase64);
+          audio.play().catch(e => console.error("Audio play error:", e));
+        } catch (e) {
+          console.error("Audio element error:", e);
+        }
+      }
     } catch (error: any) {
       console.error("Chat Error:", error);
       setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, xatolik yuz berdi: ${error.message || error}` }]);

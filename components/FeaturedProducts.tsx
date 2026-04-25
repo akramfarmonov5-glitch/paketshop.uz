@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ProductSkeleton } from './Skeleton';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface FeaturedProductsProps {
     products: Product[];
@@ -30,13 +31,16 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
     const [minPrice, setMinPrice] = useState<string>('');
     const [maxPrice, setMaxPrice] = useState<string>('');
     const { isDark } = useTheme();
-    const { t } = useLanguage();
+    const { lang, t } = useLanguage();
 
     // Derive active products based on filter and sorting
     const filteredProducts = products.filter(p => {
-        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
+        const pCat = typeof p.category === 'string' ? p.category : JSON.stringify(p.category);
+        const matchesCategory = selectedCategory === 'All' || pCat === selectedCategory;
+        const pName = getLocalizedText(p.name, lang).toLowerCase();
+        const pDesc = getLocalizedText(p.shortDescription, lang).toLowerCase();
+        const matchesSearch = pName.includes(searchQuery.toLowerCase()) ||
+            pDesc.includes(searchQuery.toLowerCase());
         const minP = minPrice ? parseInt(minPrice) : 0;
         const maxP = maxPrice ? parseInt(maxPrice) : Infinity;
         const matchesPrice = p.price >= minP && p.price <= maxP;
@@ -107,11 +111,15 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                     {categories.map(cat => (
                                         <button
                                             key={cat.id}
-                                            onClick={() => setSelectedCategory(cat.name)}
-                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
+                                            onClick={() => setSelectedCategory(typeof cat.name === 'string' ? cat.name : JSON.stringify(cat.name))}
+                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm border ${selectedCategory === (typeof cat.name === 'string' ? cat.name : JSON.stringify(cat.name))
+                                                    ? 'border-gold-400 bg-gold-400/10 text-gold-400'
+                                                    : isDark
+                                                        ? 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                                        : 'border-transparent text-light-muted hover:text-light-text hover:bg-light-card'
+                                                }`}
                                         >
-                                            <span>{t(cat.name)}</span>
-                                            {selectedCategory === cat.name && <Check size={16} />}
+                                            {getLocalizedText(cat.name, lang)}
                                         </button>
                                     ))}
                                 </div>

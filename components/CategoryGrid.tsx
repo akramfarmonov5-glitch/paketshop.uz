@@ -5,6 +5,7 @@ import { Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { CategorySkeleton } from './Skeleton';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface CategoryGridProps {
   categories: Category[];
@@ -14,7 +15,7 @@ interface CategoryGridProps {
 
 const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategory, isLoading }) => {
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   return (
     <section className={`py-12 md:py-20 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
@@ -49,7 +50,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              onClick={() => onSelectCategory(category.name)}
+              onClick={() => onSelectCategory(typeof category.name === 'string' ? category.name : JSON.stringify(category.name))}
               className={`group relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer border border-white/5 ${
                 // 1-element (index 0) 2x2 joy egallaydi. 3 ustunli gridda bu 2/3 qismni oladi.
                 index === 0 ? 'col-span-2 row-span-2' : 'col-span-1'
@@ -59,7 +60,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               <div className="absolute inset-0">
                 <img
                   src={category.image}
-                  alt={category.name}
+                  alt={getLocalizedText(category.name, lang)}
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -75,11 +76,11 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
                   </span>
                   {/* Matn o'lchamlari mobil uchun moslashtirildi */}
                   <h3 className={`font-bold text-white mb-2 md:mb-4 leading-tight ${index === 0 ? 'text-xl md:text-4xl' : 'text-xs md:text-2xl'}`}>
-                    {t(category.name)}
+                    {getLocalizedText(category.name, lang)}
                   </h3>
                   {/* Hidden for UI, but kept for SEO */}
                   <p className="sr-only">
-                    {category.description}
+                    {getLocalizedText(category.description, lang)}
                   </p>
 
                   <div className="inline-flex items-center gap-2 text-white text-[10px] md:text-sm font-medium group-hover:text-gold-400 transition-colors">

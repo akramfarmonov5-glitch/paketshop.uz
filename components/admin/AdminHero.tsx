@@ -222,16 +222,16 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                         <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
                             <span className="inline-block px-2 py-1 bg-gold-500/20 text-gold-400 text-[10px] font-bold uppercase rounded border border-gold-500/30">
-                                {formData.badge}
+                                {formData.badge?.[activeLang] || ''}
                             </span>
                             <h2 className="text-2xl font-bold text-white leading-tight">
-                                {formData.title}
+                                {formData.title?.[activeLang] || ''}
                             </h2>
                             <p className="text-sm text-gray-300 line-clamp-3">
                                 {formData.description}
                             </p>
                             <button className="px-4 py-2 bg-white text-black text-xs font-bold rounded-full mt-2">
-                                {formData.buttonText}
+                                {formData.buttonText?.[activeLang] || ''}
                             </button>
                         </div>
 

@@ -5,6 +5,7 @@ import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { Review } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductReviewsProps {
   productId: number;
@@ -13,6 +14,7 @@ interface ProductReviewsProps {
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const { isDark } = useTheme();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -110,14 +112,14 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       };
 
       setReviews([mockInsertedReview, ...reviews]);
-      showToast("Fikringiz uchun rahmat!", "success");
+      showToast(t('review_thanks'), "success");
       
       setName('');
       setComment('');
       setRating(5);
       setShowForm(false);
     } catch (error) {
-      showToast("Xatolik yuz berdi.", "error");
+      showToast(t('error_occurred'), "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -157,13 +159,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         <div>
           <h2 className={`text-xl md:text-2xl font-bold mb-1 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <MessageCircle size={22} className="text-gold-400" />
-            Mijozlar fikri
+            {t('reviews_title')}
           </h2>
           {reviews.length > 0 && (
             <div className="flex items-center gap-2">
               <div className="flex">{renderStars(Number(averageRating))}</div>
               <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {averageRating} ({reviews.length} izoh)
+                {averageRating} ({reviews.length} {t('reviews_count')})
               </span>
             </div>
           )}
@@ -173,7 +175,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
           onClick={() => setShowForm(!showForm)}
           className={`text-sm font-bold px-4 py-2 rounded-lg transition-colors border ${isDark ? 'border-gold-400/30 text-gold-400 hover:bg-gold-400/10' : 'border-black text-black hover:bg-black hover:text-white'}`}
         >
-          {showForm ? 'Bekor qilish' : 'Fikr qoldirish'}
+          {showForm ? t('cancel') : t('leave_review')}
         </button>
       </div>
 
@@ -188,19 +190,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 space-y-1.5">
-                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Sizning Ismingiz</label>
+                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('your_name')}</label>
                   <input
                     required
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                    placeholder="Ismingizni kiriting"
+                    placeholder="{t('enter_name_placeholder')}"
                   />
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Baholang</label>
+                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('rate')}</label>
                   <div className="flex gap-1 h-[46px] items-center px-4 rounded-xl border bg-transparent">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -223,14 +225,14 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Izohingiz</label>
+                <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('your_comment')}</label>
                 <textarea
                   required
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors resize-none ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                  placeholder="Mahsulot haqida fikringiz..."
+                  placeholder="{t('comment_placeholder')}"
                 />
               </div>
 
@@ -240,7 +242,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                   disabled={isSubmitting}
                   className="bg-gold-400 text-black font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gold-500 transition-transform active:scale-95 disabled:opacity-50"
                 >
-                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} /> Yuborish</>}
+                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} /> {t('submit')}</>}
                 </button>
               </div>
             </form>
@@ -251,7 +253,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
         {reviews.length === 0 ? (
           <div className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            Hali izohlar qoldirilmagan. Birinchi bo'lib fikr bildiring!
+            {t('no_reviews')}
           </div>
         ) : (
           reviews.map((review) => (
