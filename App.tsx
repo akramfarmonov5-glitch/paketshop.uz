@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -8,23 +8,25 @@ import Footer from './components/Footer';
 import TrustBadges from './components/TrustBadges';
 import Testimonials from './components/Testimonials';
 import PromoBanner from './components/PromoBanner';
-import ProductDetail from './components/ProductDetail';
 import CartSidebar from './components/CartSidebar';
-import Checkout from './components/Checkout';
-import AIChatAssistant from './components/AIChatAssistant';
 import MobileNav from './components/MobileNav';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminLogin from './components/admin/AdminLogin';
-import OrderTracker from './components/OrderTracker';
 import BlogGrid from './components/BlogGrid';
-import BlogPostDetail from './components/BlogPostDetail';
-import Wishlist from './components/Wishlist';
 import MetaPixel from './components/MetaPixel';
-import SearchModal from './components/SearchModal';
 import SEOHead from './components/SEOHead';
 import InstallPWA from './components/InstallPWA';
-import AuthModal from './components/AuthModal';
-import UserProfile from './components/UserProfile';
+
+// Lazy loaded components (Code Splitting & Performance Optimization)
+const ProductDetail = lazy(() => import('./components/ProductDetail'));
+const Checkout = lazy(() => import('./components/Checkout'));
+const AIChatAssistant = lazy(() => import('./components/AIChatAssistant'));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminLogin = lazy(() => import('./components/admin/AdminLogin'));
+const OrderTracker = lazy(() => import('./components/OrderTracker'));
+const BlogPostDetail = lazy(() => import('./components/BlogPostDetail'));
+const Wishlist = lazy(() => import('./components/Wishlist'));
+const SearchModal = lazy(() => import('./components/SearchModal'));
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
 import { useAuth } from './context/AuthContext';
 import { MOCK_PRODUCTS, MOCK_CATEGORIES, DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATION } from './constants';
 import { CartProvider, useCart } from './context/CartContext';
@@ -115,6 +117,13 @@ function routeToURL(route: Route, products: Product[], blogPosts: BlogPost[]): s
       return '/';
   }
 }
+
+const PageLoader = () => (
+  <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center">
+    <div className="w-12 h-12 border-4 border-gold-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p className="text-gray-500">Yuklanmoqda...</p>
+  </div>
+);
 
 const AppContent: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(parseRouteFromURL);
@@ -615,7 +624,9 @@ const AppContent: React.FC = () => {
         />
       )}
 
-      {renderContent()}
+      <Suspense fallback={<PageLoader />}>
+        {renderContent()}
+      </Suspense>
 
       {currentRoute.name !== 'ADMIN' && <CartSidebar onCheckout={navigateToCheckout} />}
 
@@ -629,21 +640,27 @@ const AppContent: React.FC = () => {
         />
       )}
 
-      <AIChatAssistant products={products} />
+      <Suspense fallback={null}>
+        <AIChatAssistant products={products} />
+      </Suspense>
 
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        products={products}
-        categories={categories}
-        onNavigateToProduct={navigateToProduct}
-      />
+      <Suspense fallback={null}>
+        <SearchModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          products={products}
+          categories={categories}
+          onNavigateToProduct={navigateToProduct}
+        />
+      </Suspense>
 
       {currentRoute.name !== 'CHECKOUT' && currentRoute.name !== 'ADMIN' && currentRoute.name !== 'TRACKING' && currentRoute.name !== 'BLOG_POST' && currentRoute.name !== 'WISHLIST' && (
         <Footer onAdminClick={navigateToAdmin} />
       )}
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <Suspense fallback={null}>
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      </Suspense>
       <InstallPWA />
     </div>
   );
