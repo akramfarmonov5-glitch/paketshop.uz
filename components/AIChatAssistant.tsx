@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { Product } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -103,45 +102,30 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     setIsLoading(true);
 
     try {
-      const env = import.meta.env || {};
-      const keys = [env.VITE_GEMINI_API_KEY1, env.VITE_GEMINI_API_KEY].filter(Boolean);
-
-      let lastError;
-
-      // Prepare conversation history skipping the initial greeting if needed, or mapping properly
       const history = newMessages.slice(1, -1).map(msg => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.text }]
       }));
 
-      for (const apiKey of keys) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-          
-          const chat = ai.chats.create({
-            model: 'gemini-2.5-flash',
-            config: {
-              systemInstruction: getSystemInstruction(),
-            },
-            history: history.length > 0 ? history : undefined
-          });
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          history: history,
+          systemInstruction: getSystemInstruction()
+        })
+      });
 
-          const response = await chat.sendMessage({ message: userMessage });
-          const text = response.text || "Uzr, tushunmadim. Qayta so'ray olasizmi?";
+      const data = await response.json();
 
-          setMessages(prev => [...prev, { role: 'model', text }]);
-          setIsLoading(false);
-          return; 
-        } catch (error: any) {
-          console.error(`Error with API key ${apiKey.substring(0, 5)}...:`, error);
-          lastError = error;
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Server xatosi');
       }
 
-      throw lastError;
-
+      setMessages(prev => [...prev, { role: 'model', text: data.text }]);
     } catch (error: any) {
-      console.error("All API Keys Failed:", error);
+      console.error("Chat Error:", error);
       setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, xatolik yuz berdi: ${error.message || error}` }]);
     } finally {
       setIsLoading(false);
