@@ -3,6 +3,7 @@ import { HeroContent } from '../../types';
 import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import CloudinaryUpload from '../CloudinaryUpload';
 
 interface AdminHeroProps {
     heroContent: HeroContent;
@@ -83,7 +84,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                             value={formData.badge}
                             onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
-                            placeholder="Masalan: Yangi Mavsum"
+                            placeholder="Masalan: Yangi Xizmat"
                         />
                     </div>
 
@@ -96,7 +97,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
-                            placeholder="Masalan: Premium Collection 2026"
+                            placeholder="Masalan: Sizning ishonchli hamkoringiz"
                         />
                         <p className="text-[10px] text-gray-500">Sarlavha ikkiga bo'linib ko'rsatiladi (Oq va Gradient).</p>
                     </div>
@@ -106,8 +107,8 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         <textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full h-24 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none resize-none"
-                            placeholder="Qisqacha tavsif..."
+                            className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none min-h-[100px] resize-y"
+                            placeholder="Masalan: Biz sizning biznesingiz uchun tez va ishonchli yetkazib berish xizmatlarini taqdim etamiz..."
                         />
                     </div>
 
@@ -120,7 +121,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                             value={formData.buttonText}
                             onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
-                            placeholder="Masalan: Sotib olish"
+                            placeholder="Masalan: Hozir buyurtma berish"
                         />
                     </div>
 
@@ -134,25 +135,25 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                                 <PlusCircle size={14} /> Qo'shish
                             </button>
                         </div>
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {formData.images.map((url, index) => (
-                                <div key={index} className="flex gap-2 items-center">
-                                    <span className="text-xs text-gray-600 w-4">{index + 1}.</span>
-                                    <input
-                                        type="text"
-                                        value={url}
-                                        onChange={(e) => updateImage(index, e.target.value)}
-                                        className="flex-1 bg-black border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
-                                        placeholder="https://..."
+                                <div key={index} className="relative bg-black rounded-xl p-3 border border-white/10">
+                                    <CloudinaryUpload 
+                                        currentImage={url}
+                                        label={`Slayd ${index + 1}`}
+                                        onUpload={(newUrl) => updateImage(index, newUrl)}
                                     />
-                                    <button type="button" onClick={() => removeImage(index)} className="text-red-400 hover:text-red-300 p-2">
-                                        <MinusCircle size={18} />
-                                    </button>
+                                    {formData.images.length > 1 && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => removeImage(index)} 
+                                            className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-xs z-10 transition-colors"
+                                        >
+                                            <MinusCircle size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             ))}
-                            {formData.images.length === 0 && (
-                                <p className="text-xs text-gray-500 italic">Hozircha rasmlar yo'q. Kamida bitta rasm qo'shing.</p>
-                            )}
                         </div>
                     </div>
 
