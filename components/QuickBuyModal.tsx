@@ -5,6 +5,8 @@ import { Product } from '../types';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 import * as fpixel from '../lib/fpixel';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface QuickBuyModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface QuickBuyModalProps {
 
 const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product, quantity }) => {
   const { isDark } = useTheme();
+  const { lang } = useLanguage();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -49,7 +52,7 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
         items: [
           {
             id: product.id,
-            name: product.name,
+            name: getLocalizedText(product.name, lang),
             quantity,
             price: product.price,
           },
@@ -73,7 +76,7 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
 <b>Tolov:</b> Operator aniqlaydi
 
 <b>Mahsulot:</b>
-1. ${product.name} (x${quantity}) - ${formatPrice(total)}
+1. ${getLocalizedText(product.name, lang)} (x${quantity}) - ${formatPrice(total)}
 
 <b>Jami:</b> ${formatPrice(total)}
     `.trim();
@@ -147,11 +150,11 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
             {!isSuccess ? (
               <>
                 <div className={`flex gap-4 p-4 rounded-xl mb-6 ${isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}>
-                  <div className="w-16 h-16 rounded-lg bg-gray-800 shrink-0 overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <div className="w-16 aspect-[4/5] rounded-lg bg-gray-800 shrink-0 overflow-hidden">
+                    <img src={product.image} alt={getLocalizedText(product.name, lang)} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h3 className={`font-medium text-sm line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{product.name}</h3>
+                    <h3 className={`font-medium text-sm line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h3>
                     <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Soni: {quantity} ta</p>
                     <p className="text-gold-400 font-bold mt-1 max-w-full truncate">{formatPrice(total)}</p>
                   </div>

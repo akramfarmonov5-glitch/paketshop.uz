@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { Product, BlogPost, Category } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface SEOProps {
   title?: string;
@@ -34,6 +36,7 @@ const SEOHead: React.FC<SEOProps> = ({
   breadcrumbs,
   noindex = false,
 }) => {
+  const { lang } = useLanguage();
   useEffect(() => {
     // === Title ===
     const fullTitle = title
@@ -117,15 +120,15 @@ const SEOHead: React.FC<SEOProps> = ({
       addJsonLd({
         "@context": "https://schema.org/",
         "@type": "Product",
-        "name": product.name,
+        "name": getLocalizedText(product.name, lang),
         "image": [product.image, ...(product.images || [])],
-        "description": product.shortDescription,
+        "description": getLocalizedText(product.shortDescription, lang),
         "sku": `PSHOP-${product.id}`,
         "brand": {
           "@type": "Brand",
           "name": "PaketShop"
         },
-        "category": product.category,
+        "category": getLocalizedText(product.category, lang),
         "offers": {
           "@type": "Offer",
           "url": canonical || `${BASE_URL}/`,
@@ -154,7 +157,7 @@ const SEOHead: React.FC<SEOProps> = ({
       addJsonLd({
         "@context": "https://schema.org",
         "@type": "BlogPosting",
-        "headline": blogPost.title,
+        "headline": getLocalizedText(blogPost.title, lang),
         "image": blogPost.image,
         "datePublished": blogPost.date,
         "dateModified": blogPost.date,
@@ -170,7 +173,7 @@ const SEOHead: React.FC<SEOProps> = ({
             "url": `${BASE_URL}/logo-light.png`
           }
         },
-        "description": blogPost.seo?.description || blogPost.content.substring(0, 160),
+        "description": getLocalizedText(blogPost.seo?.description, lang) || getLocalizedText(blogPost.content, lang).substring(0, 160),
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": canonical || `${BASE_URL}/`

@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -18,7 +19,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const isLiked = isInWishlist(product.id);
 
@@ -26,17 +27,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
     e.stopPropagation();
     toggleWishlist(product);
     if (!isLiked) {
-      showToast(`${t(product.name)} ${t('added_to_wishlist_desc')}`, 'success');
-    } else {
-      showToast(`${t(product.name)} ${t('removed_from_wishlist_desc')}`, 'info');
-    }
-  };
+    showToast(`${getLocalizedText(product.name, lang)} ${t('added_to_wishlist_desc')}`, 'success');
+  } else {
+    showToast(`${getLocalizedText(product.name, lang)} ${t('removed_from_wishlist_desc')}`, 'info');
+  }
+};
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    addToCart(product);
-    showToast(`${t(product.name)} ${t('added_to_cart_desc')}`, 'success');
-  };
+const handleAddToCart = (e: React.MouseEvent) => {
+  e.preventDefault();
+  addToCart(product);
+  showToast(`${getLocalizedText(product.name, lang)} ${t('added_to_cart_desc')}`, 'success');
+};
 
   return (
     <motion.div
@@ -46,11 +47,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
       {/* Image Container */}
       <div
         onClick={onNavigate}
-        className="relative aspect-[3/4] w-full overflow-hidden bg-gray-900 cursor-pointer"
+        className="relative aspect-[4/5] w-full overflow-hidden bg-gray-900 cursor-pointer"
       >
         <img
           src={product.image}
-          alt={product.name}
+          alt={getLocalizedText(product.name, lang)}
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -85,9 +86,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
       {/* Content */}
       <div className="p-3 md:p-6 flex flex-col flex-grow">
         <div className="flex-grow cursor-pointer" onClick={onNavigate}>
-          <span className={`text-[9px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t(product.category)}</span>
+          <span className={`text-[9px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</span>
           <h3 className={`text-sm md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
-            {t(product.name)}
+            {getLocalizedText(product.name, lang)}
           </h3>
           {product.itemsPerPackage && product.itemsPerPackage > 1 && (
             <span className="text-[10px] text-gold-400/80 font-medium">

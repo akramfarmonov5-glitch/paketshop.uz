@@ -8,6 +8,7 @@ import * as fpixel from '../lib/fpixel';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface CheckoutProps {
   onBack: () => void;
@@ -18,7 +19,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'paynet' | 'cash'>('paynet');
@@ -86,14 +87,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
       const discount = cartTotal * 0.1;
       setDiscountAmount(discount);
       setAppliedPromo(code);
-      showToast("Promo kod muvaffaqiyatli qo'llanildi!", "success");
+      showToast(t('checkout_promo_success'), "success");
     } else if (code === 'ADMIN') {
       const discount = cartTotal * 0.5;
       setDiscountAmount(discount);
       setAppliedPromo(code);
-      showToast("Maxsus chegirma qo'llanildi!", "success");
+      showToast(t('checkout_promo_special'), "success");
     } else {
-      showToast("Bunday promo kod mavjud emas.", "error");
+      showToast(t('checkout_promo_error'), "error");
       setDiscountAmount(0);
       setAppliedPromo('');
     }
@@ -201,19 +202,19 @@ ${discountInfo}
     
     // Custom Validation
     const newErrors: Record<string, string> = {};
-    if (!formData.firstName.trim()) newErrors.firstName = "Ismingizni kiritishingiz shart";
-    if (!formData.lastName.trim()) newErrors.lastName = "Familiyangizni kiritishingiz shart";
+    if (!formData.firstName.trim()) newErrors.firstName = t('checkout_req_firstName');
+    if (!formData.lastName.trim()) newErrors.lastName = t('checkout_req_lastName');
     
     const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
     if (phoneDigits.length < 9) {
-       newErrors.phone = "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)";
+       newErrors.phone = t('checkout_req_phone');
     }
 
-    if (!formData.address.trim()) newErrors.address = "Manzilni kiritishingiz shart";
+    if (!formData.address.trim()) newErrors.address = t('checkout_req_address');
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      showToast("Iltimos, barcha maydonlarni to'g'ri to'ldiring", "error");
+      showToast(t('checkout_req_fill_all'), "error");
       return;
     }
     
@@ -244,10 +245,10 @@ ${discountInfo}
   if (cart.length === 0 && !isSuccess) {
     return (
       <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-6 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
-        <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>Savatchangiz bo'sh</h2>
-        <p className={`mb-8 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Buyurtma berish uchun avval mahsulot tanlang.</p>
+        <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('cart_empty')}</h2>
+        <p className={`mb-8 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('cart_empty_desc')}</p>
         <button onClick={onBack} className={`px-8 py-3 rounded-full transition-colors ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-light-card text-light-text hover:bg-gray-200'}`}>
-          Do'konga qaytish
+          {t('checkout_back_to_shop')}
         </button>
       </div>
     );
@@ -258,28 +259,28 @@ ${discountInfo}
       <div className="container mx-auto px-6 max-w-6xl relative z-10">
         <button onClick={onBack} className={`flex items-center gap-2 mb-8 transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-light-muted hover:text-light-text'}`}>
           <ArrowLeft size={18} />
-          <span>Do'konga qaytish</span>
+          <span>{t('checkout_back_to_shop')}</span>
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtmani rasmiylashtirish</h1>
+            <h1 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('checkout_title')}</h1>
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Ismingiz</label>
-                  <input name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Aziz" />
+                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_firstName')}</label>
+                  <input name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder={t('checkout_placeholder_firstname')} />
                   {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Familiyangiz</label>
-                  <input name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Rahimov" />
+                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_lastName')}</label>
+                  <input name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder={t('checkout_placeholder_lastname')} />
                   {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Telefon raqam</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_phone')}</label>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>+998</span>
                   <input name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:outline-none transition-all ${errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="90 123 45 67" />
@@ -299,13 +300,13 @@ ${discountInfo}
               </div>
 
               <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Manzil</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_address')}</label>
                 <input name="address" type="text" value={formData.address} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.address ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Amir Temur ko'chasi, 15-uy" />
                 {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
               <div className="pt-2">
-                <label className={`text-sm mb-2 block ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Promo kod (Agar bo'lsa)</label>
+                <label className={`text-sm mb-2 block ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_promo')}</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Ticket className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`} size={18} />
@@ -314,7 +315,7 @@ ${discountInfo}
                       value={promoCode}
                       disabled={!!appliedPromo}
                       onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Kodini kiriting"
+                      placeholder={t('checkout_promo_placeholder')}
                       className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:border-gold-400 focus:outline-none disabled:opacity-50 ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
                     />
                   </div>
@@ -325,7 +326,7 @@ ${discountInfo}
                       disabled={!promoCode || isCheckingPromo}
                       className={`px-6 rounded-lg font-medium transition-colors disabled:opacity-50 ${isDark ? 'bg-white/10 hover:bg-gold-400 hover:text-black text-white' : 'bg-light-card hover:bg-gold-400 hover:text-black text-light-text'}`}
                     >
-                      {isCheckingPromo ? <Loader2 className="animate-spin" size={20} /> : "Qo'llash"}
+                      {isCheckingPromo ? <Loader2 className="animate-spin" size={20} /> : t('checkout_apply')}
                     </button>
                   ) : (
                     <button
@@ -339,22 +340,22 @@ ${discountInfo}
                 </div>
                 {appliedPromo && (
                   <p className="text-green-400 text-sm mt-2 flex items-center gap-1">
-                    <CheckCircle2 size={14} /> Kod qo'llanildi! Siz {formatPrice(discountAmount)} tejadingiz.
+                    <CheckCircle2 size={14} /> {t('checkout_promo_applied_1')} {formatPrice(discountAmount)} {t('checkout_promo_applied_2')}
                   </p>
                 )}
               </div>
 
               <div className="space-y-3 pt-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>To'lov usuli</label>
+                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_payment_method')}</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => setPaymentMethod('paynet')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'paynet' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Wallet size={24} />
-                    <span className="font-medium text-sm">Paynet (Onlayn)</span>
+                    <span className="font-medium text-sm">{t('checkout_paynet')}</span>
                     {paymentMethod === 'paynet' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
                   </button>
                   <button type="button" onClick={() => setPaymentMethod('cash')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'cash' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Banknote size={24} />
-                    <span className="font-medium text-sm">Naqd (Qabulda)</span>
+                    <span className="font-medium text-sm">{t('checkout_cash')}</span>
                     {paymentMethod === 'cash' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
                   </button>
                 </div>
@@ -365,33 +366,33 @@ ${discountInfo}
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                      <span>Jarayonda...</span>
+                      <span>{t('checkout_in_progress')}</span>
                     </div>
                   ) : (
                     <>
-                      <span>{paymentMethod === 'paynet' ? "To'lash" : "Buyurtma berish"}</span>
+                      <span>{paymentMethod === 'paynet' ? t('checkout_pay') : t('checkout_order_btn')}</span>
                       <span className="text-sm font-normal">({formatPrice(finalTotal)})</span>
                       <Send size={18} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </button>
                 <p className="text-center text-gray-500 text-sm mt-4 flex items-center justify-center gap-2">
-                  <ShieldCheck size={16} /> Xavfsiz to'lov va ma'lumotlar himoyasi
+                  <ShieldCheck size={16} /> {t('checkout_secure_payment')}
                 </p>
               </div>
             </form>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`border rounded-2xl p-8 h-fit sticky top-28 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border shadow-sm'}`}>
-            <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtma tarkibi</h3>
+            <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('checkout_order_summary')}</h3>
             <div className="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className={`w-16 h-20 rounded-lg overflow-hidden shrink-0 ${isDark ? 'bg-gray-800' : 'bg-light-card'}`}>
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.image} alt={getLocalizedText(item.name, lang)} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
-                    <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-light-text'}`}>{item.name}</h4>
+                    <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(item.name, lang)}</h4>
                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{item.category}</p>
                     <div className="flex justify-between mt-2">
                       <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>x{item.quantity}</span>
@@ -404,21 +405,21 @@ ${discountInfo}
 
             <div className={`space-y-3 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
               <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                <span>Mahsulotlar</span>
+                <span>{t('checkout_products_sum')}</span>
                 <span>{formatPrice(cartTotal)}</span>
               </div>
               {discountAmount > 0 && (
                 <div className="flex justify-between text-green-400">
-                  <span>Chegirma</span>
+                  <span>{t('checkout_discount')}</span>
                   <span>-{formatPrice(discountAmount)}</span>
                 </div>
               )}
               <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                <span>Yetkazib berish</span>
-                <span className="text-green-400">Bepul</span>
+                <span>{t('checkout_delivery')}</span>
+                <span className="text-green-400">{t('checkout_delivery_free')}</span>
               </div>
               <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
-                <span>Jami to'lov</span>
+                <span>{t('checkout_total')}</span>
                 <span>{formatPrice(finalTotal)}</span>
               </div>
             </div>
@@ -426,11 +427,11 @@ ${discountInfo}
             <div className="mt-8 grid grid-cols-2 gap-4">
               <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
                 <Truck className="text-gold-400 mb-2" size={24} />
-                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>Tezkor yetkazish</span>
+                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>{t('checkout_fast_delivery')}</span>
               </div>
               <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
                 <CreditCard className="text-gold-400 mb-2" size={24} />
-                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>Qulay to'lov</span>
+                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>{t('checkout_easy_payment')}</span>
               </div>
             </div>
           </motion.div>
@@ -448,14 +449,14 @@ ${discountInfo}
               <div className="w-16 h-16 bg-gold-400/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-gold-400/30">
                 <Smartphone size={32} className="text-gold-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Paynet orqali to'lash</h2>
-              <p className="text-gray-400 text-sm mb-6">To'lovni amalga oshirish uchun QR kodni skanerlang.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('checkout_paynet_title')}</h2>
+              <p className="text-gray-400 text-sm mb-6">{t('checkout_paynet_desc')}</p>
               <div className="p-4 bg-white rounded-2xl mb-6 shadow-xl">
                 <img src={PAYNET_QR_IMAGE} alt="Paynet QR Code" className="w-48 h-48 object-contain" onError={(e) => { e.currentTarget.src = QR_FALLBACK; }} />
               </div>
               <div className="flex flex-col gap-3 w-full">
-                <button onClick={completeOrder} className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors">To'lov qildim</button>
-                <a href={PAYNET_URL} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm"><ExternalLink size={16} /> Havolani ochish</a>
+                <button onClick={completeOrder} className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors">{t('checkout_paynet_btn')}</button>
+                <a href={PAYNET_URL} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm"><ExternalLink size={16} /> {t('checkout_paynet_link')}</a>
               </div>
             </motion.div>
           </div>
@@ -468,9 +469,9 @@ ${discountInfo}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-dark-900 border border-white/10 rounded-3xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl">
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} className="text-green-500" /></div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Buyurtmangiz qabul qilindi!</h2>
-              <p className="text-gray-400 mb-8 leading-relaxed">Rahmat, {formData.firstName}! Menejerlarimiz tez orada <b>{formData.phone}</b> raqami orqali siz bilan bog'lanishadi.</p>
-              <button onClick={onBack} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors">Bosh sahifaga qaytish</button>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{t('checkout_success_title')}</h2>
+              <p className="text-gray-400 mb-8 leading-relaxed">{t('checkout_success_desc_1')} {formData.firstName}! {t('checkout_success_desc_2')} <b>{formData.phone}</b> {t('checkout_success_desc_3')}</p>
+              <button onClick={onBack} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors">{t('checkout_back_home')}</button>
             </motion.div>
           </div>
         )}

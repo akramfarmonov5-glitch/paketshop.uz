@@ -4,6 +4,8 @@ import { Sparkles, Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Ed
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
+import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
+import { Globe } from 'lucide-react';
 
 interface AdminBlogProps {
   posts: BlogPost[];
@@ -15,6 +17,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
 
   const [formData, setFormData] = useState<Partial<BlogPost>>({
     title: '',
@@ -38,7 +41,13 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleOpenEdit = (post: BlogPost) => {
     setFormData({
       ...post,
-      seo: post.seo || { title: '', description: '', keywords: [] },
+      title: parseLocalizedObject(post.title),
+      content: parseLocalizedObject(post.content),
+      seo: {
+         title: parseLocalizedObject(post.seo?.title),
+         description: parseLocalizedObject(post.seo?.description),
+         keywords: parseLocalizedObject(post.seo?.keywords)
+      }
     });
     setIsModalOpen(true);
   };
@@ -55,7 +64,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   };
 
   const generateContent = async () => {
-    if (!formData.title) {
+    if (!formData.title || (!formData.title.uz && typeof formData.title !== 'string')) {
       showToast("Iltimos, avval maqola mavzusi (Title)ni yozing.", 'warning');
       return;
     }
@@ -72,7 +81,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       }>({
         systemInstruction: 'You are an expert content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON.',
         message: `
-          Topic: "${formData.title}"
+          Topic: "${formData.title?.uz || formData.title}"
 
           Generate a blog post in Uzbek language:
           1. content: informative content about packaging, business, or wholesale (around 150 words)
@@ -94,8 +103,12 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
       setFormData(prev => ({
         ...prev,
-        content: data.content,
-        seo: data.seo
+        content: { ...prev.content, [activeLang]: data.content },
+        seo: {
+          title: { ...prev.seo?.title, [activeLang]: data.seo.title },
+          description: { ...prev.seo?.description, [activeLang]: data.seo.description },
+          keywords: { ...prev.seo?.keywords, [activeLang]: data.seo.keywords.join(', ') }
+        }
       }));
     } catch (error) {
       console.error("AI Gen Error", error);
@@ -108,7 +121,16 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const postData = { ...formData };
+    const postData: any = { 
+       ...formData,
+       title: JSON.stringify(formData.title),
+       content: JSON.stringify(formData.content),
+       seo: {
+           title: JSON.stringify(formData.seo?.title),
+           description: JSON.stringify(formData.seo?.description),
+           keywords: JSON.stringify(formData.seo?.keywords)
+       }
+    };
 
     try {
       if (postData.id) {
@@ -138,7 +160,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   };
 
   const filteredPosts = posts.filter(p =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase())
+    (typeof p.title === 'string' ? p.title : JSON.stringify(p.title)).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -223,8 +245,8 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
                   <input
                     required
                     type="text"
-                    value={formData.title}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                    value={formData.title?.[activeLang] || ''}
+                    onChange={e => setFormData({ ...formData, title: { ...formData.title, [activeLang]: e.target.value } })}
                     className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none"
                     placeholder="Maqola mavzusi..."
                   />
@@ -258,8 +280,8 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
                 <label className="text-sm text-gray-400">Matn (Content)</label>
                 <textarea
                   required
-                  value={formData.content}
-                  onChange={e => setFormData({ ...formData, content: e.target.value })}
+                  value={formData.content?.[activeLang] || ''}
+                  onChange={e => setFormData({ ...formData, content: { ...formData.content, [activeLang]: e.target.value } })}
                   className="w-full h-40 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none resize-none custom-scrollbar leading-relaxed"
                   placeholder="Maqola matni..."
                 />

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface CartSidebarProps {
   onCheckout: () => void;
@@ -11,6 +13,7 @@ interface CartSidebarProps {
 const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
   const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const { isDark } = useTheme();
+  const { lang, t } = useLanguage();
 
   useEffect(() => {
     if (cart.length === 0 && isCartOpen) {
@@ -49,9 +52,9 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
             <div className={`flex items-center justify-between p-6 border-b backdrop-blur-md ${isDark ? 'border-white/10 bg-dark-900/50' : 'border-light-border bg-white/50'}`}>
               <div className="flex items-center gap-3">
                 <ShoppingBag size={20} className="text-gold-400" />
-                <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-light-text'}`}>Savatcha</h2>
+                <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-light-text'}`}>{t('cart_title')}</h2>
                 <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-white/10 text-gray-300' : 'bg-light-card text-light-muted'}`}>
-                  {cart.length} ta mahsulot
+                  {cart.length} {t('cart_items_count')}
                 </span>
               </div>
               <button
@@ -69,9 +72,9 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                   <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-light-card'}`}>
                     <ShoppingBag size={32} className={isDark ? 'text-gray-600' : 'text-light-muted'} />
                   </div>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Savatchangiz bo'sh</p>
+                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('cart_empty')}</p>
                   <button onClick={closeCart} className="text-gold-400 hover:text-gold-500 underline underline-offset-4">
-                    Xaridni davom ettirish
+                    {t('continue_shopping')}
                   </button>
                 </div>
               ) : (
@@ -83,13 +86,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex gap-4 group"
                   >
-                    <div className="w-24 h-32 rounded-xl overflow-hidden bg-gray-800 border border-white/5 shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <div className="w-24 aspect-[4/5] rounded-xl overflow-hidden bg-gray-800 border border-white/5 shrink-0">
+                      <img src={item.image} alt={getLocalizedText(item.name, lang)} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-1">
                       <div>
                         <div className="flex justify-between items-start">
-                          <h3 className={`font-medium line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{item.name}</h3>
+                          <h3 className={`font-medium line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(item.name, lang)}</h3>
                           <button
                             onClick={() => removeFromCart(item.id)}
                             className="text-gray-500 hover:text-red-400 transition-colors p-1"
@@ -97,7 +100,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{item.category}</p>
+                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{getLocalizedText(item.category, lang)}</p>
                       </div>
 
                       <div className="flex items-end justify-between">
@@ -130,15 +133,15 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
               <div className={`p-6 border-t ${isDark ? 'border-white/10 bg-dark-900' : 'border-light-border bg-light-card'}`}>
                 <div className="space-y-3 mb-6">
                   <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                    <span>Mahsulotlar summasi</span>
+                    <span>{t('checkout_products_sum')}</span>
                     <span>{formatPrice(cartTotal)}</span>
                   </div>
                   <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                    <span>Yetkazib berish</span>
-                    <span className="text-green-400">Bepul</span>
+                    <span>{t('checkout_delivery')}</span>
+                    <span className="text-green-400">{t('checkout_delivery_free')}</span>
                   </div>
                   <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
-                    <span>Jami</span>
+                    <span>{t('total_sum')}</span>
                     <span>{formatPrice(cartTotal)}</span>
                   </div>
                 </div>
@@ -150,7 +153,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                   }}
                   className="w-full py-4 bg-gold-400 text-black font-bold rounded-xl hover:bg-gold-500 transition-colors flex items-center justify-center gap-2 group"
                 >
-                  Buyurtma berish
+                  {t('checkout_order_btn')}
                   <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

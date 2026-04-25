@@ -27,7 +27,7 @@ export const ProductSkeleton = () => {
   
   return (
     <div className={`rounded-2xl border overflow-hidden flex flex-col h-full ${isDark ? 'bg-dark-900 border-white/5' : 'bg-white border-light-border'}`}>
-      <div className="aspect-[4/5] sm:aspect-square relative w-full">
+      <div className="aspect-[4/5] relative w-full">
         <Skeleton className="w-full h-full rounded-none" variant="rectangular" />
       </div>
       <div className="p-4 flex flex-col flex-1 justify-between gap-4">
@@ -50,7 +50,7 @@ export const CategorySkeleton = () => {
   const { isDark } = useTheme();
   
   return (
-    <div className={`relative aspect-[3/4] sm:aspect-[4/5] rounded-3xl overflow-hidden ${isDark ? 'bg-dark-900' : 'bg-gray-100'}`}>
+    <div className={`relative aspect-[4/5] rounded-3xl overflow-hidden ${isDark ? 'bg-dark-900' : 'bg-gray-100'}`}>
       <Skeleton className="w-full h-full rounded-none" variant="rectangular" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
         <Skeleton className="h-6 w-2/3 mb-2 bg-white/20" variant="text" />
@@ -93,7 +93,7 @@ export const ProductDetailSkeleton = () => {
         <Skeleton className="h-4 w-48 mb-8" variant="text" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           <div className="lg:col-span-6 space-y-3">
-            <div className={`aspect-square md:aspect-[4/3] w-full rounded-2xl md:rounded-3xl border ${isDark ? 'bg-dark-900 border-white/5' : 'bg-white border-light-border'}`}>
+            <div className={`aspect-[4/5] w-full rounded-2xl md:rounded-3xl border ${isDark ? 'bg-dark-900 border-white/5' : 'bg-white border-light-border'}`}>
               <Skeleton className="w-full h-full rounded-none" variant="rectangular" />
             </div>
             <div className="flex gap-2 md:gap-3">

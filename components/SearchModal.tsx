@@ -5,6 +5,7 @@ import { Product, Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import * as fpixel from '../lib/fpixel';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   // Auto focus input when modal opens
   useEffect(() => {
@@ -51,11 +52,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
   }, [query]);
 
   const filteredProducts = query.trim()
-    ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
+    ? products.filter(p => getLocalizedText(p.name, lang).toLowerCase().includes(query.toLowerCase()) || getLocalizedText(p.category, lang).toLowerCase().includes(query.toLowerCase())).slice(0, 5)
     : [];
 
   const filteredCategories = query.trim()
-    ? categories.filter(c => c.name.toLowerCase().includes(query.toLowerCase()))
+    ? categories.filter(c => getLocalizedText(c.name, lang).toLowerCase().includes(query.toLowerCase()))
     : [];
 
   // Popular searches suggestions based on actual categories
@@ -162,9 +163,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                         {filteredCategories.map(cat => (
                           <div key={cat.id} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'}`}>
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800">
-                              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                              <img src={cat.image} alt={getLocalizedText(cat.name, lang)} className="w-full h-full object-cover" />
                             </div>
-                            <span className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{t(cat.name)}</span>
+                            <span className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(cat.name, lang)}</span>
                             <ArrowRight size={16} className={`ml-auto group-hover:text-gold-400 ${isDark ? 'text-gray-600' : 'text-light-muted'}`} />
                           </div>
                         ))}
@@ -183,12 +184,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                             onClick={() => handleProductClick(product.id)}
                             className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer group transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'}`}
                           >
-                            <div className={`w-14 h-16 rounded-lg overflow-hidden border ${isDark ? 'bg-gray-800 border-white/5' : 'bg-light-card border-light-border'}`}>
-                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            <div className={`w-14 aspect-[4/5] rounded-lg overflow-hidden border ${isDark ? 'bg-gray-800 border-white/5' : 'bg-light-card border-light-border'}`}>
+                              <img src={product.image} alt={getLocalizedText(product.name, lang)} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1">
-                              <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{t(product.name)}</h4>
-                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t(product.category)}</p>
+                              <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h4>
+                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</p>
                             </div>
                             <div className="text-right">
                               <span className="text-sm font-bold text-gold-400">{product.formattedPrice}</span>

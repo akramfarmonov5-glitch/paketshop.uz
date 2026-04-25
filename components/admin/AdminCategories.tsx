@@ -5,6 +5,7 @@ import { Category } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
+import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
 
 interface AdminCategoriesProps {
   categories: Category[];
@@ -16,7 +17,8 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [formData, setFormData] = useState<Partial<Category>>({
+  const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
+  const [formData, setFormData] = useState<any>({
     name: '',
     slug: '',
     image: '',
@@ -189,9 +191,9 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
             </div>
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-gold-400 transition-colors truncate">{category.name}</h3>
+                <h3 className="text-lg font-bold text-white group-hover:text-gold-400 transition-colors truncate">{getLocalizedText(category.name, 'uz')}</h3>
                 <p className="text-xs text-gray-500 font-mono truncate">/{category.slug}</p>
-                <p className="text-sm text-gray-400 mt-2 line-clamp-2 text-xs">{category.description || "Tavsif yo'q"}</p>
+                <p className="text-sm text-gray-400 mt-2 line-clamp-2 text-xs">{getLocalizedText(category.description, 'uz') || "Tavsif yo'q"}</p>
               </div>
               <div className="flex justify-end gap-2 mt-2">
                 <button
@@ -227,6 +229,10 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
             </div>
 
             <form onSubmit={handleSave} className="space-y-5">
+              <div className="flex items-center gap-2 mb-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm">
+                  <Globe size={18} />
+                  <span>Siz hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kiritmoqdasiz.</span>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 flex items-center gap-2">
                   <Type size={16} /> Nomi
@@ -235,7 +241,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                   <input
                     required
                     type="text"
-                    value={formData.name}
+                    value={formData.name?.[activeLang] || ''}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none transition-colors"
                     placeholder="Masalan: Soatlar"
@@ -243,7 +249,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                   <button
                     type="button"
                     onClick={generateCategoryDetails}
-                    disabled={isGenerating || !formData.name}
+                    disabled={isGenerating || !formData.name?.uz}
                     className="px-3 bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 rounded-xl flex items-center justify-center disabled:opacity-50 transition-colors"
                     title="AI yordamida to'ldirish"
                   >

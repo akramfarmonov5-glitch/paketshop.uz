@@ -36,6 +36,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { hasSupabaseCredentials, supabase } from './lib/supabaseClient';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from './types';
 import { productSlug, getIdFromSlug, blogSlug, getBlogIdFromSlug, slugify } from './lib/slugify';
+import { getLocalizedText } from './lib/i18nUtils';
 import { ProductDetailSkeleton } from './components/Skeleton';
 import * as fpixel from './lib/fpixel';
 
@@ -393,9 +394,9 @@ const AppContent: React.FC = () => {
   // CATEGORY route uchun activeCategory ni useEffect orqali o'rnatish (render ichida setState oldini olish)
   useEffect(() => {
     if (currentRoute.name === 'CATEGORY') {
-      const cat = categories.find(c => slugify(c.name) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
-      if (cat && activeCategory !== cat.name) {
-        setActiveCategory(cat.name);
+      const cat = categories.find(c => slugify(getLocalizedText(c.name, 'uz')) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
+      if (cat && activeCategory !== getLocalizedText(cat.name, 'uz')) {
+        setActiveCategory(getLocalizedText(cat.name, 'uz'));
       }
     }
   }, [currentRoute, categories]);
@@ -444,17 +445,17 @@ const AppContent: React.FC = () => {
         const slug = productSlug(product);
         return (
           <SEOHead
-            title={`${product.name} - ${product.category} sotib olish`}
-            description={`${product.name} - ${product.shortDescription}. Narxi: ${product.formattedPrice}. PaketShop.uz dan buyurtma bering. Bepul yetkazib berish!`}
-            keywords={[product.name, product.category, 'sotib olish', 'narxi', 'PaketShop', 'online shop', 'uzbekistan']}
+            title={`${getLocalizedText(product.name, 'uz')} - ${getLocalizedText(product.category, 'uz')} sotib olish`}
+            description={`${getLocalizedText(product.name, 'uz')} - ${getLocalizedText(product.shortDescription, 'uz')}. Narxi: ${product.formattedPrice}. PaketShop.uz dan buyurtma bering. Bepul yetkazib berish!`}
+            keywords={[getLocalizedText(product.name, 'uz'), getLocalizedText(product.category, 'uz'), 'sotib olish', 'narxi', 'PaketShop', 'online shop', 'uzbekistan']}
             canonical={`${BASE_URL}/product/${slug}`}
             ogImage={product.image}
             ogType="product"
             product={product}
             breadcrumbs={[
               { name: 'Bosh sahifa', url: BASE_URL },
-              { name: product.category, url: `${BASE_URL}/category/${slugify(product.category)}` },
-              { name: product.name, url: `${BASE_URL}/product/${slug}` }
+              { name: getLocalizedText(product.category, 'uz'), url: `${BASE_URL}/category/${slugify(getLocalizedText(product.category, 'uz'))}` },
+              { name: getLocalizedText(product.name, 'uz'), url: `${BASE_URL}/product/${slug}` }
             ]}
           />
         );
@@ -467,9 +468,9 @@ const AppContent: React.FC = () => {
         const slug = blogSlug(post);
         return (
           <SEOHead
-            title={post.seo?.title || post.title}
-            description={post.seo?.description || post.content.substring(0, 160)}
-            keywords={post.seo?.keywords || [post.title, 'blog', 'PaketShop']}
+            title={getLocalizedText(post.seo?.title, 'uz') || getLocalizedText(post.title, 'uz')}
+            description={getLocalizedText(post.seo?.description, 'uz') || getLocalizedText(post.content, 'uz').substring(0, 160)}
+            keywords={getLocalizedText(post.seo?.keywords, 'uz')?.split(',').map(s=>s.trim()) || [getLocalizedText(post.title, 'uz'), 'blog', 'PaketShop']}
             canonical={`${BASE_URL}/blog/${slug}`}
             ogImage={post.image}
             ogType="article"
@@ -477,7 +478,7 @@ const AppContent: React.FC = () => {
             breadcrumbs={[
               { name: 'Bosh sahifa', url: BASE_URL },
               { name: 'Blog', url: `${BASE_URL}/` },
-              { name: post.title, url: `${BASE_URL}/blog/${slug}` }
+              { name: getLocalizedText(post.title, 'uz'), url: `${BASE_URL}/blog/${slug}` }
             ]}
           />
         );
@@ -485,19 +486,19 @@ const AppContent: React.FC = () => {
     }
 
     if (currentRoute.name === 'CATEGORY') {
-      const cat = categories.find(c => slugify(c.name) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
+      const cat = categories.find(c => slugify(getLocalizedText(c.name, 'uz')) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
       if (cat) {
         return (
           <SEOHead
-            title={`${cat.name} - Online Sotib Olish`}
-            description={cat.description || `${cat.name} kategoriyasidagi sifatli mahsulotlar. PaketShop.uz dan buyurtma bering!`}
-            keywords={[cat.name, 'sotib olish', 'narxi', 'PaketShop', 'uzbekistan']}
+            title={`${getLocalizedText(cat.name, 'uz')} - Online Sotib Olish`}
+            description={getLocalizedText(cat.description, 'uz') || `${getLocalizedText(cat.name, 'uz')} kategoriyasidagi sifatli mahsulotlar. PaketShop.uz dan buyurtma bering!`}
+            keywords={[getLocalizedText(cat.name, 'uz'), 'sotib olish', 'narxi', 'PaketShop', 'uzbekistan']}
             canonical={`${BASE_URL}/category/${cat.slug}`}
             ogImage={cat.image}
             category={cat}
             breadcrumbs={[
               { name: 'Bosh sahifa', url: BASE_URL },
-              { name: cat.name, url: `${BASE_URL}/category/${cat.slug}` }
+              { name: getLocalizedText(cat.name, 'uz'), url: `${BASE_URL}/category/${cat.slug}` }
             ]}
           />
         );
