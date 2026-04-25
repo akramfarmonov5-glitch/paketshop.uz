@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Package, Clock, Truck, CheckCircle, ArrowLeft } from 'lucide-react';
 import { hasSupabaseCredentials } from '../lib/supabaseClient';
 import { Order } from '../types';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface OrderTrackerProps {
   onBack: () => void;
@@ -166,7 +167,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({ onBack }) => {
                         order.items.map((item, idx) => (
                           <div key={idx} className="flex justify-between items-center text-sm">
                             <span className="text-gray-300">
-                              {item.name} <span className="text-gray-600">x{item.quantity}</span>
+                              {getLocalizedText(item.name, 'uz')} <span className="text-gray-600">x{item.quantity}</span>
                             </span>
                           </div>
                         ))}

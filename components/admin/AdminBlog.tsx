@@ -19,7 +19,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
 
-  const [formData, setFormData] = useState<Partial<BlogPost>>({
+  const [formData, setFormData] = useState<any>({
     title: '',
     image: '',
     content: '',
@@ -64,7 +64,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   };
 
   const generateContent = async () => {
-    if (!formData.title || (!formData.title.uz && typeof formData.title !== 'string')) {
+    if (!getLocalizedText(formData.title, 'uz')) {
       showToast("Iltimos, avval maqola mavzusi (Title)ni yozing.", 'warning');
       return;
     }
@@ -81,7 +81,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       }>({
         systemInstruction: 'You are an expert content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON.',
         message: `
-          Topic: "${formData.title?.uz || formData.title}"
+          Topic: "${getLocalizedText(formData.title, 'uz')}"
 
           Generate a blog post in Uzbek language:
           1. content: informative content about packaging, business, or wholesale (around 150 words)
@@ -194,15 +194,15 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
         {filteredPosts.map((post) => (
           <div key={post.id} className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden group hover:border-gold-400/50 transition-all flex flex-col">
             <div className="aspect-video relative overflow-hidden">
-              <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+              <img src={post.image} alt={getLocalizedText(post.title, 'uz')} className="w-full h-full object-cover" />
               <div className="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-xs text-white flex items-center gap-1">
                 <Calendar size={12} className="text-gold-400" />
                 {post.date}
               </div>
             </div>
             <div className="p-4 flex-1 flex flex-col">
-              <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{post.title}</h3>
-              <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{post.content}</p>
+              <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{getLocalizedText(post.title, 'uz')}</h3>
+              <p className="text-gray-400 text-sm line-clamp-3 mb-4 flex-1">{getLocalizedText(post.content, 'uz')}</p>
 
               <div className="flex justify-between items-center pt-4 border-t border-white/5">
                 <span className="text-xs text-gray-500">ID: {post.id}</span>

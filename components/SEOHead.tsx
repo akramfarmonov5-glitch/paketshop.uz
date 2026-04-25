@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Product, BlogPost, Category } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { LOCALE_BY_LANG, SEO_LANGUAGES, stripLanguagePrefix, withLanguagePrefix } from '../lib/seoLanguage';
 
 interface SEOProps {
   title?: string;
@@ -13,6 +14,7 @@ interface SEOProps {
   product?: Product;
   blogPost?: BlogPost;
   category?: Category;
+  productCategoryName?: string;
   breadcrumbs?: { name: string; url: string }[];
   noindex?: boolean;
 }
@@ -33,6 +35,7 @@ const SEOHead: React.FC<SEOProps> = ({
   product,
   blogPost,
   category,
+  productCategoryName,
   breadcrumbs,
   noindex = false,
 }) => {
@@ -40,7 +43,7 @@ const SEOHead: React.FC<SEOProps> = ({
   useEffect(() => {
     // === Title ===
     const fullTitle = title
-      ? `${title} | PaketShop.uz`
+      ? (title.includes('PaketShop.uz') ? title : `${title} | PaketShop.uz`)
       : "PaketShop.uz | Online Do'kon - O'zbekistondagi Sifatli Mahsulotlar";
     document.title = fullTitle;
 
@@ -78,6 +81,24 @@ const SEOHead: React.FC<SEOProps> = ({
     }
     canonicalEl.setAttribute('href', canonical || `${BASE_URL}/`);
 
+    document.querySelectorAll('link[data-seo-alternate]').forEach(el => el.remove());
+    const canonicalUrl = new URL(canonical || `${BASE_URL}/`);
+    const basePath = stripLanguagePrefix(canonicalUrl.pathname);
+    SEO_LANGUAGES.forEach((alternateLang) => {
+      const alternateEl = document.createElement('link');
+      alternateEl.setAttribute('rel', 'alternate');
+      alternateEl.setAttribute('hreflang', alternateLang);
+      alternateEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(basePath, alternateLang)}`);
+      alternateEl.setAttribute('data-seo-alternate', 'true');
+      document.head.appendChild(alternateEl);
+    });
+    const xDefaultEl = document.createElement('link');
+    xDefaultEl.setAttribute('rel', 'alternate');
+    xDefaultEl.setAttribute('hreflang', 'x-default');
+    xDefaultEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(basePath, 'uz')}`);
+    xDefaultEl.setAttribute('data-seo-alternate', 'true');
+    document.head.appendChild(xDefaultEl);
+
     // === Open Graph ===
     setMeta('og:title', title || "PaketShop.uz | Sifatli Mahsulotlar Onlayn Do'koni", true);
     setMeta('og:description', desc, true);
@@ -85,7 +106,7 @@ const SEOHead: React.FC<SEOProps> = ({
     setMeta('og:type', ogType === 'product' ? 'product' : ogType === 'article' ? 'article' : 'website', true);
     setMeta('og:image', ogImage || `${BASE_URL}/logo-light.png`, true);
     setMeta('og:site_name', 'PaketShop.uz', true);
-    setMeta('og:locale', 'uz_UZ', true);
+    setMeta('og:locale', LOCALE_BY_LANG[lang], true);
 
     // === FB Product Catalog Microdata ===
     if (product) {
@@ -128,7 +149,7 @@ const SEOHead: React.FC<SEOProps> = ({
           "@type": "Brand",
           "name": "PaketShop"
         },
-        "category": getLocalizedText(product.category, lang),
+        "category": productCategoryName || getLocalizedText(product.category, lang),
         "offers": {
           "@type": "Offer",
           "url": canonical || `${BASE_URL}/`,
@@ -200,8 +221,8 @@ const SEOHead: React.FC<SEOProps> = ({
       addJsonLd({
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": `${category.name} - PaketShop.uz`,
-        "description": category.description || `${category.name} kategoriyasi - PaketShop.uz`,
+        "name": `${getLocalizedText(category.name, lang)} - PaketShop.uz`,
+        "description": getLocalizedText(category.description, lang) || `${getLocalizedText(category.name, lang)} - PaketShop.uz`,
         "url": canonical || `${BASE_URL}/`,
         "image": category.image
       });
@@ -243,8 +264,9 @@ const SEOHead: React.FC<SEOProps> = ({
     // Cleanup on unmount
     return () => {
       document.querySelectorAll('script[data-seo-dynamic]').forEach(el => el.remove());
+      document.querySelectorAll('link[data-seo-alternate]').forEach(el => el.remove());
     };
-  }, [title, description, keywords, canonical, ogImage, ogType, product, blogPost, category, breadcrumbs, noindex]);
+  }, [title, description, keywords, canonical, ogImage, ogType, product, blogPost, category, productCategoryName, breadcrumbs, noindex, lang]);
 
   return null; // This component renders nothing visually
 };

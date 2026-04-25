@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { checkRateLimit, getClientIp } from './_rateLimit';
 
 function createWavHeader(dataLength: number, sampleRate = 24000) {
   const buffer = Buffer.alloc(44);
@@ -21,6 +22,14 @@ function createWavHeader(dataLength: number, sampleRate = 24000) {
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const rateLimit = checkRateLimit(`gemini:${getClientIp(req)}`, 20, 60 * 1000);
+  res.setHeader('X-RateLimit-Remaining', String(rateLimit.remaining));
+  res.setHeader('X-RateLimit-Reset', String(Math.ceil(rateLimit.resetAt / 1000)));
+
+  if (!rateLimit.allowed) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

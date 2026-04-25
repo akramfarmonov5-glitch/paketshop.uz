@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { CategorySkeleton } from './Skeleton';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getCategorySlug } from '../lib/categoryUtils';
 
 interface CategoryGridProps {
   categories: Category[];
@@ -50,7 +51,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              onClick={() => onSelectCategory(typeof category.name === 'string' ? category.name : JSON.stringify(category.name))}
+              onClick={() => onSelectCategory(getCategorySlug(category))}
               className={`group relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer border border-white/5 ${
                 // 1-element (index 0) 2x2 joy egallaydi. 3 ustunli gridda bu 2/3 qismni oladi.
                 index === 0 ? 'col-span-2 row-span-2' : 'col-span-1'

@@ -1,20 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Heart } from 'lucide-react';
-import { Product } from '../types';
+import { Category, Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getCategoryDisplayName } from '../lib/categoryUtils';
 
 interface ProductCardProps {
   product: Product;
   onNavigate: () => void;
+  categories?: Category[];
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate, categories = [] }) => {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
@@ -86,7 +88,9 @@ const handleAddToCart = (e: React.MouseEvent) => {
       {/* Content */}
       <div className="p-3 md:p-6 flex flex-col flex-grow">
         <div className="flex-grow cursor-pointer" onClick={onNavigate}>
-          <span className={`text-[11px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</span>
+          <span className={`text-[11px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>
+            {getCategoryDisplayName(product.category, categories, lang)}
+          </span>
           <h3 className={`text-base md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
             {getLocalizedText(product.name, lang)}
           </h3>

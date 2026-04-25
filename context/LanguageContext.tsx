@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { isSeoLanguage, LOCALE_BY_LANG, SeoLanguage, withLanguagePrefix } from '../lib/seoLanguage';
 
-type Language = 'uz' | 'ru' | 'en';
+type Language = SeoLanguage;
 
 interface Translations {
     [key: string]: {
@@ -22,7 +23,7 @@ const translations: Translations = {
     add_to_cart: { uz: 'Savatga', ru: 'В Корзину', en: 'Add to Cart' },
 
     // Footer
-    footer_desc: { uz: 'Hashamat bu shunchaki ko\'rinish emas, bu hayot tarzi. Bizning maqsadimiz sizga eng yaxshisini taqdim etish.', ru: 'Роскошь — это не просто вид, это образ жизни. Наша цель — предоставить вам лучшее.', en: 'Luxury is not just a look, it is a lifestyle. Our goal is to provide you with the best.' },
+    footer_desc: { uz: 'Qadoqlash, oshxona va xo\'jalik mahsulotlarini ishonchli yetkazib beramiz.', ru: 'Надежно поставляем упаковочные, кухонные и хозяйственные товары.', en: 'Reliable supply of packaging, kitchen and household products.' },
     footer_categories: { uz: 'Kategoriyalar', ru: 'Категории', en: 'Categories' },
     footer_help: { uz: 'Yordam', ru: 'Помощь', en: 'Help' },
     footer_contact: { uz: 'Bog\'lanish', ru: 'Контакты', en: 'Contact Us' },
@@ -139,8 +140,8 @@ const translations: Translations = {
     theme_dark: { uz: 'Qorong\'u tema', ru: 'Темная тема', en: 'Dark Theme' },
     follow_us: { uz: 'Bizni kuzating', ru: 'Подписывайтесь на нас', en: 'Follow Us' },
     all_rights_reserved: { uz: 'Barcha huquqlar himoyalangan', ru: 'Все права защищены', en: 'All rights reserved' },
-    meta_title: { uz: 'PaketShop.uz | Online Do\'kon - O\'zbekistondagi Sifatli Mahsulotlar', ru: 'PaketShop.uz | Онлайн Магазин - Качественные Товары в Узбекистане', en: 'PaketShop.uz | Online Store - Quality Products in Uzbekistan' },
-    meta_description: { uz: 'PaketShop.uz - O\'zbekistondagi ishonchli onlayn do\'kon. Soatlar, sumkalar, parfyumeriya va boshqa sifatli mahsulotlar.', ru: 'PaketShop.uz - надежный онлайн-магазин в Узбекистане. Часы, сумки, парфюмерия и другие качественные товары.', en: 'PaketShop.uz - reliable online store in Uzbekistan. Watches, bags, perfumes and other quality products.' },
+    meta_title: { uz: 'PaketShop.uz | Qadoqlash va xo\'jalik mahsulotlari', ru: 'PaketShop.uz | Упаковочные и хозяйственные товары', en: 'PaketShop.uz | Packaging and household products' },
+    meta_description: { uz: 'PaketShop.uz - O\'zbekistondagi qadoqlash, oshxona va xo\'jalik mahsulotlari onlayn do\'koni.', ru: 'PaketShop.uz - интернет-магазин упаковочных, кухонных и хозяйственных товаров в Узбекистане.', en: 'PaketShop.uz - online store for packaging, kitchen and household products in Uzbekistan.' },
     premium_series: { uz: 'Premium Seriya', ru: 'Премиум Серия', en: 'Premium Series' },
     limited_edition: { uz: 'Maxsus Nashr', ru: 'Лимитированная Серия', en: 'Limited Edition' },
     collection_2026: { uz: '2026 To\'plami', ru: 'Коллекция 2026', en: '2026 Collection' },
@@ -249,6 +250,8 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [lang, setLangState] = useState<Language>(() => {
+        const pathLang = window.location.pathname.split('/').filter(Boolean)[0];
+        if (isSeoLanguage(pathLang)) return pathLang;
         const saved = localStorage.getItem('paketshop_lang');
         return (saved as Language) || 'uz';
     });
@@ -257,6 +260,12 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         setLangState(newLang);
         localStorage.setItem('paketshop_lang', newLang);
         document.documentElement.lang = newLang;
+
+        const nextPath = withLanguagePrefix(window.location.pathname, newLang);
+        const nextUrl = `${nextPath}${window.location.search}${window.location.hash}`;
+        if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+            window.history.pushState({ lang: newLang }, '', nextUrl);
+        }
     };
 
     const t = (key: string): string => {
@@ -266,35 +275,25 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     useEffect(() => {
         document.documentElement.lang = lang;
 
-        // Update SEO Meta Tags
-        const title = t('meta_title');
-        const desc = t('meta_description');
-
-        if (title) {
-            document.title = title;
-            const metaTitle = document.querySelector('meta[name="title"]');
-            if (metaTitle) metaTitle.setAttribute('content', title);
-            const ogTitle = document.querySelector('meta[property="og:title"]');
-            if (ogTitle) ogTitle.setAttribute('content', title);
-            const twitterTitle = document.querySelector('meta[property="twitter:title"]');
-            if (twitterTitle) twitterTitle.setAttribute('content', title);
-        }
-
-        if (desc) {
-            const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) metaDesc.setAttribute('content', desc);
-            const ogDesc = document.querySelector('meta[property="og:description"]');
-            if (ogDesc) ogDesc.setAttribute('content', desc);
-            const twitterDesc = document.querySelector('meta[property="twitter:description"]');
-            if (twitterDesc) twitterDesc.setAttribute('content', desc);
-        }
-
         // Update og:locale
         const ogLocale = document.querySelector('meta[property="og:locale"]');
         if (ogLocale) {
-            const localeMap = { uz: 'uz_UZ', ru: 'ru_RU', en: 'en_US' };
-            ogLocale.setAttribute('content', localeMap[lang]);
+            ogLocale.setAttribute('content', LOCALE_BY_LANG[lang]);
         }
+    }, [lang]);
+
+    useEffect(() => {
+        const handlePopState = () => {
+            const pathLang = window.location.pathname.split('/').filter(Boolean)[0];
+            if (isSeoLanguage(pathLang) && pathLang !== lang) {
+                setLangState(pathLang);
+                localStorage.setItem('paketshop_lang', pathLang);
+                document.documentElement.lang = pathLang;
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
     }, [lang]);
 
     return (

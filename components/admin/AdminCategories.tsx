@@ -1,47 +1,77 @@
-
 import React, { useState } from 'react';
 import { Edit, Trash2, Plus, Search, X, Save, Image as ImageIcon, Globe, Type, Layout, Sparkles } from 'lucide-react';
-import { Category } from '../../types';
+import { Category, LocalizedString } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
+import { slugify } from '../../lib/slugify';
 
 interface AdminCategoriesProps {
   categories: Category[];
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 }
 
+type Lang = 'uz' | 'ru' | 'en';
+
+type CategoryFormData = {
+  id?: number;
+  name: LocalizedString;
+  slug: string;
+  image: string;
+  description: LocalizedString;
+  googleProductCategory: string;
+};
+
+const LANGUAGES: Lang[] = ['uz', 'ru', 'en'];
+
+const emptyLocalizedString = (): LocalizedString => ({
+  uz: '',
+  ru: '',
+  en: '',
+});
+
+const createEmptyFormData = (): CategoryFormData => ({
+  name: emptyLocalizedString(),
+  slug: '',
+  image: '',
+  description: emptyLocalizedString(),
+  googleProductCategory: '',
+});
+
 const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCategories }) => {
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    slug: '',
-    image: '',
-    description: '',
-    googleProductCategory: ''
-  });
+  const [activeLang, setActiveLang] = useState<Lang>('uz');
+  const [formData, setFormData] = useState<CategoryFormData>(createEmptyFormData());
+
+  const updateLocalizedField = (field: 'name' | 'description', lang: Lang, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        [lang]: value,
+      },
+    }));
+  };
 
   const handleOpenAdd = () => {
-    setFormData({
-      name: '',
-      slug: '',
-      image: '',
-      description: '',
-      googleProductCategory: ''
-    });
+    setActiveLang('uz');
+    setFormData(createEmptyFormData());
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (category: Category) => {
+    setActiveLang('uz');
     setFormData({
-      ...category,
-      description: category.description || '',
-      googleProductCategory: category.googleProductCategory || ''
+      id: category.id,
+      name: parseLocalizedObject(category.name),
+      slug: category.slug || '',
+      image: category.image || '',
+      description: parseLocalizedObject(category.description),
+      googleProductCategory: category.googleProductCategory || '',
     });
     setIsModalOpen(true);
   };
@@ -53,47 +83,61 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
         if (error) throw error;
         setCategories(prev => prev.filter(c => c.id !== id));
       } catch (error) {
-        console.error("Delete error:", error);
-        showToast("O'chirishda xatolik: " + (error as any).message, 'error');
+        console.error('Delete error:', error);
+        showToast("O'chirishda xatolik: " + (error as Error).message, 'error');
       }
     }
   };
 
   const generateCategoryDetails = async () => {
-    if (!formData.name) {
-      showToast("Iltimos, avval Kategoriya nomini yozing.", 'warning');
+    if (!formData.name.uz.trim()) {
+      showToast("Iltimos, avval kategoriya nomini o'zbek tilida yozing.", 'warning');
       return;
     }
 
     setIsGenerating(true);
     try {
       const data = await requestGeminiJson<{
-        description: string;
         slug: string;
+        descriptionUz: string;
+        descriptionRu: string;
+        descriptionEn: string;
       }>({
-        systemInstruction: 'Act as a luxury e-commerce content strategist. Always answer in valid JSON.',
+        systemInstruction: 'Act as a multilingual e-commerce content strategist. Always answer in valid JSON.',
         message: `
-          Category name: "${formData.name}"
+          Category name:
+          Uzbek: "${formData.name.uz}"
+          Russian: "${formData.name.ru}"
+          English: "${formData.name.en}"
 
           Generate:
-          1. description: a short elegant description in Uzbek (max 1 sentence)
-          2. slug: a clean kebab-case URL slug
+          1. slug: a clean kebab-case URL slug based on the Uzbek category name
+          2. descriptionUz: short elegant Uzbek description (max 1 sentence)
+          3. descriptionRu: short elegant Russian description (max 1 sentence)
+          4. descriptionEn: short elegant English description (max 1 sentence)
 
           Return JSON:
           {
-            "description": "...",
-            "slug": "..."
+            "slug": "...",
+            "descriptionUz": "...",
+            "descriptionRu": "...",
+            "descriptionEn": "..."
           }
         `,
       });
 
       setFormData(prev => ({
         ...prev,
-        description: data.description,
-        slug: data.slug
+        slug: data.slug || slugify(prev.name.uz),
+        description: {
+          uz: data.descriptionUz || prev.description.uz,
+          ru: data.descriptionRu || prev.description.ru,
+          en: data.descriptionEn || prev.description.en,
+        },
       }));
     } catch (error) {
-      console.error("AI Gen Error", error);
+      console.error('AI Gen Error', error);
+      showToast('AI tavsif yaratishda xatolik yuz berdi.', 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -102,59 +146,56 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const slug = formData.slug || formData.name?.toLowerCase().replace(/\s+/g, '-') || '';
+    if (!formData.name.uz.trim()) {
+      showToast("Kategoriya nomining o'zbekcha varianti majburiy.", 'warning');
+      return;
+    }
+
+    const slug = formData.slug.trim() || slugify(formData.name.uz);
 
     const dataToSave = {
-      name: formData.name,
+      name: JSON.stringify(formData.name),
       slug,
-      image: formData.image || 'https://via.placeholder.com/400',
-      description: formData.description || '',
-      googleProductCategory: formData.googleProductCategory || '',
+      image: formData.image.trim() || 'https://via.placeholder.com/400',
+      description: JSON.stringify(formData.description),
+      googleProductCategory: formData.googleProductCategory.trim(),
     };
 
     try {
       if (formData.id) {
-        // Update
         const { data, error } = await supabase
           .from('categories')
           .update(dataToSave)
           .eq('id', formData.id)
-          .select();
+          .select()
+          .single();
 
         if (error) throw error;
-        if (data && data.length > 0) {
-          const newCategory = {
-            ...data[0],
-            slug: slug || data[0].name.toLowerCase().replace(/\s+/g, '-')
-          };
-          setCategories(prev => prev.map(c => c.id === formData.id ? (newCategory as Category) : c));
-        }
+        setCategories(prev => prev.map(c => (c.id === formData.id ? (data as Category) : c)));
       } else {
-        // Insert - DB will auto-generate ID
         const { data, error } = await supabase
           .from('categories')
           .insert([dataToSave])
-          .select();
+          .select()
+          .single();
 
         if (error) throw error;
-        if (data && data.length > 0) {
-          const newCategory = {
-            ...data[0],
-            slug: slug || data[0].name.toLowerCase().replace(/\s+/g, '-')
-          };
-          setCategories(prev => [(newCategory as Category), ...prev]);
-        }
+        setCategories(prev => [data as Category, ...prev]);
       }
+
       setIsModalOpen(false);
+      setFormData(createEmptyFormData());
+      showToast('Kategoriya muvaffaqiyatli saqlandi.', 'success');
     } catch (error) {
-      console.error("Save error:", error);
-      showToast("Saqlashda xatolik: " + (error as any).message, 'error');
+      console.error('Save error:', error);
+      showToast("Saqlashda xatolik: " + (error as Error).message, 'error');
     }
   };
 
-  const filteredCategories = categories.filter(c =>
-    getLocalizedText(c.name, 'uz').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCategories = categories.filter(category => {
+    const localizedName = getLocalizedText(category.name, 'uz').toLowerCase();
+    return localizedName.includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="space-y-6">
@@ -229,29 +270,50 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
             </div>
 
             <form onSubmit={handleSave} className="space-y-5">
-              <div className="flex items-center gap-2 mb-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm">
+              <div className="flex items-center justify-between gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <div className="flex items-center gap-2 text-blue-400 text-sm">
                   <Globe size={18} />
-                  <span>Siz hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kiritmoqdasiz.</span>
+                  <span>
+                    Hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kirityapsiz.
+                  </span>
+                </div>
+                <div className="flex rounded-xl bg-black/40 p-1 border border-white/10">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => setActiveLang(lang)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors ${
+                        activeLang === lang
+                          ? 'bg-gold-400 text-black'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
               </div>
+
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 flex items-center gap-2">
                   <Type size={16} /> Nomi
                 </label>
                 <div className="flex gap-2">
                   <input
-                    required
+                    required={activeLang === 'uz'}
                     type="text"
-                    value={formData.name?.[activeLang] || ''}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.name[activeLang]}
+                    onChange={e => updateLocalizedField('name', activeLang, e.target.value)}
                     className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none transition-colors"
-                    placeholder="Masalan: Soatlar"
+                    placeholder={activeLang === 'uz' ? 'Masalan: Paketlar' : activeLang === 'ru' ? 'Например: Пакеты' : 'For example: Bags'}
                   />
                   <button
                     type="button"
                     onClick={generateCategoryDetails}
-                    disabled={isGenerating || !formData.name?.uz}
+                    disabled={isGenerating || !formData.name.uz.trim()}
                     className="px-3 bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 rounded-xl flex items-center justify-center disabled:opacity-50 transition-colors"
-                    title="AI yordamida to'ldirish"
+                    title="AI yordamida tavsif yaratish"
                   >
                     {isGenerating ? <div className="w-4 h-4 border-2 border-current rounded-full animate-spin" /> : <Sparkles size={20} />}
                   </button>
@@ -265,9 +327,9 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                 <input
                   type="text"
                   value={formData.slug}
-                  onChange={e => setFormData({ ...formData, slug: e.target.value })}
+                  onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                   className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none transition-colors font-mono text-sm"
-                  placeholder="soatlar (bo'sh qolsa avtomatik)"
+                  placeholder="paketlar (bo'sh qolsa avtomatik)"
                 />
               </div>
 
@@ -281,7 +343,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                       required
                       type="text"
                       value={formData.image}
-                      onChange={e => setFormData({ ...formData, image: e.target.value })}
+                      onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
                       className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none transition-colors"
                       placeholder="https://..."
                     />
@@ -306,11 +368,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 flex items-center gap-2">
-                  <Layout size={16} /> Tavsif (Description)
+                  <Layout size={16} /> Tavsif
                 </label>
                 <textarea
-                  value={formData.description || ''}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  value={formData.description[activeLang]}
+                  onChange={e => updateLocalizedField('description', activeLang, e.target.value)}
                   className="w-full h-28 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none resize-none transition-colors custom-scrollbar"
                   placeholder="Kategoriya haqida qisqacha ma'lumot..."
                 />
@@ -320,12 +382,22 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                 <label className="text-sm text-gray-400">Google Product Category (Facebook Catalog)</label>
                 <input
                   type="text"
-                  value={formData.googleProductCategory || ''}
-                  onChange={e => setFormData({ ...formData, googleProductCategory: e.target.value })}
+                  value={formData.googleProductCategory}
+                  onChange={e => setFormData(prev => ({ ...prev, googleProductCategory: e.target.value }))}
                   className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none text-xs font-mono transition-colors"
-                  placeholder="Apparel & Accessories > Jewelry > Watches"
+                  placeholder="Apparel & Accessories > Shopping Totes"
                 />
                 <p className="text-[10px] text-gray-500 ml-1">Facebook va Instagram do'koni integratsiyasi uchun kerak.</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 rounded-xl bg-black/30 border border-white/5 p-3 text-xs">
+                {LANGUAGES.map((lang) => (
+                  <div key={lang} className="space-y-1">
+                    <p className="font-bold uppercase text-gold-400">{lang}</p>
+                    <p className="text-white truncate">{formData.name[lang] || '-'}</p>
+                    <p className="text-gray-500 line-clamp-2">{formData.description[lang] || 'Tavsif yo‘q'}</p>
+                  </div>
+                ))}
               </div>
 
               <div className="pt-6 flex gap-4">

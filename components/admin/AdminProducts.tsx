@@ -6,7 +6,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { requestGeminiJson } from '../../lib/geminiApi';
-import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
+import { getLocalizedText } from '../../lib/i18nUtils';
+import { getCategoryDisplayName, getCategorySlug, getProductCategoryKey } from '../../lib/categoryUtils';
 
 interface AdminProductsProps {
   products: Product[];
@@ -37,7 +38,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   const handleOpenAdd = () => {
     setFormData({
       name: '',
-      category: categories.length > 0 ? categories[0].name : '',
+      category: categories.length > 0 ? getCategorySlug(categories[0]) : '',
       price: 0,
       image: '',
       images: [''],
@@ -57,6 +58,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
     setFormData({
       ...product,
+      category: getProductCategoryKey(product.category, categories),
       images: images
     });
     setIsModalOpen(true);
@@ -95,7 +97,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
         systemInstruction: 'You are a luxury product expert for an online store. Always answer in valid JSON.',
         message: `
           Product name: "${formData.name?.uz || formData.name}"
-          Category: "${formData.category}"
+          Category: "${getCategoryDisplayName(formData.category, categories, 'uz')}"
 
           Generate in Uzbek language (Latin script):
           1. A short premium description (max 2 sentences).
@@ -135,7 +137,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     // Tayyorlash
     const dataToSave: Record<string, any> = {
       name: formData.name,
-      category: formData.category,
+      category: getProductCategoryKey(formData.category, categories),
       price: Number(formData.price),
       image: mainImage,
       images: validImages,
@@ -200,11 +202,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     }
   };
 
-  const updateSpec = (index: number, field: 'label' | 'value', value: string) => {
-    const newSpecs = [...(formData.specs || [])];
-    newSpecs[index] = { ...newSpecs[index], [field]: value };
-    setFormData({ ...formData, specs: newSpecs });
-  };
   const addSpec = () => {
     setFormData({ ...formData, specs: [...(formData.specs || []), { label: '', value: '' }] });
   };
@@ -232,7 +229,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
   const filteredProducts = products.filter(p =>
     (typeof p.name === 'string' ? p.name : JSON.stringify(p.name)).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (typeof p.category === 'string' ? p.category : JSON.stringify(p.category)).toLowerCase().includes(searchTerm.toLowerCase())
+    getCategoryDisplayName(p.category, categories, 'uz').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -291,7 +288,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                 <td className="p-4 font-medium text-white">{getLocalizedText(product.name, 'uz')}</td>
                 <td className="p-4 text-gray-400 text-sm">
                   <span className="bg-white/5 px-2 py-1 rounded text-xs border border-white/10">
-                    {getLocalizedText(product.category, 'uz')}
+                    {getCategoryDisplayName(product.category, categories, 'uz')}
                   </span>
                 </td>
                 <td className="p-4 text-gold-400 text-sm">{product.formattedPrice}</td>
@@ -384,7 +381,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                   >
                     <option className="bg-zinc-900 text-white" value="" disabled>Tanlang</option>
                     {categories.map(cat => (
-                      <option className="bg-zinc-900 text-white" key={cat.id} value={typeof cat.name === 'string' ? cat.name : cat.name?.uz}>{getLocalizedText(cat.name, 'uz')}</option>
+                      <option className="bg-zinc-900 text-white" key={cat.id} value={getCategorySlug(cat)}>{getLocalizedText(cat.name, 'uz')}</option>
                     ))}
                   </select>
                 </div>
