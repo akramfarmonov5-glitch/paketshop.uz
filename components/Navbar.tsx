@@ -255,11 +255,11 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                     <span className="font-medium">{t('nav_home')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
-                  <button key="catalog" onClick={handleMobileLinkClick} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
+                  <button key="catalog" onClick={() => { onNavigateHome(); setIsMobileMenuOpen(false); setTimeout(() => { const el = document.getElementById('featured-products'); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: y, behavior: 'smooth' }); }}, 300); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
                     <span className="font-medium">{t('nav_catalog')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
-                  <button key="blog" onClick={handleMobileLinkClick} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
+                  <button key="blog" onClick={() => { onNavigateHome(); setIsMobileMenuOpen(false); setTimeout(() => { const el = document.querySelector('section:last-of-type'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 300); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
                     <span className="font-medium">{t('nav_blog')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
