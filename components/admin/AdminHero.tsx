@@ -208,7 +208,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                 {/* Live Preview */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-bold text-white">Jonli Ko'rinish (Birinchi rasm)</h3>
-                    <div className="bg-black border border-white/10 rounded-3xl overflow-hidden relative aspect-[3/4] lg:aspect-square">
+                    <div className="bg-black border border-white/10 rounded-3xl overflow-hidden relative aspect-[4/5]">
                         {previewImage ? (
                             <img
                                 src={previewImage}

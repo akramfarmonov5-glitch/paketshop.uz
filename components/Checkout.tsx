@@ -388,7 +388,7 @@ ${discountInfo}
             <div className="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-4">
-                  <div className={`w-16 h-20 rounded-lg overflow-hidden shrink-0 ${isDark ? 'bg-gray-800' : 'bg-light-card'}`}>
+                  <div className={`w-16 aspect-[4/5] rounded-lg overflow-hidden shrink-0 ${isDark ? 'bg-gray-800' : 'bg-light-card'}`}>
                     <img src={item.image} alt={getLocalizedText(item.name, lang)} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
