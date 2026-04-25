@@ -92,7 +92,8 @@ const AdminLeads: React.FC = () => {
       </div>
 
       <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden">
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
             <thead className="bg-white/5 border-b border-white/5">
                 <tr>
                     <th className="p-4 text-sm font-medium text-gray-400">Mijoz</th>
@@ -148,6 +149,7 @@ const AdminLeads: React.FC = () => {
                 )}
             </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
