@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Product, CartItem } from '../types';
 import { trackAddToCart } from '../lib/fpixel';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface CartContextType {
   cart: CartItem[];
@@ -51,7 +52,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     
     // Pixel Tracking
-    trackAddToCart(product);
+    trackAddToCart({
+      id: product.id,
+      name: getLocalizedText(product.name, 'uz'),
+      price: product.price,
+      category: getLocalizedText(product.category, 'uz'),
+    });
     
     setIsCartOpen(true); // Open cart when adding item
   };

@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ProductSkeleton } from './Skeleton';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getCategoryDisplayName, getCategorySlug, getProductCategoryKey } from '../lib/categoryUtils';
 
 interface FeaturedProductsProps {
     products: Product[];
@@ -35,7 +36,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
 
     // Derive active products based on filter and sorting
     const filteredProducts = products.filter(p => {
-        const pCat = typeof p.category === 'string' ? p.category : JSON.stringify(p.category);
+        const pCat = getProductCategoryKey(p.category, categories);
         const matchesCategory = selectedCategory === 'All' || pCat === selectedCategory;
         const pName = getLocalizedText(p.name, lang).toLowerCase();
         const pDesc = getLocalizedText(p.shortDescription, lang).toLowerCase();
@@ -111,8 +112,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                     {categories.map(cat => (
                                         <button
                                             key={cat.id}
-                                            onClick={() => setSelectedCategory(typeof cat.name === 'string' ? cat.name : JSON.stringify(cat.name))}
-                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm border ${selectedCategory === (typeof cat.name === 'string' ? cat.name : JSON.stringify(cat.name))
+                                            onClick={() => setSelectedCategory(getCategorySlug(cat))}
+                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm border ${selectedCategory === getCategorySlug(cat)
                                                     ? 'border-gold-400 bg-gold-400/10 text-gold-400'
                                                     : isDark
                                                         ? 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
@@ -204,6 +205,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                                     <ProductCard
                                                         product={product}
                                                         onNavigate={() => onNavigateToProduct(product.id)}
+                                                        categories={categories}
                                                     />
                                                 </motion.div>
                                             ))}
@@ -254,10 +256,10 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                         {categories.map(cat => (
                                             <button
                                                 key={cat.id}
-                                                onClick={() => { setSelectedCategory(cat.name); setIsFilterOpen(false); }}
-                                                className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                                                onClick={() => { setSelectedCategory(getCategorySlug(cat)); setIsFilterOpen(false); }}
+                                                className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === getCategorySlug(cat) ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
                                             >
-                                                {t(cat.name)}
+                                                {getCategoryDisplayName(cat.name, categories, lang)}
                                             </button>
                                         ))}
                                     </div>

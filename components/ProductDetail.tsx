@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart, Play } from 'lucide-react';
-import { Product } from '../types';
+import { Category, Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
@@ -15,16 +15,18 @@ import ProductReviews from './ProductReviews';
 import * as fpixel from '../lib/fpixel';
 import { requestGeminiText } from '../lib/geminiApi';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getCategoryDisplayName, getProductCategoryKey } from '../lib/categoryUtils';
 
 interface ProductDetailProps {
   product: Product;
   allProducts?: Product[];
+  categories?: Category[];
   onProductSelect?: (id: number) => void;
   onBack: () => void;
   onCheckout: () => void;
 }
 
-const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = [], onProductSelect, onBack, onCheckout }) => {
+const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = [], categories = [], onProductSelect, onBack, onCheckout }) => {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { showToast } = useToast();
@@ -38,9 +40,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
   const [isQuickBuyOpen, setIsQuickBuyOpen] = useState(false);
 
   const isLiked = isInWishlist(product.id);
+  const productCategoryKey = getProductCategoryKey(product.category, categories);
 
   const relatedProducts = allProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
+    .filter(p => getProductCategoryKey(p.category, categories) === productCategoryKey && p.id !== product.id)
     .slice(0, 4);
 
   const galleryImages = product.images && product.images.length > 0 ? product.images : [product.image];
@@ -54,7 +57,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     fpixel.trackViewContent({
       ...product,
       name: getLocalizedText(product.name, lang),
-      category: getLocalizedText(product.category, lang)
+      category: getCategoryDisplayName(product.category, categories, lang)
     });
 
     const generateAIDescription = async () => {
@@ -62,7 +65,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
         const languageName = lang === 'uz' ? 'Uzbek (Cyrillic or Latin as common)' : lang === 'ru' ? 'Russian' : 'English';
         const text = await requestGeminiText({
           systemInstruction: 'You write elegant but concise product copy for e-commerce product pages.',
-          message: `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${getLocalizedText(product.name, 'uz')}" in the "${getLocalizedText(product.category, 'uz')}" category. The description must be in ${languageName}. Keep it premium, minimal, and limited to 3 sentences.`,
+          message: `Write a short, sophisticated, and persuasive product description for a luxury e-commerce item named "${getLocalizedText(product.name, 'uz')}" in the "${getCategoryDisplayName(product.category, categories, 'uz')}" category. The description must be in ${languageName}. Keep it premium, minimal, and limited to 3 sentences.`,
         });
 
         setAiDescription(text || "Ma'lumot yuklanmadi.");
@@ -83,7 +86,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     fpixel.trackAddToCart({
       ...product,
       name: getLocalizedText(product.name, lang),
-      category: getLocalizedText(product.category, lang)
+      category: getCategoryDisplayName(product.category, categories, lang)
     });
   };
 
@@ -101,7 +104,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
     fpixel.trackAddToCart({
       ...product,
       name: getLocalizedText(product.name, lang),
-      category: getLocalizedText(product.category, lang)
+      category: getCategoryDisplayName(product.category, categories, lang)
     });
     onCheckout();
   };
@@ -134,7 +137,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           <Breadcrumbs
             onHomeClick={onBack}
             items={[
-              { label: typeof product.category === 'string' && product.category.includes('{') ? getLocalizedText(product.category, lang) : product.category, onClick: onBack },
+              { label: getCategoryDisplayName(product.category, categories, lang), onClick: onBack },
               { label: typeof product.name === 'string' && product.name.includes('{') ? getLocalizedText(product.name, lang) : product.name, active: true }
             ]}
           />
@@ -199,7 +202,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
           >
             <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
               <span className="text-gold-400 text-xs md:text-sm font-bold uppercase tracking-[0.2em]">
-                {getLocalizedText(product.category, lang)}
+                {getCategoryDisplayName(product.category, categories, lang)}
               </span>
               <h1 className={`text-3xl md:text-4xl lg:text-5xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
                 {getLocalizedText(product.name, lang)}
@@ -350,6 +353,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                   <ProductCard
                     product={p}
                     onNavigate={() => onProductSelect ? onProductSelect(p.id) : null}
+                    categories={categories}
                   />
                 </motion.div>
               ))}

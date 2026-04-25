@@ -3,6 +3,8 @@ import { NavigationSettings, MenuItem, SocialLink, Category } from '../../types'
 import { Plus, Trash2, Menu, Share2, Save, GripVertical, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import { getLocalizedText } from '../../lib/i18nUtils';
+import { getCategorySlug } from '../../lib/categoryUtils';
 
 interface AdminNavigationProps {
     navigationSettings: NavigationSettings;
@@ -113,7 +115,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
                                     <input
                                         type="text"
                                         placeholder="Nomi (Masalan: Erkaklar)"
-                                        value={item.label}
+                                        value={getLocalizedText(item.label, 'uz')}
                                         onChange={(e) => updateMenuItem(index, 'label', e.target.value)}
                                         className="w-full bg-transparent border-b border-white/10 text-sm text-white focus:outline-none focus:border-gold-400 pb-1"
                                     />
@@ -145,8 +147,8 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
                                             </optgroup>
                                             <optgroup label="Kategoriyalar">
                                                 {categories.map(cat => (
-                                                    <option key={cat.id} value={`#category-${cat.name}`}>
-                                                        {cat.name}
+                                                    <option key={cat.id} value={`#category-${getCategorySlug(cat)}`}>
+                                                        {getLocalizedText(cat.name, 'uz')}
                                                     </option>
                                                 ))}
                                             </optgroup>

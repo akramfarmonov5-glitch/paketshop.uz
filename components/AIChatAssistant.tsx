@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface Message {
   role: 'user' | 'model';
@@ -72,7 +73,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   const getSystemInstruction = () => {
     const productContext = products.map(p =>
-      `- ${p.name} (${p.category}): ${p.formattedPrice}. ${p.shortDescription}`
+      `- ${getLocalizedText(p.name, 'uz')} (${getLocalizedText(p.category, 'uz')}): ${p.formattedPrice}. ${getLocalizedText(p.shortDescription, 'uz')}`
     ).join('\n');
 
     return `

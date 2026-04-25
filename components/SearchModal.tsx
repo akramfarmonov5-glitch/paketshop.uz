@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import * as fpixel from '../lib/fpixel';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getCategoryDisplayName } from '../lib/categoryUtils';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
   }, [query]);
 
   const filteredProducts = query.trim()
-    ? products.filter(p => getLocalizedText(p.name, lang).toLowerCase().includes(query.toLowerCase()) || getLocalizedText(p.category, lang).toLowerCase().includes(query.toLowerCase())).slice(0, 5)
+    ? products.filter(p => getLocalizedText(p.name, lang).toLowerCase().includes(query.toLowerCase()) || getCategoryDisplayName(p.category, categories, lang).toLowerCase().includes(query.toLowerCase())).slice(0, 5)
     : [];
 
   const filteredCategories = query.trim()
@@ -189,7 +190,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                             </div>
                             <div className="flex-1">
                               <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h4>
-                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</p>
+                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getCategoryDisplayName(product.category, categories, lang)}</p>
                             </div>
                             <div className="text-right">
                               <span className="text-sm font-bold text-gold-400">{product.formattedPrice}</span>
