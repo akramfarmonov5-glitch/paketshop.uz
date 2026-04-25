@@ -23,6 +23,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'paynet' | 'cash'>('paynet');
   const [showPaynetModal, setShowPaynetModal] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [promoCode, setPromoCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -68,6 +69,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error for this field when user starts typing
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: '' });
+    }
   };
 
   const handleApplyPromo = async () => {
@@ -186,6 +191,26 @@ ${discountInfo}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Custom Validation
+    const newErrors: Record<string, string> = {};
+    if (!formData.firstName.trim()) newErrors.firstName = "Ismingizni kiritishingiz shart";
+    if (!formData.lastName.trim()) newErrors.lastName = "Familiyangizni kiritishingiz shart";
+    
+    const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
+    if (phoneDigits.length < 9) {
+       newErrors.phone = "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)";
+    }
+
+    if (!formData.address.trim()) newErrors.address = "Manzilni kiritishingiz shart";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      showToast("Iltimos, barcha maydonlarni to'g'ri to'ldiring", "error");
+      return;
+    }
+    
+    setErrors({});
     setIsLoading(true);
 
     await sendTelegramNotification();
@@ -232,15 +257,17 @@ ${discountInfo}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <h1 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtmani rasmiylashtirish</h1>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Ismingiz</label>
-                  <input required name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Aziz" />
+                  <input name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Aziz" />
+                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Familiyangiz</label>
-                  <input required name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Rahimov" />
+                  <input name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Rahimov" />
+                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                 </div>
               </div>
 
@@ -248,13 +275,14 @@ ${discountInfo}
                 <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Telefon raqam</label>
                 <div className="relative">
                   <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>+998</span>
-                  <input required name="phone" type="tel" pattern="[0-9 ]{9,12}" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="90 123 45 67" />
+                  <input name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:outline-none transition-all ${errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="90 123 45 67" />
                 </div>
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
               <div className="space-y-2">
                 <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('city_label')}</label>
-                <select name="city" value={formData.city} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}>
+                <select name="city" value={formData.city} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}>
                   {cities.map(cityKey => (
                     <option key={cityKey} className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value={t(cityKey)}>
                       {t(cityKey)}
@@ -265,7 +293,8 @@ ${discountInfo}
 
               <div className="space-y-2">
                 <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Manzil</label>
-                <input required name="address" type="text" value={formData.address} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`} placeholder="Amir Temur ko'chasi, 15-uy" />
+                <input name="address" type="text" value={formData.address} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.address ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Amir Temur ko'chasi, 15-uy" />
+                {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
               <div className="pt-2">
