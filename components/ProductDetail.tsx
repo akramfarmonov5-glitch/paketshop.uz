@@ -372,7 +372,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col group"
+              className="relative w-full max-w-md md:max-w-lg aspect-[4/5] bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col group mx-auto"
             >
               <button
                 onClick={handleCloseVideo}
