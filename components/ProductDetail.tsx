@@ -338,7 +338,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 <span className="text-gold-400 text-xs font-bold uppercase tracking-widest mb-2 block">
                   {t('recommendations')}
                 </span>
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
+                <h2 className={`text-2xl md:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {t('related_products')}
                 </h2>
               </div>
