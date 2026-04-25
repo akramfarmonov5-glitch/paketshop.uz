@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Order, OrderStatus } from '../../types';
-import { Clock, CheckCircle, Truck, Package, Search, Download } from 'lucide-react';
+import { Clock, CheckCircle, Truck, Package, Search, Download, Trash2 } from 'lucide-react';
 
 import { supabase } from '../../lib/supabaseClient';
 
@@ -72,6 +72,17 @@ const AdminOrders: React.FC = () => {
     }
   };
 
+  const deleteOrder = async (id: string) => {
+    try {
+      const { error } = await supabase.from('orders').delete().eq('id', id);
+      if (error) throw error;
+      setOrders(prev => prev.filter(o => o.id !== id));
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert("Buyurtmani o'chirishda xatolik yuz berdi");
+    }
+  };
+
   const formatPrice = (price: number) => new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
 
   const handleExportCSV = () => {
@@ -128,6 +139,7 @@ const AdminOrders: React.FC = () => {
               <th className="p-4 text-sm font-medium text-gray-400">Summa</th>
               <th className="p-4 text-sm font-medium text-gray-400">Holat</th>
               <th className="p-4 text-sm font-medium text-gray-400">Boshqaruv</th>
+              <th className="p-4 text-sm font-medium text-gray-400 text-center">O'chirish</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -166,6 +178,15 @@ const AdminOrders: React.FC = () => {
                       <option className="bg-zinc-900 text-white" value="Yetkazilmoqda">Yetkazilmoqda</option>
                       <option className="bg-zinc-900 text-white" value="Yakunlandi">Yakunlandi</option>
                     </select>
+                  </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => deleteOrder(order.id)}
+                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                      title="Buyurtmani o'chirish"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </td>
                 </tr>
               );
