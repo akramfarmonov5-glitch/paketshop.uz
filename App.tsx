@@ -33,7 +33,7 @@ import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
-import { supabase } from './lib/supabaseClient';
+import { hasSupabaseCredentials, supabase } from './lib/supabaseClient';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from './types';
 import { productSlug, getIdFromSlug, blogSlug, getBlogIdFromSlug, slugify } from './lib/slugify';
 import * as fpixel from './lib/fpixel';
@@ -125,6 +125,35 @@ const PageLoader = () => (
   </div>
 );
 
+const AdminAccessDenied: React.FC<{
+  onBack: () => void;
+  onSignOut: () => Promise<void>;
+}> = ({ onBack, onSignOut }) => (
+  <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="bg-zinc-900 border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl text-center">
+      <h2 className="text-2xl font-bold text-white mb-3">Admin ruxsati topilmadi</h2>
+      <p className="text-gray-400 text-sm mb-8">
+        Bu akkaunt tizimga kirgan, lekin admin paneldan foydalanish uchun `admin_users`
+        jadvalida ruxsat berilmagan.
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 px-4 py-3 rounded-xl bg-white/5 text-white hover:bg-white/10 transition-colors"
+        >
+          Bosh sahifaga qaytish
+        </button>
+        <button
+          onClick={onSignOut}
+          className="flex-1 px-4 py-3 rounded-xl bg-gold-400 text-black font-bold hover:bg-gold-500 transition-colors"
+        >
+          Chiqish
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const AppContent: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<Route>(parseRouteFromURL);
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
@@ -134,7 +163,7 @@ const AppContent: React.FC = () => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
 
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
     {
@@ -156,7 +185,8 @@ const AppContent: React.FC = () => {
   ]);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
+  const [isAdminChecking, setIsAdminChecking] = useState(false);
   const { toggleCart } = useCart();
 
   // === URL Routing ===
@@ -190,17 +220,53 @@ const AppContent: React.FC = () => {
   }, [products, blogPosts]); // products/blogPosts yuklanganidan keyin URL ni to'g'rilash
 
   useEffect(() => {
-    const adminSession = localStorage.getItem('paketshop_admin_session');
-    if (adminSession === 'active') {
-      setIsAdminAuthenticated(true);
+    let cancelled = false;
+
+    if (currentRoute.name !== 'ADMIN') {
+      setIsAdminChecking(false);
+      return () => {
+        cancelled = true;
+      };
     }
-  }, []);
+
+    if (!user) {
+      setIsAdminAuthorized(false);
+      setIsAdminChecking(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setIsAdminChecking(true);
+
+    import('./lib/admin')
+      .then(({ isAdminUser }) => isAdminUser(user.id))
+      .then((allowed) => {
+        if (!cancelled) {
+          setIsAdminAuthorized(allowed);
+        }
+      })
+      .catch((error) => {
+        console.error('Admin access check failed:', error);
+        if (!cancelled) {
+          setIsAdminAuthorized(false);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsAdminChecking(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRoute.name, user]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const env = import.meta.env || {};
-        if (!env.VITE_SUPABASE_URL) {
+        if (!hasSupabaseCredentials) {
           console.warn("Supabase credentials missing, using mock data.");
           setProducts(MOCK_PRODUCTS);
           setCategories(MOCK_CATEGORIES);
@@ -271,7 +337,15 @@ const AppContent: React.FC = () => {
             .select('*')
             .order('date', { ascending: false });
           if (blogData && blogData.length > 0) {
-            setBlogPosts(blogData as BlogPost[]);
+            const mappedPosts = blogData.map((post) => ({
+              ...post,
+              seo: post.seo || {
+                title: post.seo_title || post.title,
+                description: post.seo_description || post.content?.substring(0, 160) || '',
+                keywords: post.seo_keywords || [],
+              },
+            }));
+            setBlogPosts(mappedPosts as BlogPost[]);
           }
         } catch (e) {
           console.warn('Blog posts fetch failed, using defaults:', e);
@@ -347,11 +421,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleAdminLogin = () => {
-    setIsAdminAuthenticated(true);
-    localStorage.setItem('paketshop_admin_session', 'active');
-  };
-
   const handleProfileClick = () => {
     if (user) {
       navigate({ name: 'PROFILE' });
@@ -360,9 +429,9 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleAdminLogout = () => {
-    setIsAdminAuthenticated(false);
-    localStorage.removeItem('paketshop_admin_session');
+  const handleAdminLogout = async () => {
+    setIsAdminAuthorized(false);
+    await signOut();
     navigateToHome();
   };
 
@@ -495,11 +564,23 @@ const AppContent: React.FC = () => {
 
   const renderContent = () => {
     if (currentRoute.name === 'ADMIN') {
-      if (!isAdminAuthenticated) {
+      if (authLoading || isAdminChecking) {
+        return <PageLoader />;
+      }
+
+      if (!user) {
         return (
           <AdminLogin
-            onLogin={handleAdminLogin}
             onBack={navigateToHome}
+          />
+        );
+      }
+
+      if (!isAdminAuthorized) {
+        return (
+          <AdminAccessDenied
+            onBack={navigateToHome}
+            onSignOut={handleAdminLogout}
           />
         );
       }

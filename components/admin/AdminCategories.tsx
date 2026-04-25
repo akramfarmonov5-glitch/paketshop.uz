@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, Plus, Search, X, Save, Image as ImageIcon, Globe, Type, Layout, Sparkles } from 'lucide-react';
 import { Category } from '../../types';
-import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../../lib/supabaseClient';
+import { requestGeminiJson } from '../../lib/geminiApi';
 
 interface AdminCategoriesProps {
   categories: Category[];
@@ -63,40 +63,31 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
     setIsGenerating(true);
     try {
-      const env = import.meta.env || {};
-      const apiKey = env.VITE_GEMINI_API_KEY;
-      const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+      const data = await requestGeminiJson<{
+        description: string;
+        slug: string;
+      }>({
+        systemInstruction: 'Act as a luxury e-commerce content strategist. Always answer in valid JSON.',
+        message: `
+          Category name: "${formData.name}"
 
-      const prompt = `
-            Act as a luxury e-commerce content strategist.
-            Category Name: "${formData.name}"
-            
-            Generate the following:
-            1. description: A short, elegant description in **Uzbek** (max 1 sentence).
-            2. slug: A clean, kebab-case URL slug (e.g., "mens-watches").
-            
-            Return JSON:
-            {
-                "description": "...",
-                "slug": "..."
-            }
-        `;
+          Generate:
+          1. description: a short elegant description in Uzbek (max 1 sentence)
+          2. slug: a clean kebab-case URL slug
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: { responseMimeType: 'application/json' }
+          Return JSON:
+          {
+            "description": "...",
+            "slug": "..."
+          }
+        `,
       });
 
-      const text = response.text;
-      if (text) {
-        const data = JSON.parse(text);
-        setFormData(prev => ({
-          ...prev,
-          description: data.description,
-          slug: data.slug
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        description: data.description,
+        slug: data.slug
+      }));
     } catch (error) {
       console.error("AI Gen Error", error);
     } finally {
@@ -111,7 +102,10 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
     const dataToSave = {
       name: formData.name,
-      image: formData.image || 'https://via.placeholder.com/400'
+      slug,
+      image: formData.image || 'https://via.placeholder.com/400',
+      description: formData.description || '',
+      googleProductCategory: formData.googleProductCategory || '',
     };
 
     try {

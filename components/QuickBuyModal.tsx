@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Product } from '../types';
-import { supabase } from '../lib/supabaseClient';
-import { useToast } from '../context/ToastContext';
+import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 import * as fpixel from '../lib/fpixel';
 
@@ -15,19 +14,18 @@ interface QuickBuyModalProps {
 }
 
 const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product, quantity }) => {
-  const { showToast } = useToast();
   const { isDark } = useTheme();
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     phone: '',
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const total = product.price * quantity;
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
   };
@@ -37,59 +35,57 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
   };
 
   const saveOrderToDatabase = async (orderId: string, dateStr: string) => {
-    const env = import.meta.env || {};
-    if (!env.VITE_SUPABASE_URL) return;
+    if (!hasSupabaseCredentials) return;
 
     try {
       const { error } = await supabase.from('orders').insert({
         id: orderId,
         customerName: formData.firstName,
         phone: formData.phone,
-        total: total,
+        total,
         status: 'Kutilmoqda',
         date: dateStr,
-        paymentMethod: 'Naqd' // Or calling back for details
+        paymentMethod: 'Naqd',
+        items: [
+          {
+            id: product.id,
+            name: product.name,
+            quantity,
+            price: product.price,
+          },
+        ],
       });
 
       if (error) {
-        console.error("Error saving quick order to Supabase:", error);
+        console.error('Error saving quick order to Supabase:', error);
       }
     } catch (e) {
-      console.error("Supabase quick order error:", e);
+      console.error('Supabase quick order error:', e);
     }
   };
 
   const sendTelegramNotification = async () => {
-    const env = import.meta.env || {};
-    const token = env.VITE_TELEGRAM_BOT_TOKEN;
-    const chatId = env.VITE_TELEGRAM_CHAT_ID;
-
-    if (!token || !chatId) {
-      console.warn("Telegram credentials not found.");
-      return;
-    }
-
     const message = `
-⚡ <b>TEZKOR BUYURTMA! (Bitta bosish)</b>
+<b>TEZKOR BUYURTMA</b>
 
-👤 <b>Ism:</b> ${formData.firstName}
-📞 <b>Tel:</b> ${formData.phone}
-💳 <b>To'lov:</b> Operator aniqlaydi
+<b>Ism:</b> ${formData.firstName}
+<b>Telefon:</b> ${formData.phone}
+<b>Tolov:</b> Operator aniqlaydi
 
-🛒 <b>Mahsulot:</b>
+<b>Mahsulot:</b>
 1. ${product.name} (x${quantity}) - ${formatPrice(total)}
 
-💰 <b>JAMI TO'LOV:</b> ${formatPrice(total)}
-    `;
+<b>Jami:</b> ${formatPrice(total)}
+    `.trim();
 
     try {
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      await fetch('/api/telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+        body: JSON.stringify({ message }),
       });
     } catch (error) {
-      console.error("Failed to send Telegram message", error);
+      console.error('Failed to send Telegram message', error);
     }
   };
 
@@ -106,12 +102,10 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
 
     setIsLoading(false);
     setIsSuccess(true);
-    
-    // Automatically close after success message
+
     setTimeout(() => {
       onClose();
-      // Reset state for future openings
-      setTimeout(() => setIsSuccess(false), 500); 
+      setTimeout(() => setIsSuccess(false), 500);
     }, 3000);
   };
 
@@ -127,17 +121,18 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
           onClick={!isLoading && !isSuccess ? onClose : undefined}
           className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         />
-        
+
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl ${isDark ? 'bg-dark-900 border border-white/10' : 'bg-white border border-light-border'}`}
+          className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl ${
+            isDark ? 'bg-dark-900 border border-white/10' : 'bg-white border border-light-border'
+          }`}
         >
-          {/* Header */}
           <div className={`p-4 md:p-6 border-b flex justify-between items-center ${isDark ? 'border-white/10' : 'border-light-border'}`}>
             <h2 className={`font-bold text-lg md:text-xl ${isDark ? 'text-white' : 'text-light-text'}`}>
-              ⚡ Tezkor xarid
+              Tezkor xarid
             </h2>
             <button
               onClick={onClose}
@@ -151,7 +146,6 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
           <div className="p-4 md:p-6">
             {!isSuccess ? (
               <>
-                {/* Product Summary */}
                 <div className={`flex gap-4 p-4 rounded-xl mb-6 ${isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}>
                   <div className="w-16 h-16 rounded-lg bg-gray-800 shrink-0 overflow-hidden">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
@@ -163,7 +157,6 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
                   </div>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1.5">
                     <label className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Ismingiz</label>
@@ -221,7 +214,7 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
                 <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle2 size={32} className="text-green-500" />
                 </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtma yuborildi!</h3>
+                <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtma yuborildi</h3>
                 <p className={`${isDark ? 'text-gray-400' : 'text-light-muted'} text-sm`}>Siz bilan tez orada bog'lanamiz.</p>
               </motion.div>
             )}

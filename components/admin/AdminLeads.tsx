@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Phone, Calendar, Search, MessageSquare } from 'lucide-react';
 import { ChatLead } from '../../types';
-import { supabase } from '../../lib/supabaseClient';
+import { hasSupabaseCredentials, supabase } from '../../lib/supabaseClient';
 
 const AdminLeads: React.FC = () => {
   const [leads, setLeads] = useState<ChatLead[]>([]);
@@ -15,8 +15,7 @@ const AdminLeads: React.FC = () => {
   const fetchLeads = async () => {
     setLoading(true);
     
-    const env = import.meta.env || {};
-    if (!env.VITE_SUPABASE_URL) {
+    if (!hasSupabaseCredentials) {
         setLeads([
             { id: '1', name: 'Alisher Valiyev', phone: '90 123 45 67', created_at: new Date().toISOString() },
             { id: '2', name: 'Zarina Karimova', phone: '99 876 54 32', created_at: new Date(Date.now() - 86400000).toISOString() },

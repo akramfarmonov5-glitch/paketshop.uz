@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
-import { supabase } from '../lib/supabaseClient';
+import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 
 interface Message {
   role: 'user' | 'model';
@@ -53,8 +53,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     localStorage.setItem('paketshop_chat_user', JSON.stringify(formData));
 
-    const env = import.meta.env || {};
-    if (env.VITE_SUPABASE_URL) {
+    if (hasSupabaseCredentials) {
       try {
         await supabase.from('leads').insert({
           id: `lead_${Date.now()}`,

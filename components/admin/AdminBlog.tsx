@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { BlogPost } from '../../types';
 import { Sparkles, Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Edit, X, Save } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { supabase } from '../../lib/supabaseClient';
+import { requestGeminiJson } from '../../lib/geminiApi';
 
 interface AdminBlogProps {
   posts: BlogPost[];
@@ -34,7 +34,10 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   };
 
   const handleOpenEdit = (post: BlogPost) => {
-    setFormData(post);
+    setFormData({
+      ...post,
+      seo: post.seo || { title: '', description: '', keywords: [] },
+    });
     setIsModalOpen(true);
   };
 
@@ -57,45 +60,41 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
     setIsGenerating(true);
     try {
-      const env = import.meta.env || {};
-      const ai = new GoogleGenAI({ apiKey: env.VITE_GEMINI_API_KEY || '' });
+      const data = await requestGeminiJson<{
+        content: string;
+        seo: {
+          title: string;
+          description: string;
+          keywords: string[];
+        };
+      }>({
+        systemInstruction: 'You are an expert content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON.',
+        message: `
+          Topic: "${formData.title}"
 
-      const prompt = `
-            You are an expert content writer for a packaging materials and wholesale store in Uzbekistan.
-            Topic: "${formData.title}"
-            
-            Generate a blog post in **Uzbek** language:
-            1. Content: Engaging, informative content about packaging, business, or wholesale (approx 150 words).
-            2. SEO Title: Short catchy title.
-            3. SEO Description: Meta description.
-            4. Keywords: Array of 5 strings related to the topic.
+          Generate a blog post in Uzbek language:
+          1. content: informative content about packaging, business, or wholesale (around 150 words)
+          2. seo.title: short catchy title
+          3. seo.description: meta description
+          4. seo.keywords: array of 5 related strings
 
-            Return JSON:
-            {
-                "content": "...",
-                "seo": {
-                    "title": "...",
-                    "description": "...",
-                    "keywords": ["...", "..."]
-                }
+          Return JSON:
+          {
+            "content": "...",
+            "seo": {
+              "title": "...",
+              "description": "...",
+              "keywords": ["...", "..."]
             }
-        `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: { responseMimeType: 'application/json' }
+          }
+        `,
       });
 
-      const text = response.text;
-      if (text) {
-        const data = JSON.parse(text);
-        setFormData(prev => ({
-          ...prev,
-          content: data.content,
-          seo: data.seo
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        content: data.content,
+        seo: data.seo
+      }));
     } catch (error) {
       console.error("AI Gen Error", error);
       alert("AI xatolik yuz berdi. API kalitini tekshiring.");

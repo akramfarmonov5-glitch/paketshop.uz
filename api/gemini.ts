@@ -5,14 +5,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'Gemini API key is missing on server' });
   }
 
   try {
-    const { message, history, systemInstruction } = req.body;
+    const { message, history, systemInstruction, jsonMode } = req.body || {};
     
     if (!message) {
       return res.status(400).json({ error: 'Message content is required' });
@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
-        systemInstruction: systemInstruction,
+        systemInstruction,
+        ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
       },
       history: history && history.length > 0 ? history : undefined
     });
