@@ -81,12 +81,12 @@ const InstallPWA: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-[90] max-w-[320px]">
+      <div className="fixed bottom-24 md:bottom-8 left-0 right-0 md:left-auto md:right-8 mx-auto md:mx-0 z-[90] w-[92vw] max-w-[400px]">
         <motion.div
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
-          className={`relative p-4 rounded-2xl shadow-2xl border ${isDark ? 'bg-dark-900/95 border-white/10 shadow-black/50' : 'bg-white/95 border-gray-200 shadow-xl'}`}
+          className={`relative p-5 md:p-6 rounded-3xl shadow-2xl border ${isDark ? 'bg-dark-900/95 border-white/10 shadow-black/50' : 'bg-white/95 border-gray-200 shadow-xl'}`}
         >
           <button
             onClick={handleDismiss}
@@ -95,30 +95,30 @@ const InstallPWA: React.FC = () => {
             <X size={16} />
           </button>
 
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-white flex items-center justify-center p-1">
+          <div className="flex gap-4 md:gap-5 items-start">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl shrink-0 overflow-hidden bg-white flex items-center justify-center p-2 shadow-inner border border-gray-100">
               <img src="/logo-light.png" alt="PaketShop App" className="w-full h-full object-contain" />
             </div>
             
-            <div>
-              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>PaketShop Ilovasi</h3>
-              <p className={`text-[11px] leading-tight mt-1 mb-3 pr-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className="flex-1">
+              <h3 className={`font-bold text-base md:text-lg mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>PaketShop Ilovasi</h3>
+              <p className={`text-xs md:text-sm leading-relaxed mb-4 pr-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 {isIOS 
                   ? "Tezkor ishlash uchun ilovani o'rnating." 
                   : "Saytni qulay ilova (App) ko'rinishida telefoningizga o'rnating."}
               </p>
 
               {isIOS ? (
-                <div className={`text-[10px] font-medium p-2 rounded-lg ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-50 text-gray-600'}`}>
-                  Qo'shish uchun pastdagi <Share size={12} className="inline mx-1" /> tugmani bosib <b>"Ekranga qo'shish"</b> (Add to Home Screen) ni tanlang.
+                <div className={`text-xs md:text-sm font-medium p-3 rounded-xl ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-50 text-gray-600'}`}>
+                  Qo'shish uchun pastdagi <Share size={14} className="inline mx-1" /> tugmani bosib <b>"Ekranga qo'shish"</b> (Add to Home Screen) ni tanlang.
                 </div>
               ) : (
                 <button
                   onClick={handleInstallClick}
-                  className="w-full bg-gold-400 text-black font-bold text-xs py-2 rounded-lg hover:bg-gold-500 transition-colors flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                  className="w-full bg-gold-400 text-black font-bold text-sm md:text-base py-3 md:py-3.5 rounded-xl hover:bg-gold-500 transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
                 >
-                  <Download size={14} />
-                  O'rnatish (O'rnatish tez va bepul)
+                  <Download size={18} />
+                  O'rnatish (Tez va bepul)
                 </button>
               )}
             </div>
