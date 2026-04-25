@@ -36,6 +36,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { hasSupabaseCredentials, supabase } from './lib/supabaseClient';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from './types';
 import { productSlug, getIdFromSlug, blogSlug, getBlogIdFromSlug, slugify } from './lib/slugify';
+import { ProductDetailSkeleton } from './components/Skeleton';
 import * as fpixel from './lib/fpixel';
 
 const BASE_URL = 'https://paketshop.uz';
@@ -620,12 +621,7 @@ const AppContent: React.FC = () => {
 
     if (currentRoute.name === 'PRODUCT') {
       if (isLoading) {
-        return (
-          <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
-            <div className="w-12 h-12 border-4 border-gold-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className={isDark ? 'text-gray-400' : 'text-light-muted'}>Yuklanmoqda...</p>
-          </div>
-        );
+        return <ProductDetailSkeleton />;
       }
       const product = products.find(p => p.id === currentRoute.productId);
       if (product) {
@@ -673,6 +669,7 @@ const AppContent: React.FC = () => {
         <CategoryGrid
           categories={categories}
           onSelectCategory={handleCategorySelect}
+          isLoading={isLoading}
         />
         <PromoBanner />
         <FeaturedProducts
@@ -683,7 +680,7 @@ const AppContent: React.FC = () => {
           isLoading={isLoading}
         />
         <Testimonials />
-        <BlogGrid posts={blogPosts} onPostClick={navigateToBlogPost} />
+        <BlogGrid posts={blogPosts} onPostClick={navigateToBlogPost} isLoading={isLoading} />
       </main>
     );
   };

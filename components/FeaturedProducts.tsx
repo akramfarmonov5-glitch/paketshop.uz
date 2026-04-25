@@ -5,6 +5,7 @@ import { Filter, X, Check, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { ProductSkeleton } from './Skeleton';
 
 interface FeaturedProductsProps {
     products: Product[];
@@ -163,7 +164,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                         {isLoading ? (
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                                    <div key={i} className={`rounded-xl h-[250px] md:h-[400px] animate-pulse border ${isDark ? 'bg-dark-800 border-white/5' : 'bg-light-card border-light-border'}`}></div>
+                                    <ProductSkeleton key={i} />
                                 ))}
                             </div>
                         ) : (
