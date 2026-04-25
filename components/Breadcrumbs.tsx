@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
 
@@ -12,6 +12,14 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, onHomeClick }) => {
   const { lang, t } = useLanguage();
   return (
     <nav className="flex items-center text-sm text-gray-500 mb-8 overflow-x-auto whitespace-nowrap pb-2 md:pb-0">
+      <button 
+        onClick={() => window.history.back()}
+        className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors mr-3 bg-white/5 px-2 py-1 rounded-md"
+      >
+        <ArrowLeft size={14} />
+        <span>{t('back_button') || 'Orqaga'}</span>
+      </button>
+
       <button 
         onClick={onHomeClick}
         className="flex items-center gap-1 hover:text-gold-400 transition-colors"
