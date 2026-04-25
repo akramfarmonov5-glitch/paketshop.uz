@@ -4,6 +4,7 @@ import { ArrowRight, ShoppingBag, ChevronRight } from 'lucide-react';
 import { HeroContent } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedText } from '../lib/i18nUtils';
 
 interface HeroProps {
   content?: HeroContent;
@@ -12,7 +13,7 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ content }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   // Fallback if content is missing
   const displayContent = content || {
@@ -49,11 +50,12 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
   };
 
   const getLocalizedTitle = () => {
+    const titleStr = getLocalizedText(displayContent.title, lang);
     return (
       <>
-        {displayContent.title.split(' ').slice(0, 1).join(' ')} <br />
+        {titleStr.split(' ').slice(0, 1).join(' ')} <br />
         <span className={`text-transparent bg-clip-text bg-gradient-to-r ${isDark ? 'from-white to-gray-400' : 'from-amber-600 to-gold-500'}`}>
-          {displayContent.title.split(' ').slice(1).join(' ')} {t('hero_title_suffix')}
+          {titleStr.split(' ').slice(1).join(' ')} {t('hero_title_suffix')}
         </span>
       </>
     );
@@ -73,7 +75,7 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
         >
           <div className="inline-block px-3 py-1 md:px-4 md:py-1.5 border border-gold-500/30 rounded-full bg-gold-500/10 backdrop-blur-sm">
             <span className="text-gold-400 text-[10px] md:text-xs font-semibold uppercase tracking-widest">
-              {displayContent.badge}
+              {getLocalizedText(displayContent.badge, lang)}
             </span>
           </div>
 
@@ -82,7 +84,7 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
           </h1>
 
           <p className={`text-base md:text-xl max-w-lg font-light leading-relaxed ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-            {displayContent.description}
+            {getLocalizedText(displayContent.description, lang)}
           </p>
 
           <div className="flex gap-4 pt-2 md:pt-4">
@@ -90,7 +92,7 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
               onClick={scrollToProducts}
               className={`flex items-center gap-2 px-6 py-3 md:px-8 md:py-4 font-semibold rounded-full transition-all duration-300 transform hover:scale-105 text-sm md:text-base ${isDark ? 'bg-white text-black hover:bg-gold-400' : 'bg-gold-500 text-white hover:bg-gold-600'}`}
             >
-              {t('shop_now')}
+              {getLocalizedText(displayContent.buttonText, lang)}
               <ShoppingBag size={18} />
             </button>
             <button className={`px-6 py-3 md:px-8 md:py-4 border font-medium rounded-full backdrop-blur-sm transition-all duration-300 text-sm md:text-base ${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-light-border text-light-text hover:bg-light-card'}`}>
