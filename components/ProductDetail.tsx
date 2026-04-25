@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Box, Activity, Zap, PlayCircle, X, Youtube, ExternalLink, ArrowRight, Heart, Play } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -391,7 +391,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                     />
                     <div className="z-20 transform group-hover:scale-110 transition-transform duration-300">
                       <div className="w-16 h-16 md:w-24 md:h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.5)]">
-                        <Youtube size={32} className="text-white fill-white md:w-[48px] md:h-[48px]" />
+                        <Play size={32} className="text-white fill-white md:w-[48px] md:h-[48px] ml-2 md:ml-3" />
                       </div>
                     </div>
                     <p className="z-20 mt-4 md:mt-6 text-sm md:text-xl font-bold tracking-widest text-white drop-shadow-lg uppercase">{t('video_review')}</p>
