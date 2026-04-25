@@ -198,15 +198,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             className="lg:col-span-6 flex flex-col justify-center"
           >
             <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
-              <span className="text-gold-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
+              <span className="text-gold-400 text-xs md:text-sm font-bold uppercase tracking-[0.2em]">
                 {getLocalizedText(product.category, lang)}
               </span>
-              <h1 className={`text-2xl md:text-4xl lg:text-5xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-bold leading-tight ${isDark ? 'bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400' : 'text-gray-900'}`}>
                 {getLocalizedText(product.name, lang)}
               </h1>
 
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium text-white ${product.stock === 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                <span className={`px-2 py-1 md:px-3 rounded text-xs md:text-sm font-medium text-white ${product.stock === 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
                   {product.stock === 0 ? t('out_of_stock') : (product.stock ? `${product.stock} ${t('stock_in')}` : t('in_stock'))}
                 </span>
                 <div className="flex text-gold-500">
@@ -216,7 +216,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 {hasVideo && (
                   <button
                     onClick={handleOpenVideo}
-                    className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 md:px-3 rounded hover:bg-red-500 hover:text-white transition-colors"
+                    className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-red-500 bg-red-500/10 px-2 py-1 md:px-3 rounded hover:bg-red-500 hover:text-white transition-colors"
                   >
                     <Youtube size={12} className="md:w-[14px] md:h-[14px]" />
                     {t('video_review')}
@@ -225,7 +225,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               </div>
               {product.itemsPerPackage && product.itemsPerPackage > 1 && (
                 <div className="inline-block">
-                  <span className={`px-2 py-1 md:px-3 rounded text-[10px] md:text-xs font-medium border flex items-center gap-2 ${isDark ? 'border-gold-400/30 text-gold-400 bg-gold-400/5' : 'border-gold-500/30 text-gold-600 bg-gold-400/10'}`}>
+                  <span className={`px-2 py-1 md:px-3 rounded text-xs md:text-sm font-medium border flex items-center gap-2 ${isDark ? 'border-gold-400/30 text-gold-400 bg-gold-400/5' : 'border-gold-500/30 text-gold-600 bg-gold-400/10'}`}>
                     <Box size={12} />
                     {product.itemsPerPackage} {t('items_per_package_desc')}
                   </span>
@@ -237,7 +237,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
               <div className="flex items-end justify-between mb-3 md:mb-4">
                 <div>
                   <p className="text-gray-400 text-xs mb-1">{t('total_sum')}</p>
-                  <p className={`text-2xl md:text-3xl font-light ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.formattedPrice}</p>
+                  <p className={`text-3xl md:text-4xl font-light ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.formattedPrice}</p>
                 </div>
                 <button
                   onClick={handleToggleWishlist}

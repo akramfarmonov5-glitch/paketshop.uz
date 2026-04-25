@@ -60,12 +60,12 @@ const handleAddToCart = (e: React.MouseEvent) => {
         {/* Badges */}
         <div className="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-1.5 z-10">
           {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
-            <span className="px-2 py-0.5 bg-red-500 text-white text-[8px] md:text-[10px] font-bold rounded-md uppercase tracking-wider shadow-lg">
+            <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] md:text-[11px] font-bold rounded-md uppercase tracking-wider shadow-lg">
               🔥 Bestseller
             </span>
           )}
           {product.price >= 100000 && product.price <= 300000 && (
-            <span className="px-2 py-0.5 bg-emerald-500 text-white text-[8px] md:text-[10px] font-bold rounded-md uppercase tracking-wider shadow-lg">
+            <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] md:text-[11px] font-bold rounded-md uppercase tracking-wider shadow-lg">
               ✨ Yangi
             </span>
           )}
@@ -86,19 +86,19 @@ const handleAddToCart = (e: React.MouseEvent) => {
       {/* Content */}
       <div className="p-3 md:p-6 flex flex-col flex-grow">
         <div className="flex-grow cursor-pointer" onClick={onNavigate}>
-          <span className={`text-[9px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</span>
-          <h3 className={`text-sm md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
+          <span className={`text-[11px] md:text-xs uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getLocalizedText(product.category, lang)}</span>
+          <h3 className={`text-base md:text-lg font-medium mt-0.5 md:mt-1 group-hover:text-gold-400 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>
             {getLocalizedText(product.name, lang)}
           </h3>
           {product.itemsPerPackage && product.itemsPerPackage > 1 && (
-            <span className="text-[10px] text-gold-400/80 font-medium">
+            <span className="text-xs text-gold-400/80 font-medium">
               ({product.itemsPerPackage} {t('items_per_package_desc')})
             </span>
           )}
         </div>
 
         <div className="flex items-center justify-between mt-2 md:mt-4">
-          <span className="text-gold-400 font-semibold text-xs md:text-lg">
+          <span className="text-gold-400 font-semibold text-sm md:text-lg">
             {product.formattedPrice}
           </span>
 
