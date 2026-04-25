@@ -50,11 +50,11 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
 
             {/* Contact Info */}
             <div className="space-y-4 mb-6">
-              <a href="tel:+998901234567" className={`flex items-center gap-3 text-sm group ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
+              <a href="tel:+998996448444" className={`flex items-center gap-3 text-sm group ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-light-bg'}`}>
                   <Phone size={14} className="text-gold-400" />
                 </div>
-                <span className="group-hover:text-gold-400 transition-colors">+998 90 123 45 67</span>
+                <span className="group-hover:text-gold-400 transition-colors">+998 99 644 84 44</span>
               </a>
               <div className={`flex items-center gap-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-light-bg'}`}>

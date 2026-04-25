@@ -22,7 +22,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   const [formLoading, setFormLoading] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: "Assalomu alaykum! Men PaketShop shaxsiy stilistingizman. Sizga qanday yordam bera olaman? Masalan, 'sovg'a uchun soat' yoki 'yozgi sumka' so'rashingiz mumkin." }
+    { role: 'model', text: "Assalomu alaykum! Men PaketShop onlayn do'koni yordamchisiman. Sizga qanday yordam bera olaman? Masalan, 'qanday paketlar bor' yoki 'konteyner narxini ayt' deb so'rashingiz mumkin." }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
