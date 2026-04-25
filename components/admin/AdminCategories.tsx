@@ -153,7 +153,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
   };
 
   const filteredCategories = categories.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+    getLocalizedText(c.name, 'uz').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -186,8 +186,8 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCategories.map((category) => (
           <div key={category.id} className="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex gap-4 group hover:border-gold-400/50 transition-all">
-            <div className="w-24 h-24 rounded-xl bg-gray-800 overflow-hidden shrink-0 relative border border-white/5">
-              <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+            <div className="w-24 aspect-[4/5] rounded-xl bg-gray-800 overflow-hidden shrink-0 relative border border-white/5">
+              <img src={category.image} alt={getLocalizedText(category.name, 'uz')} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
               <div>
