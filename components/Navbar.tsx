@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, User, Menu, X, ChevronRight, Instagram, Send, Facebook, Youtube, Twitter, Heart, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, X, ChevronRight, Instagram, Send, Facebook, Youtube, Twitter, Heart, Sun, Moon, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -86,6 +86,14 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
 
         {/* Desktop Icons */}
         <div className={`hidden md:flex items-center gap-5 ${isDark ? 'text-white' : 'text-light-text'}`}>
+          <a 
+            href="tel:+998996448444" 
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-light-text'}`}
+          >
+            <Phone size={14} className="text-gold-400" />
+            <span>+998 99 644 84 44</span>
+          </a>
+
           {/* Language Switcher */}
           <div className="relative">
             <button
@@ -263,8 +271,21 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                   {/* Tillar bosh sahifaga (navbar-ga) olingan */}
                 </div>
 
-                {/* Social Media & Footer Info */}
-                <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
+                  <a 
+                    href="tel:+998996448444" 
+                    className={`flex items-center gap-3 p-4 rounded-xl mb-4 transition-colors ${isDark ? 'bg-white/5 text-white' : 'bg-light-card text-light-text'}`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gold-400/10 flex items-center justify-center shrink-0">
+                      <Phone size={18} className="text-gold-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Aloqa uchun</span>
+                      <span className="font-bold">+998 99 644 84 44</span>
+                    </div>
+                  </a>
+
+                  {/* Social Media & Footer Info */}
+                  <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
                   <p className={`text-xs mb-4 uppercase tracking-widest font-semibold ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Bizni kuzating</p>
                   <div className="flex gap-4 mb-8">
                     {navigationSettings.socialLinks.map((social) => (
