@@ -48,6 +48,16 @@ const translations: Translations = {
     filter: { uz: 'Filtr', ru: 'Фильтр', en: 'Filter' },
     search_placeholder: { uz: 'Qidirish...', ru: 'Поиск...', en: 'Search...' },
 
+    // Sorting & Filtering
+    sort_by: { uz: 'Saralash', ru: 'Сортировка', en: 'Sort by' },
+    sort_newest: { uz: 'Eng yangilari', ru: 'Сначала новые', en: 'Newest first' },
+    sort_price_asc: { uz: 'Arzonlari oldin', ru: 'Сначала дешевые', en: 'Price: Low to High' },
+    sort_price_desc: { uz: 'Qimmatlari oldin', ru: 'Сначала дорогие', en: 'Price: High to Low' },
+    price_range: { uz: 'Narx oralig\'i', ru: 'Диапазон цен', en: 'Price range' },
+    min_price: { uz: 'Dan', ru: 'От', en: 'Min' },
+    max_price: { uz: 'Gacha', ru: 'До', en: 'Max' },
+    apply: { uz: 'Qo\'llash', ru: 'Применить', en: 'Apply' },
+
     // Product Status & Features
     stock_in: { uz: 'dona', ru: 'шт', en: 'pcs' },
     in_stock: { uz: 'Mavjud', ru: 'В наличии', en: 'In Stock' },

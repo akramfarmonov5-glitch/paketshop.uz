@@ -25,15 +25,25 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
     }, [activeCategory]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [sortOrder, setSortOrder] = useState<string>('newest');
+    const [minPrice, setMinPrice] = useState<string>('');
+    const [maxPrice, setMaxPrice] = useState<string>('');
     const { isDark } = useTheme();
     const { t } = useLanguage();
 
-    // Derive active products based on filter
+    // Derive active products based on filter and sorting
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
+        const minP = minPrice ? parseInt(minPrice) : 0;
+        const maxP = maxPrice ? parseInt(maxPrice) : Infinity;
+        const matchesPrice = p.price >= minP && p.price <= maxP;
+        return matchesCategory && matchesSearch && matchesPrice;
+    }).sort((a, b) => {
+        if (sortOrder === 'price-asc') return a.price - b.price;
+        if (sortOrder === 'price-desc') return b.price - a.price;
+        return b.id - a.id; // default: newest
     });
 
     return (
@@ -77,30 +87,73 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                 <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
 
                     {/* Sidebar Filter (Desktop) */}
-                    <div className="hidden md:block w-64 shrink-0 space-y-8 sticky top-28 h-fit">
-                        <div>
-                            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-light-text'}`}>
-                                <Filter size={18} className="text-gold-400" />
-                                {t('footer_categories')}
-                            </h3>
-                            <div className="space-y-2">
-                                <button
-                                    onClick={() => setSelectedCategory('All')}
-                                    className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
-                                >
-                                    <span>{t('all_categories')}</span>
-                                    {selectedCategory === 'All' && <Check size={16} />}
-                                </button>
-                                {categories.map(cat => (
+                    <div className="hidden md:block w-64 shrink-0 sticky top-28 h-fit">
+                        <div className="space-y-8">
+                            {/* Categories */}
+                            <div>
+                                <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-light-text'}`}>
+                                    <Filter size={18} className="text-gold-400" />
+                                    {t('footer_categories')}
+                                </h3>
+                                <div className="space-y-2">
                                     <button
-                                        key={cat.id}
-                                        onClick={() => setSelectedCategory(cat.name)}
-                                        className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
+                                        onClick={() => setSelectedCategory('All')}
+                                        className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
                                     >
-                                        <span>{t(cat.name)}</span>
-                                        {selectedCategory === cat.name && <Check size={16} />}
+                                        <span>{t('all_categories')}</span>
+                                        {selectedCategory === 'All' && <Check size={16} />}
                                     </button>
-                                ))}
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setSelectedCategory(cat.name)}
+                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all flex justify-between items-center ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-light-muted hover:bg-light-card hover:text-light-text'}`}
+                                        >
+                                            <span>{t(cat.name)}</span>
+                                            {selectedCategory === cat.name && <Check size={16} />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Sort Order */}
+                            <div>
+                                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>
+                                    {t('sort_by')}
+                                </h3>
+                                <select 
+                                    value={sortOrder}
+                                    onChange={(e) => setSortOrder(e.target.value)}
+                                    className={`w-full border rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-gold-400 transition-colors cursor-pointer ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
+                                >
+                                    <option value="newest">{t('sort_newest')}</option>
+                                    <option value="price-asc">{t('sort_price_asc')}</option>
+                                    <option value="price-desc">{t('sort_price_desc')}</option>
+                                </select>
+                            </div>
+
+                            {/* Price Range */}
+                            <div>
+                                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>
+                                    {t('price_range')}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        type="number" 
+                                        placeholder={t('min_price')}
+                                        value={minPrice}
+                                        onChange={(e) => setMinPrice(e.target.value)}
+                                        className={`w-full border rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-gold-400 transition-colors ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
+                                    />
+                                    <span className="text-gray-400">-</span>
+                                    <input 
+                                        type="number" 
+                                        placeholder={t('max_price')}
+                                        value={maxPrice}
+                                        onChange={(e) => setMaxPrice(e.target.value)}
+                                        className={`w-full border rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-gold-400 transition-colors ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -178,22 +231,70 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
                                 </button>
                             </div>
 
-                            <div className="space-y-1 overflow-y-auto max-h-[calc(100vh-140px)] pr-2 custom-scrollbar">
-                                <button
-                                    onClick={() => { setSelectedCategory('All'); setIsFilterOpen(false); }}
-                                    className={`w-full text-left px-4 py-2 rounded-xl transition-all ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
-                                >
-                                    {t('all_categories')}
-                                </button>
-                                {categories.map(cat => (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => { setSelectedCategory(cat.name); setIsFilterOpen(false); }}
-                                        className={`w-full text-left px-4 py-2 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                            <div className="space-y-8 overflow-y-auto max-h-[calc(100vh-140px)] pr-2 custom-scrollbar">
+                                {/* Categories */}
+                                <div>
+                                    <h4 className={`text-sm font-bold mb-3 uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('footer_categories')}</h4>
+                                    <div className="space-y-1">
+                                        <button
+                                            onClick={() => { setSelectedCategory('All'); setIsFilterOpen(false); }}
+                                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === 'All' ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                                        >
+                                            {t('all_categories')}
+                                        </button>
+                                        {categories.map(cat => (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => { setSelectedCategory(cat.name); setIsFilterOpen(false); }}
+                                                className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedCategory === cat.name ? 'bg-gold-400 text-black font-bold' : isDark ? 'text-gray-400 hover:bg-white/5' : 'text-light-muted hover:bg-light-card'}`}
+                                            >
+                                                {t(cat.name)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Sort Order */}
+                                <div>
+                                    <h4 className={`text-sm font-bold mb-3 uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('sort_by')}</h4>
+                                    <select 
+                                        value={sortOrder}
+                                        onChange={(e) => setSortOrder(e.target.value)}
+                                        className={`w-full border rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-gold-400 transition-colors ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
                                     >
-                                        {t(cat.name)}
+                                        <option value="newest">{t('sort_newest')}</option>
+                                        <option value="price-asc">{t('sort_price_asc')}</option>
+                                        <option value="price-desc">{t('sort_price_desc')}</option>
+                                    </select>
+                                </div>
+
+                                {/* Price Range */}
+                                <div>
+                                    <h4 className={`text-sm font-bold mb-3 uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('price_range')}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="number" 
+                                            placeholder={t('min_price')}
+                                            value={minPrice}
+                                            onChange={(e) => setMinPrice(e.target.value)}
+                                            className={`w-full border rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-gold-400 transition-colors ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
+                                        />
+                                        <span className="text-gray-400">-</span>
+                                        <input 
+                                            type="number" 
+                                            placeholder={t('max_price')}
+                                            value={maxPrice}
+                                            onChange={(e) => setMaxPrice(e.target.value)}
+                                            className={`w-full border rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-gold-400 transition-colors ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsFilterOpen(false)}
+                                        className="w-full mt-4 bg-gold-400 text-black font-bold py-3 rounded-xl hover:bg-gold-500"
+                                    >
+                                        {t('apply')}
                                     </button>
-                                ))}
+                                </div>
                             </div>
                         </motion.div>
                     </motion.div>
