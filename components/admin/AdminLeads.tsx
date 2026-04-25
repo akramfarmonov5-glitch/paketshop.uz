@@ -40,7 +40,6 @@ const AdminLeads: React.FC = () => {
   };
 
   const deleteLead = async (id: string) => {
-    if (!window.confirm("Rostdan ham bu mijozni o'chirib tashlamoqchimisiz?")) return;
     try {
       const { error } = await supabase.from('leads').delete().eq('id', id);
       if (error) throw error;
