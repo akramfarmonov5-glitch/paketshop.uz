@@ -27,7 +27,7 @@ const InstallPWA: React.FC = () => {
       const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
       if (!dismissedAt) return false;
       const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
-      return daysSince < 7; // Show again after 7 days
+      return daysSince < 1; // Show again after 1 day
     };
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -39,7 +39,7 @@ const InstallPWA: React.FC = () => {
         if (!isDismissedRecently()) {
           setShowPrompt(true);
         }
-      }, 5000);
+      }, 2000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -50,7 +50,7 @@ const InstallPWA: React.FC = () => {
         if (!isDismissedRecently()) {
           setShowPrompt(true);
         }
-      }, 5000);
+      }, 2000);
     }
 
     return () => {
