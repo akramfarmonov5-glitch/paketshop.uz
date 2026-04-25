@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Phone, Calendar, Search, MessageSquare } from 'lucide-react';
+import { Users, Phone, Calendar, Search, MessageSquare, Trash2 } from 'lucide-react';
 import { ChatLead } from '../../types';
 import { hasSupabaseCredentials, supabase } from '../../lib/supabaseClient';
 
@@ -36,6 +36,18 @@ const AdminLeads: React.FC = () => {
         console.error("Error fetching leads:", error);
     } finally {
         setLoading(false);
+    }
+  };
+
+  const deleteLead = async (id: string) => {
+    if (!window.confirm("Rostdan ham bu mijozni o'chirib tashlamoqchimisiz?")) return;
+    try {
+      const { error } = await supabase.from('leads').delete().eq('id', id);
+      if (error) throw error;
+      setLeads(leads.filter(lead => lead.id !== id));
+    } catch (err) {
+      console.error("Error deleting lead:", err);
+      alert("O'chirishda xatolik yuz berdi");
     }
   };
 
@@ -121,9 +133,14 @@ const AdminLeads: React.FC = () => {
                                 </div>
                             </td>
                             <td className="p-4 text-right">
-                                <button className="p-2 text-gold-400 hover:bg-gold-400/10 rounded-lg transition-colors" title="Bog'lanish">
-                                    <MessageSquare size={18} />
-                                </button>
+                                <div className="flex items-center justify-end gap-2">
+                                    <button className="p-2 text-gold-400 hover:bg-gold-400/10 rounded-lg transition-colors" title="Bog'lanish">
+                                        <MessageSquare size={18} />
+                                    </button>
+                                    <button onClick={() => deleteLead(lead.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="O'chirish">
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))
