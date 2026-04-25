@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Users, Phone, Calendar, Search, MessageSquare, Trash2 } from 'lucide-react';
 import { ChatLead } from '../../types';
 import { hasSupabaseCredentials, supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 
 const AdminLeads: React.FC = () => {
+  const { showToast } = useToast();
   const [leads, setLeads] = useState<ChatLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,7 +48,7 @@ const AdminLeads: React.FC = () => {
       setLeads(leads.filter(lead => lead.id !== id));
     } catch (err) {
       console.error("Error deleting lead:", err);
-      alert("O'chirishda xatolik yuz berdi");
+      showToast("O'chirishda xatolik yuz berdi", 'error');
     }
   };
 

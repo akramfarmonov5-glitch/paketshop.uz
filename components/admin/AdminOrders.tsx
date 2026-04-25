@@ -3,8 +3,10 @@ import { Order, OrderStatus } from '../../types';
 import { Clock, CheckCircle, Truck, Package, Search, Download, Trash2 } from 'lucide-react';
 
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../context/ToastContext';
 
 const AdminOrders: React.FC = () => {
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,7 +81,7 @@ const AdminOrders: React.FC = () => {
       setOrders(prev => prev.filter(o => o.id !== id));
     } catch (err) {
       console.error('Error deleting order:', err);
-      alert("Buyurtmani o'chirishda xatolik yuz berdi");
+      showToast("Buyurtmani o'chirishda xatolik yuz berdi", 'error');
     }
   };
 
