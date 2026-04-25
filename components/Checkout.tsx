@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, ShieldCheck, CreditCard, Truck, Send, Wallet, Banknote, X, Smartphone, ExternalLink, Ticket, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import * as fpixel from '../lib/fpixel';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +15,7 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { cart, cartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { isDark } = useTheme();
   const { t } = useLanguage();
@@ -107,7 +109,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     try {
-      const { error } = await supabase.from('orders').insert({
+      const orderData: any = {
         id: orderId,
         "customerName": `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
@@ -115,8 +117,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
         status: 'Kutilmoqda',
         date: dateStr,
         "paymentMethod": paymentMethod === 'paynet' ? 'Paynet' : 'Naqd'
-        // address, city, items columns currently missing in DB, skipping for now
-      });
+      };
+
+      if (user) {
+        orderData.user_id = user.id;
+      }
+
+      const { error } = await supabase.from('orders').insert(orderData);
 
       if (error) {
         console.error("Error saving order to Supabase:", error);
