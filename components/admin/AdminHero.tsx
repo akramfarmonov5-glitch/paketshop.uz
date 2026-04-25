@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { HeroContent } from '../../types';
-import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2 } from 'lucide-react';
+import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2, Globe } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
+import { parseLocalizedObject, LocalizedString } from '../../lib/i18nUtils';
 
 interface AdminHeroProps {
     heroContent: HeroContent;
@@ -12,11 +13,16 @@ interface AdminHeroProps {
 
 const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) => {
     const { showToast } = useToast();
-    // Ensure images array is initialized if coming from old state
-    const [formData, setFormData] = useState<HeroContent>({
+    // Ensure text fields are fully localized objects
+    const [formData, setFormData] = useState<any>({
         ...heroContent,
+        badge: parseLocalizedObject(heroContent.badge),
+        title: parseLocalizedObject(heroContent.title),
+        description: parseLocalizedObject(heroContent.description),
+        buttonText: parseLocalizedObject(heroContent.buttonText),
         images: heroContent.images || []
     });
+    const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
     const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -25,10 +31,21 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
         setIsSaving(true);
 
         try {
-            // Upsert to Supabase (update if exists, insert if not)
+            // Prepare data for save (stringify objects)
+            const savePayload = {
+                id: 2, // Explicitly use integer ID for hero_content
+                badge: JSON.stringify(formData.badge),
+                title: JSON.stringify(formData.title),
+                description: JSON.stringify(formData.description),
+                button_text: JSON.stringify(formData.buttonText),
+                images: formData.images
+            };
+
+            // Upsert to Supabase
             const { error } = await supabase
                 .from('hero_content')
-                .upsert({ id: 'main', ...formData }, { onConflict: 'id' });
+                .update(savePayload)
+                .eq('id', 2);
 
             if (error) throw error;
 
@@ -66,14 +83,31 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
 
     return (
         <div className="max-w-4xl">
-            <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">Banner Sozlamalari (Hero)</h2>
-                <p className="text-gray-400">Veb-saytning bosh sahifasidagi asosiy bannerni o'zgartirish.</p>
+            <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-3xl font-bold text-white mb-2">Banner Sozlamalari (Hero)</h2>
+                    <p className="text-gray-400">Veb-saytning bosh sahifasidagi asosiy bannerni o'zgartirish.</p>
+                </div>
+                <div className="flex bg-black p-1 rounded-xl border border-white/10">
+                    {(['uz', 'ru', 'en'] as const).map(l => (
+                        <button
+                            key={l}
+                            onClick={() => setActiveLang(l)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${activeLang === l ? 'bg-gold-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            {l}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Form */}
                 <form onSubmit={handleSave} className="space-y-6 bg-zinc-900 border border-white/10 p-6 rounded-2xl">
+                    <div className="flex items-center gap-2 mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm">
+                        <Globe size={18} />
+                        <span>Siz hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kiritmoqdasiz.</span>
+                    </div>
 
                     <div className="space-y-2">
                         <label className="text-sm text-gray-400 flex items-center gap-2">
@@ -81,8 +115,8 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.badge}
-                            onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                            value={formData.badge[activeLang]}
+                            onChange={(e) => setFormData({ ...formData, badge: { ...formData.badge, [activeLang]: e.target.value } })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
                             placeholder="Masalan: Yangi Xizmat"
                         />
@@ -94,8 +128,8 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            value={formData.title[activeLang]}
+                            onChange={(e) => setFormData({ ...formData, title: { ...formData.title, [activeLang]: e.target.value } })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
                             placeholder="Masalan: Sizning ishonchli hamkoringiz"
                         />
@@ -105,8 +139,8 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                     <div className="space-y-2">
                         <label className="text-sm text-gray-400">Tavsif (Description)</label>
                         <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            value={formData.description[activeLang]}
+                            onChange={(e) => setFormData({ ...formData, description: { ...formData.description, [activeLang]: e.target.value } })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none min-h-[100px] resize-y"
                             placeholder="Masalan: Biz sizning biznesingiz uchun tez va ishonchli yetkazib berish xizmatlarini taqdim etamiz..."
                         />
@@ -118,8 +152,8 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.buttonText}
-                            onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
+                            value={formData.buttonText[activeLang]}
+                            onChange={(e) => setFormData({ ...formData, buttonText: { ...formData.buttonText, [activeLang]: e.target.value } })}
                             className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 focus:outline-none"
                             placeholder="Masalan: Hozir buyurtma berish"
                         />
