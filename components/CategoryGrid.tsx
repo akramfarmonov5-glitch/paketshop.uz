@@ -71,11 +71,11 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               {/* Content */}
               <div className="absolute inset-0 p-3 md:p-8 flex flex-col justify-end items-start">
                 <div className="transform translate-y-0 md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="text-gold-400 text-[9px] md:text-xs font-bold uppercase tracking-widest mb-1 md:mb-2 block">
+                  <span className="text-gold-400 text-[11px] md:text-xs font-bold uppercase tracking-widest mb-1 md:mb-2 block">
                     {t('category_collection')}
                   </span>
                   {/* Matn o'lchamlari mobil uchun moslashtirildi */}
-                  <h3 className={`font-bold text-white mb-2 md:mb-4 leading-tight ${index === 0 ? 'text-xl md:text-4xl' : 'text-xs md:text-2xl'}`}>
+                  <h3 className={`font-bold text-white mb-2 md:mb-4 leading-tight ${index === 0 ? 'text-2xl md:text-4xl' : 'text-sm md:text-2xl'}`}>
                     {getLocalizedText(category.name, lang)}
                   </h3>
                   {/* Hidden for UI, but kept for SEO */}
@@ -83,10 +83,10 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
                     {getLocalizedText(category.description, lang)}
                   </p>
 
-                  <div className="inline-flex items-center gap-2 text-white text-[10px] md:text-sm font-medium group-hover:text-gold-400 transition-colors">
+                  <div className="inline-flex items-center gap-2 text-white text-xs md:text-sm font-medium group-hover:text-gold-400 transition-colors">
                     <span className="hidden md:inline">{t('view')}</span>
-                    <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-gold-400 group-hover:text-black transition-all">
-                      <ArrowRight size={10} className="md:w-[14px] md:h-[14px]" />
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-gold-400 group-hover:text-black transition-all">
+                      <ArrowRight size={12} className="md:w-[14px] md:h-[14px]" />
                     </div>
                   </div>
                 </div>
