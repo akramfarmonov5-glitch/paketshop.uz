@@ -261,7 +261,8 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
       </div>
 
       <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden">
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[700px]">
           <thead className="bg-white/5 border-b border-white/5">
             <tr>
               <th className="p-4 text-sm font-medium text-gray-400">Rasm</th>
@@ -317,6 +318,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && (
