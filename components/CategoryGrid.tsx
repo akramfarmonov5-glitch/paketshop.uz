@@ -4,13 +4,15 @@ import { ArrowRight } from 'lucide-react';
 import { Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { CategorySkeleton } from './Skeleton';
 
 interface CategoryGridProps {
   categories: Category[];
   onSelectCategory: (categoryName: string) => void;
+  isLoading?: boolean;
 }
 
-const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategory }) => {
+const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategory, isLoading }) => {
   const { isDark } = useTheme();
   const { t } = useLanguage();
 
@@ -28,8 +30,19 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
 
         {/* Mobile: grid-cols-3 (3 ustun), Tablet/Desktop: grid-cols-3/4 */}
         <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 auto-rows-[160px] md:auto-rows-[300px]">
-          {/* Slice ko'paytirildi: 6 tagacha kategoriya sig'adi (1 ta katta + 5 ta kichik) */}
-          {categories.map((category, index) => (
+          {isLoading ? (
+            <>
+              {[1, 2, 3, 4, 5, 6].map((i, index) => (
+                <div key={i} className={`group relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer border border-white/5 ${
+                  index === 0 ? 'col-span-2 row-span-2' : 'col-span-1'
+                }`}>
+                  <CategorySkeleton />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              {categories.map((category, index) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 20 }}
@@ -79,6 +92,8 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
               </div>
             </motion.div>
           ))}
+            </>
+          )}
         </div>
       </div>
     </section>

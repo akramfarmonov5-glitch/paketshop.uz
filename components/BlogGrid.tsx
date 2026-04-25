@@ -3,18 +3,20 @@ import { BlogPost } from '../types';
 import { Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { BlogSkeleton } from './Skeleton';
 
 interface BlogGridProps {
   posts: BlogPost[];
   onPostClick: (id: number) => void;
+  isLoading?: boolean;
 }
 
-const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick }) => {
+const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick, isLoading }) => {
   const { isDark } = useTheme();
   // Faqat oxirgi 6 ta postni ko'rsatamiz
   const displayPosts = posts.slice(0, 6);
 
-  if (displayPosts.length === 0) return null;
+  if (!isLoading && displayPosts.length === 0) return null;
 
   return (
     <section className={`py-20 border-t transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/5' : 'bg-light-card border-light-border'}`}>
@@ -34,7 +36,15 @@ const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {displayPosts.map((post, index) => (
+          {isLoading ? (
+            <>
+              {[1, 2, 3].map(i => (
+                <BlogSkeleton key={i} />
+              ))}
+            </>
+          ) : (
+            <>
+              {displayPosts.map((post, index) => (
             <motion.article
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
@@ -70,6 +80,8 @@ const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick }) => {
               </div>
             </motion.article>
           ))}
+            </>
+          )}
         </div>
 
         <button className={`md:hidden mt-10 w-full py-4 border rounded-xl flex items-center justify-center gap-2 ${isDark ? 'border-white/10 text-white hover:bg-white/5' : 'border-light-border text-light-text hover:bg-light-card'}`}>
