@@ -68,7 +68,14 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   };
 
   const generateContent = async () => {
-    if (!getLocalizedText(formData.title, 'uz')) {
+    const topic = getLocalizedText(formData.title, activeLang) || getLocalizedText(formData.title, 'uz');
+    const languageInstructions = {
+      uz: 'Uzbek language, Latin script',
+      ru: 'Russian language',
+      en: 'English language',
+    };
+
+    if (!topic) {
       showToast("Iltimos, avval maqola mavzusi (Title)ni yozing.", 'warning');
       return;
     }
@@ -85,13 +92,14 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       }>({
         systemInstruction: 'You are an expert content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON.',
         message: `
-          Topic: "${getLocalizedText(formData.title, 'uz')}"
+          Topic: "${topic}"
 
-          Generate a blog post in Uzbek language:
+          Generate a blog post in ${languageInstructions[activeLang]}:
           1. content: informative content about packaging, business, or wholesale (around 150 words)
           2. seo.title: short catchy title
           3. seo.description: meta description
           4. seo.keywords: array of 5 related strings
+          5. Do not use another language. The whole response content and SEO must be in ${languageInstructions[activeLang]}.
 
           Return JSON:
           {
