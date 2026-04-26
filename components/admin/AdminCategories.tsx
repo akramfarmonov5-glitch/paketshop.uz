@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Plus, Search, X, Save, Image as ImageIcon, Globe, Type, Layout, Sparkles } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, X, Save, Image as ImageIcon, Globe, Type, Layout, Sparkles, Loader2 } from 'lucide-react';
 import { Category, LocalizedString } from '../../types';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
@@ -44,6 +44,8 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [activeLang, setActiveLang] = useState<Lang>('uz');
   const [formData, setFormData] = useState<CategoryFormData>(createEmptyFormData());
 
@@ -59,12 +61,14 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
   const handleOpenAdd = () => {
     setActiveLang('uz');
+    setSaveError('');
     setFormData(createEmptyFormData());
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (category: Category) => {
     setActiveLang('uz');
+    setSaveError('');
     setFormData({
       id: category.id,
       name: parseLocalizedObject(category.name),
@@ -146,6 +150,8 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSaving) return;
+
     if (!formData.name.uz.trim()) {
       showToast("Kategoriya nomining o'zbekcha varianti majburiy.", 'warning');
       return;
@@ -161,25 +167,49 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       googleProductCategory: formData.googleProductCategory.trim(),
     };
 
-    try {
+    const saveWithPayload = async (payload: typeof dataToSave | Omit<typeof dataToSave, 'googleProductCategory'>) => {
       if (formData.id) {
-        const { data, error } = await supabase
+        return supabase
           .from('categories')
-          .update(dataToSave)
+          .update(payload)
           .eq('id', formData.id)
           .select()
           .single();
+      }
 
-        if (error) throw error;
+      return supabase
+        .from('categories')
+        .insert([payload])
+        .select()
+        .single();
+    };
+
+    const isGoogleCategoryColumnError = (error: unknown) => {
+      const message = [
+        (error as { message?: string })?.message,
+        (error as { details?: string })?.details,
+        (error as { hint?: string })?.hint,
+      ].filter(Boolean).join(' ');
+
+      return message.includes('googleProductCategory') && /column|schema|cache|find/i.test(message);
+    };
+
+    try {
+      setIsSaving(true);
+      setSaveError('');
+
+      let { data, error } = await saveWithPayload(dataToSave);
+
+      if (error && isGoogleCategoryColumnError(error)) {
+        const { googleProductCategory: _googleProductCategory, ...fallbackData } = dataToSave;
+        ({ data, error } = await saveWithPayload(fallbackData));
+      }
+
+      if (error) throw error;
+
+      if (formData.id) {
         setCategories(prev => prev.map(c => (c.id === formData.id ? (data as Category) : c)));
       } else {
-        const { data, error } = await supabase
-          .from('categories')
-          .insert([dataToSave])
-          .select()
-          .single();
-
-        if (error) throw error;
         setCategories(prev => [data as Category, ...prev]);
       }
 
@@ -188,7 +218,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       showToast('Kategoriya muvaffaqiyatli saqlandi.', 'success');
     } catch (error) {
       console.error('Save error:', error);
-      showToast("Saqlashda xatolik: " + (error as Error).message, 'error');
+      const message = (error as Error).message || "Noma'lum xatolik yuz berdi.";
+      setSaveError(message);
+      showToast("Saqlashda xatolik: " + message, 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -400,13 +434,28 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                 ))}
               </div>
 
+              {saveError && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  Saqlashda xatolik: {saveError}
+                </div>
+              )}
+
               <div className="pt-6 flex gap-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors font-medium">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSaving}
+                  className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   Bekor qilish
                 </button>
-                <button type="submit" className="flex-1 py-3.5 bg-gold-400 hover:bg-gold-500 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-gold-400/20">
-                  <Save size={18} />
-                  Saqlash
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="flex-1 py-3.5 bg-gold-400 hover:bg-gold-500 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-gold-400/20 disabled:opacity-70 disabled:cursor-wait"
+                >
+                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
                 </button>
               </div>
             </form>
