@@ -61,6 +61,8 @@ const translations: Translations = {
     checkout_discount: { uz: 'Chegirma', ru: 'Скидка', en: 'Discount' },
     checkout_delivery: { uz: 'Yetkazib berish', ru: 'Доставка', en: 'Delivery' },
     checkout_delivery_free: { uz: 'Bepul', ru: 'Бесплатно', en: 'Free' },
+    checkout_min_order_notice: { uz: 'Minimal buyurtma {min}. Yana {remaining} mahsulot qo\'shing.', ru: 'Минимальная сумма заказа {min}. Добавьте товаров еще на {remaining}.', en: 'Minimum order is {min}. Add {remaining} more in products.' },
+    checkout_free_delivery_notice: { uz: '{threshold} dan yuqori buyurtmalarga yetkazib berish bepul. Bepul dostavkagacha {remaining} qoldi.', ru: 'Для заказов от {threshold} доставка бесплатная. До бесплатной доставки осталось {remaining}.', en: 'Orders from {threshold} include free delivery. {remaining} left until free delivery.' },
     checkout_total: { uz: 'Jami to\'lov', ru: 'Итого к оплате', en: 'Total payment' },
     checkout_fast_delivery: { uz: 'Tezkor yetkazish', ru: 'Быстрая доставка', en: 'Fast delivery' },
     checkout_easy_payment: { uz: 'Qulay to\'lov', ru: 'Удобная оплата', en: 'Easy payment' },

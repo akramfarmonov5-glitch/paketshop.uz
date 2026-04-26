@@ -162,8 +162,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
 
     const totalFormatted = new Intl.NumberFormat('uz-UZ').format(finalTotal) + ' UZS';
     const deliveryInfo = deliveryFee > 0
-      ? `\nYetkazib berish: ${new Intl.NumberFormat('uz-UZ').format(deliveryFee)} UZS`
-      : `\nYetkazib berish: Bepul`;
+      ? `\n${t('checkout_delivery')}: ${new Intl.NumberFormat('uz-UZ').format(deliveryFee)} UZS`
+      : `\n${t('checkout_delivery')}: ${t('checkout_delivery_free')}`;
     const discountInfo = appliedPromo ? `\n🏷 <b>Promo:</b> ${appliedPromo} (-${new Intl.NumberFormat('uz-UZ').format(discountAmount)} UZS)` : '';
     const paymentLabel = paymentMethod === 'paynet' ? '📲 Paynet (Onlayn)' : '💵 Naqd (Yetkazilganda)';
 
@@ -224,7 +224,7 @@ ${deliveryInfo}
 
     if (!formData.address.trim()) newErrors.address = t('checkout_req_address');
     if (cartTotal < MIN_ORDER_AMOUNT) {
-      newErrors.order = `Minimal buyurtma summasi ${formatPrice(MIN_ORDER_AMOUNT)}. Yana ${formatPrice(remainingForMinOrder)} mahsulot qo'shing.`;
+      newErrors.order = minOrderNotice;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -256,6 +256,23 @@ ${deliveryInfo}
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
   };
+
+  const formatTemplate = (key: string, values: Record<string, string>) => {
+    return Object.entries(values).reduce(
+      (text, [token, value]) => text.split(`{${token}}`).join(value),
+      t(key),
+    );
+  };
+
+  const minOrderNotice = formatTemplate('checkout_min_order_notice', {
+    min: formatPrice(MIN_ORDER_AMOUNT),
+    remaining: formatPrice(remainingForMinOrder),
+  });
+
+  const freeDeliveryNotice = formatTemplate('checkout_free_delivery_notice', {
+    threshold: formatPrice(FREE_DELIVERY_THRESHOLD),
+    remaining: formatPrice(remainingForFreeDelivery),
+  });
 
   if (cart.length === 0 && !isSuccess) {
     return (
@@ -431,12 +448,12 @@ ${deliveryInfo}
               )}
               {cartTotal < MIN_ORDER_AMOUNT && (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                  Minimal buyurtma {formatPrice(MIN_ORDER_AMOUNT)}. Yana {formatPrice(remainingForMinOrder)} mahsulot qo'shing.
+                  {minOrderNotice}
                 </div>
               )}
               {discountedSubtotal < FREE_DELIVERY_THRESHOLD && (
                 <div className="rounded-xl border border-gold-400/20 bg-gold-400/10 p-3 text-sm text-gold-300">
-                  {formatPrice(FREE_DELIVERY_THRESHOLD)} dan yuqori buyurtmalarga yetkazib berish bepul. Bepul dostavkagacha {formatPrice(remainingForFreeDelivery)} qoldi.
+                  {freeDeliveryNotice}
                 </div>
               )}
               <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
