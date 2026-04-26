@@ -16,6 +16,7 @@ interface SEOProps {
   category?: Category;
   productCategoryName?: string;
   breadcrumbs?: { name: string; url: string }[];
+  alternatePaths?: Partial<Record<'uz' | 'ru' | 'en', string>>;
   noindex?: boolean;
 }
 
@@ -37,6 +38,7 @@ const SEOHead: React.FC<SEOProps> = ({
   category,
   productCategoryName,
   breadcrumbs,
+  alternatePaths,
   noindex = false,
 }) => {
   const { lang } = useLanguage();
@@ -88,14 +90,14 @@ const SEOHead: React.FC<SEOProps> = ({
       const alternateEl = document.createElement('link');
       alternateEl.setAttribute('rel', 'alternate');
       alternateEl.setAttribute('hreflang', alternateLang);
-      alternateEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(basePath, alternateLang)}`);
+      alternateEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(alternatePaths?.[alternateLang] || basePath, alternateLang)}`);
       alternateEl.setAttribute('data-seo-alternate', 'true');
       document.head.appendChild(alternateEl);
     });
     const xDefaultEl = document.createElement('link');
     xDefaultEl.setAttribute('rel', 'alternate');
     xDefaultEl.setAttribute('hreflang', 'x-default');
-    xDefaultEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(basePath, 'uz')}`);
+    xDefaultEl.setAttribute('href', `${BASE_URL}${withLanguagePrefix(alternatePaths?.uz || basePath, 'uz')}`);
     xDefaultEl.setAttribute('data-seo-alternate', 'true');
     document.head.appendChild(xDefaultEl);
 
@@ -266,7 +268,7 @@ const SEOHead: React.FC<SEOProps> = ({
       document.querySelectorAll('script[data-seo-dynamic]').forEach(el => el.remove());
       document.querySelectorAll('link[data-seo-alternate]').forEach(el => el.remove());
     };
-  }, [title, description, keywords, canonical, ogImage, ogType, product, blogPost, category, productCategoryName, breadcrumbs, noindex, lang]);
+  }, [title, description, keywords, canonical, ogImage, ogType, product, blogPost, category, productCategoryName, breadcrumbs, alternatePaths, noindex, lang]);
 
   return null; // This component renders nothing visually
 };

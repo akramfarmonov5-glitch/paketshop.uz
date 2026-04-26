@@ -99,11 +99,11 @@ function routeToPath(route: Route, products: Product[], blogPosts: BlogPost[], c
       return '/';
     case 'PRODUCT': {
       const product = products.find(p => p.id === route.productId);
-      return product ? `/product/${productSlug(product)}` : '/';
+      return product ? `/product/${productSlug(product, lang)}` : '/';
     }
     case 'BLOG_POST': {
       const post = blogPosts.find(p => p.id === route.postId);
-      return post ? `/blog/${blogSlug(post)}` : '/';
+      return post ? `/blog/${blogSlug(post, lang)}` : '/';
     }
     case 'CATEGORY': {
       const category = findCategoryByValue(route.categorySlug, categories);
@@ -453,7 +453,7 @@ const AppContent: React.FC = () => {
     if (currentRoute.name === 'PRODUCT') {
       const product = products.find(p => p.id === currentRoute.productId);
       if (product) {
-        const slug = productSlug(product);
+        const slug = productSlug(product, lang);
         const categoryName = getCategoryDisplayName(product.category, categories, lang);
         const categoryKey = getProductCategoryKey(product.category, categories, lang);
         const productName = getLocalizedText(product.name, lang);
@@ -464,6 +464,11 @@ const AppContent: React.FC = () => {
             description={`${productName} - ${productDescription}. Narxi: ${product.formattedPrice}. PaketShop.uz`}
             keywords={[productName, categoryName, 'PaketShop', 'online shop', 'uzbekistan']}
             canonical={localizedUrl(BASE_URL, `/product/${slug}`, lang)}
+            alternatePaths={{
+              uz: `/product/${productSlug(product, 'uz')}`,
+              ru: `/product/${productSlug(product, 'ru')}`,
+              en: `/product/${productSlug(product, 'en')}`,
+            }}
             ogImage={product.image}
             ogType="product"
             product={product}
@@ -481,7 +486,7 @@ const AppContent: React.FC = () => {
     if (currentRoute.name === 'BLOG_POST') {
       const post = blogPosts.find(p => p.id === currentRoute.postId);
       if (post) {
-        const slug = blogSlug(post);
+        const slug = blogSlug(post, lang);
         const postTitle = getLocalizedText(post.title, lang);
         return (
           <SEOHead
@@ -489,6 +494,11 @@ const AppContent: React.FC = () => {
             description={getLocalizedText(post.seo?.description, lang) || getLocalizedText(post.content, lang).substring(0, 160)}
             keywords={getLocalizedText(post.seo?.keywords, lang)?.split(',').map(s=>s.trim()) || [postTitle, 'blog', 'PaketShop']}
             canonical={localizedUrl(BASE_URL, `/blog/${slug}`, lang)}
+            alternatePaths={{
+              uz: `/blog/${blogSlug(post, 'uz')}`,
+              ru: `/blog/${blogSlug(post, 'ru')}`,
+              en: `/blog/${blogSlug(post, 'en')}`,
+            }}
             ogImage={post.image}
             ogType="article"
             blogPost={post}
@@ -513,6 +523,11 @@ const AppContent: React.FC = () => {
             description={getLocalizedText(cat.description, lang) || `${categoryName} - PaketShop.uz`}
             keywords={[categoryName, 'PaketShop', 'uzbekistan']}
             canonical={localizedUrl(BASE_URL, `/category/${categorySlug}`, lang)}
+            alternatePaths={{
+              uz: `/category/${getCategorySlug(cat, 'uz')}`,
+              ru: `/category/${getCategorySlug(cat, 'ru')}`,
+              en: `/category/${getCategorySlug(cat, 'en')}`,
+            }}
             ogImage={cat.image}
             category={cat}
             breadcrumbs={[

@@ -20,9 +20,10 @@ export function slugify(text: string): string {
 /**
  * Mahsulot uchun unique slug yaratish (id bilan)
  */
-export function productSlug(product: { id: number; name: any }): string {
-  const localizedName = getLocalizedText(product.name, 'uz');
-  return `${slugify(localizedName)}-${product.id}`;
+export function productSlug(product: { id: number; name: any; slug?: any }, lang = 'uz'): string {
+  const localizedSlug = getLocalizedText(product.slug, lang);
+  const localizedName = getLocalizedText(product.name, lang);
+  return `${localizedSlug || slugify(localizedName)}-${product.id}`;
 }
 
 /**
@@ -38,9 +39,10 @@ export function getIdFromSlug(slug: string): number | null {
 /**
  * Blog post uchun slug yaratish
  */
-export function blogSlug(post: { id: number; title: any }): string {
-  const localizedTitle = getLocalizedText(post.title, 'uz');
-  return `${slugify(localizedTitle)}-${post.id}`;
+export function blogSlug(post: { id: number; title: any; slug?: any }, lang = 'uz'): string {
+  const localizedSlug = getLocalizedText(post.slug, lang);
+  const localizedTitle = getLocalizedText(post.title, lang);
+  return `${localizedSlug || slugify(localizedTitle)}-${post.id}`;
 }
 
 /**

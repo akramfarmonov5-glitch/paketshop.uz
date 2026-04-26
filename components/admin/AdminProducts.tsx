@@ -6,8 +6,9 @@ import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { requestGeminiJson } from '../../lib/geminiApi';
-import { getLocalizedText } from '../../lib/i18nUtils';
+import { getLocalizedText, parseLocalizedObject } from '../../lib/i18nUtils';
 import { getCategoryDisplayName, getCategorySlug, getProductCategoryKey } from '../../lib/categoryUtils';
+import { slugify } from '../../lib/slugify';
 
 interface AdminProductsProps {
   products: Product[];
@@ -24,6 +25,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
   const [formData, setFormData] = useState<any>({
     name: '',
+    slug: '',
     category: '',
     price: 0,
     image: '',
@@ -38,6 +40,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   const handleOpenAdd = () => {
     setFormData({
       name: '',
+      slug: { uz: '', ru: '', en: '' },
       category: categories.length > 0 ? getCategorySlug(categories[0]) : '',
       price: 0,
       image: '',
@@ -58,6 +61,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
     setFormData({
       ...product,
+      name: parseLocalizedObject(product.name),
+      slug: parseLocalizedObject(product.slug),
+      shortDescription: parseLocalizedObject(product.shortDescription),
+      specs: (product.specs || []).map(spec => ({
+        label: parseLocalizedObject(spec.label),
+        value: parseLocalizedObject(spec.value),
+      })),
       category: getProductCategoryKey(product.category, categories),
       images: images
     });
@@ -115,8 +125,14 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
       setFormData(prev => ({
         ...prev,
-        shortDescription: data.shortDescription,
-        specs: data.specs
+        shortDescription: {
+          ...parseLocalizedObject(prev.shortDescription),
+          [activeLang]: data.shortDescription,
+        },
+        specs: data.specs.map(spec => ({
+          label: { uz: '', ru: '', en: '', [activeLang]: spec.label },
+          value: { uz: '', ru: '', en: '', [activeLang]: spec.value },
+        }))
       }));
     } catch (error) {
       console.error("AI Error:", error);
@@ -136,12 +152,17 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
     // Tayyorlash
     const dataToSave: Record<string, any> = {
-      name: formData.name,
+      name: JSON.stringify(formData.name),
+      slug: JSON.stringify({
+        uz: formData.slug?.uz?.trim() || slugify(getLocalizedText(formData.name, 'uz')),
+        ru: formData.slug?.ru?.trim() || slugify(getLocalizedText(formData.name, 'ru') || getLocalizedText(formData.name, 'uz')),
+        en: formData.slug?.en?.trim() || slugify(getLocalizedText(formData.name, 'en') || getLocalizedText(formData.name, 'uz')),
+      }),
       category: getProductCategoryKey(formData.category, categories),
       price: Number(formData.price),
       image: mainImage,
       images: validImages,
-      description: formData.shortDescription,
+      description: JSON.stringify(formData.shortDescription),
       stock: Number(formData.stock),
       "itemsPerPackage": Number(formData.itemsPerPackage || 1),
       specifications: formData.specs
@@ -371,6 +392,21 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                     placeholder="Masalan: Rolex Submariner"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400 flex items-center gap-2">
+                    <Globe size={14} /> Slug ({activeLang.toUpperCase()})
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.slug?.[activeLang] || ''}
+                    onChange={e => setFormData({ ...formData, slug: { ...formData.slug, [activeLang]: e.target.value } })}
+                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none font-mono text-sm"
+                    placeholder={activeLang === 'uz' ? 'polietilen-paket' : activeLang === 'ru' ? 'polietilenovyy-paket' : 'polyethylene-bag'}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm text-gray-400">Kategoriya</label>
                   <select
