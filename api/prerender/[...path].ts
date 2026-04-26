@@ -65,7 +65,8 @@ function renderProductPage(slug, products, categories, lang) {
   const categoryKey = category ? getCategorySlug(category, 'uz') : slugify(getLocalizedText(product.category, 'uz'));
   const name = getLocalizedText(product.name, lang);
   const descriptionText = getLocalizedText(product.shortDescription || product.description || product.name, lang);
-  const canonicalUrl = localizedUrl(`/product/${slug}`, lang);
+  const productUrlSlug = getEntitySlug(product, 'product', lang);
+  const canonicalUrl = localizedUrl(`/product/${productUrlSlug}`, lang);
   const title = `${name} - ${categoryName} | PaketShop.uz`;
   const description = `${name} - ${descriptionText}. ${formatPrice(product.price)}. PaketShop.uz`;
 
@@ -103,6 +104,7 @@ function renderProductPage(slug, products, categories, lang) {
     title,
     description,
     canonicalUrl,
+    alternatePaths: Object.fromEntries(LANGUAGES.map(altLang => [altLang, `/product/${getEntitySlug(product, 'product', altLang)}`])),
     keywords: [name, categoryName, 'PaketShop', 'Uzbekistan'],
     ogType: 'product',
     ogImage: product.image,
@@ -133,7 +135,8 @@ function renderBlogPage(slug, blogPosts, lang) {
   const postTitle = getLocalizedText(post.title, lang);
   const content = getLocalizedText(post.content, lang);
   const description = getLocalizedText(post.seo?.description, lang) || content.substring(0, 160);
-  const canonicalUrl = localizedUrl(`/blog/${slug}`, lang);
+  const postUrlSlug = getEntitySlug(post, 'blog', lang);
+  const canonicalUrl = localizedUrl(`/blog/${postUrlSlug}`, lang);
 
   const schema = {
     '@context': 'https://schema.org',
@@ -163,6 +166,7 @@ function renderBlogPage(slug, blogPosts, lang) {
     title: `${titleText} | PaketShop.uz Blog`,
     description,
     canonicalUrl,
+    alternatePaths: Object.fromEntries(LANGUAGES.map(altLang => [altLang, `/blog/${getEntitySlug(post, 'blog', altLang)}`])),
     keywords: getLocalizedText(post.seo?.keywords, lang) || postTitle,
     ogType: 'article',
     ogImage: post.image,
@@ -198,7 +202,7 @@ function renderCategoryPage(catSlug, products, categories, lang) {
     itemListElement: catProducts.map((p, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: localizedUrl(`/product/${slugify(getLocalizedText(p.name, 'uz'))}-${p.id}`, lang),
+      url: localizedUrl(`/product/${getEntitySlug(p, 'product', lang)}`, lang),
       name: getLocalizedText(p.name, lang),
     })),
   };
@@ -213,6 +217,7 @@ function renderCategoryPage(catSlug, products, categories, lang) {
     title: `${categoryName} | PaketShop.uz`,
     description,
     canonicalUrl,
+    alternatePaths: category ? Object.fromEntries(LANGUAGES.map(altLang => [altLang, `/category/${getCategorySlug(category, altLang)}`])) : null,
     keywords: [categoryName, 'PaketShop', 'Uzbekistan'],
     ogType: 'website',
     ogImage: category?.image || `${BASE_URL}/logo-light.png`,
@@ -281,11 +286,12 @@ function renderHomePage(products, categories, blogPosts, lang) {
   });
 }
 
-function renderDocument({ lang, title, description, canonicalUrl, keywords, ogType, ogImage, schemas, body }) {
+function renderDocument({ lang, title, description, canonicalUrl, keywords, ogType, ogImage, schemas, body, alternatePaths = null }) {
   const basePath = stripLanguagePrefix(new URL(canonicalUrl).pathname);
   const alternates = LANGUAGES.map(altLang =>
-    `<link rel="alternate" hreflang="${altLang}" href="${localizedUrl(basePath, altLang)}">`
+    `<link rel="alternate" hreflang="${altLang}" href="${localizedUrl(alternatePaths?.[altLang] || basePath, altLang)}">`
   ).join('\n  ');
+  const xDefaultPath = alternatePaths?.uz || basePath;
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
@@ -298,7 +304,7 @@ function renderDocument({ lang, title, description, canonicalUrl, keywords, ogTy
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
   <link rel="canonical" href="${canonicalUrl}">
   ${alternates}
-  <link rel="alternate" hreflang="x-default" href="${localizedUrl(basePath, 'uz')}">
+  <link rel="alternate" hreflang="x-default" href="${localizedUrl(xDefaultPath, 'uz')}">
   <meta property="og:type" content="${esc(ogType)}">
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
@@ -356,7 +362,7 @@ function productListItem(product, lang) {
   const name = getLocalizedText(product.name, lang);
   const description = getLocalizedText(product.shortDescription || product.description || '', lang);
   return `<li>
-    <a href="${localizedUrl(`/product/${slugify(getLocalizedText(product.name, 'uz'))}-${product.id}`, lang)}">
+    <a href="${localizedUrl(`/product/${getEntitySlug(product, 'product', lang)}`, lang)}">
       <img src="${esc(product.image)}" alt="${esc(name)}" width="300" height="375" loading="lazy">
       <h3>${esc(name)}</h3>
       <p>${esc(description)}</p>
@@ -386,6 +392,11 @@ function getCategorySlugs(category) {
   return LANGUAGES
     .map(lang => getCategorySlug(category, lang))
     .filter((slug, index, slugs) => slug && slugs.indexOf(slug) === index);
+}
+
+function getEntitySlug(entity, entityType, lang) {
+  const source = entityType === 'blog' ? entity.title : entity.name;
+  return `${getLocalizedText(entity.slug, lang) || slugify(getLocalizedText(source, lang))}-${entity.id}`;
 }
 
 function localizedUrl(path, lang) {

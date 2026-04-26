@@ -7,6 +7,7 @@ export interface LocalizedString {
 export interface Product {
   id: number;
   name: string | LocalizedString;
+  slug?: string | LocalizedString;
   price: number;
   formattedPrice: string;
   category: string; // This will link to Category.slug or name
@@ -86,6 +87,7 @@ export interface Order {
 export interface BlogPost {
   id: number;
   title: string | LocalizedString;
+  slug?: string | LocalizedString;
   image: string;
   content: string | LocalizedString;
   seo: {

@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
 import { Globe } from 'lucide-react';
+import { slugify } from '../../lib/slugify';
 
 interface AdminBlogProps {
   posts: BlogPost[];
@@ -21,6 +22,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
   const [formData, setFormData] = useState<any>({
     title: '',
+    slug: '',
     image: '',
     content: '',
     seo: { title: '', description: '', keywords: [] },
@@ -30,6 +32,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleOpenAdd = () => {
     setFormData({
       title: '',
+      slug: { uz: '', ru: '', en: '' },
       image: '',
       content: '',
       seo: { title: '', description: '', keywords: [] },
@@ -42,6 +45,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     setFormData({
       ...post,
       title: parseLocalizedObject(post.title),
+      slug: parseLocalizedObject(post.slug),
       content: parseLocalizedObject(post.content),
       seo: {
          title: parseLocalizedObject(post.seo?.title),
@@ -124,6 +128,11 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     const postData: any = { 
        ...formData,
        title: JSON.stringify(formData.title),
+       slug: JSON.stringify({
+         uz: formData.slug?.uz?.trim() || slugify(getLocalizedText(formData.title, 'uz')),
+         ru: formData.slug?.ru?.trim() || slugify(getLocalizedText(formData.title, 'ru') || getLocalizedText(formData.title, 'uz')),
+         en: formData.slug?.en?.trim() || slugify(getLocalizedText(formData.title, 'en') || getLocalizedText(formData.title, 'uz')),
+       }),
        content: JSON.stringify(formData.content),
        seo: {
            title: JSON.stringify(formData.seo?.title),
@@ -264,6 +273,19 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 flex items-center gap-2">
+                  <Globe size={16} /> Slug ({activeLang.toUpperCase()})
+                </label>
+                <input
+                  type="text"
+                  value={formData.slug?.[activeLang] || ''}
+                  onChange={e => setFormData({ ...formData, slug: { ...formData.slug, [activeLang]: e.target.value } })}
+                  className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none font-mono text-sm"
+                  placeholder={activeLang === 'uz' ? 'qadoqlash-boyicha-maslahatlar' : activeLang === 'ru' ? 'sovety-po-upakovke' : 'packaging-tips'}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 flex items-center gap-2">
                   <ImageIcon size={16} /> Rasm URL
                 </label>
                 <input
@@ -301,8 +323,8 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
                   <label className="text-sm text-gray-400">SEO Title</label>
                   <input
                     type="text"
-                    value={formData.seo?.title || ''}
-                    onChange={e => setFormData({ ...formData, seo: { ...formData.seo!, title: e.target.value } })}
+                    value={formData.seo?.title?.[activeLang] || ''}
+                    onChange={e => setFormData({ ...formData, seo: { ...formData.seo!, title: { ...formData.seo?.title, [activeLang]: e.target.value } } })}
                     className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none"
                   />
                 </div>

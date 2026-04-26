@@ -48,8 +48,7 @@ export default async function handler(req, res) {
     }
 
     for (const product of products) {
-      const prodSlug = `${slugify(getLocalizedText(product.name, 'uz'))}-${product.id}`;
-      urls += renderLocalizedUrl(`/product/${prodSlug}`, today, 'weekly', '0.8', {
+      urls += renderLocalizedEntityUrl('product', product, today, 'weekly', '0.8', {
         image: product.image,
         imageTitle: getLocalizedText(product.name, 'uz'),
         imageCaption: getLocalizedText(product.shortDescription || product.description || product.name, 'uz'),
@@ -57,8 +56,7 @@ export default async function handler(req, res) {
     }
 
     for (const post of blogPosts) {
-      const postSlug = `${slugify(getLocalizedText(post.title, 'uz'))}-${post.id}`;
-      urls += renderLocalizedUrl(`/blog/${postSlug}`, post.date || today, 'monthly', '0.7', {
+      urls += renderLocalizedEntityUrl('blog', post, post.date || today, 'monthly', '0.7', {
         image: post.image,
         imageTitle: getLocalizedText(post.title, 'uz'),
       });
@@ -140,12 +138,44 @@ ${xDefault}
   }).join('');
 }
 
+function renderLocalizedEntityUrl(entityType, entity, lastmod, changefreq, priority, imageData: SitemapImageData = {}) {
+  return LANGUAGES.map((lang) => {
+    const path = `/${entityType}/${getEntitySlug(entityType, entity, lang)}`;
+    const loc = localizedUrl(path, lang);
+    const alternates = LANGUAGES.map((altLang) =>
+      `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${localizedUrl(`/${entityType}/${getEntitySlug(entityType, entity, altLang)}`, altLang)}" />`
+    ).join('\n');
+    const xDefault = `    <xhtml:link rel="alternate" hreflang="x-default" href="${localizedUrl(`/${entityType}/${getEntitySlug(entityType, entity, 'uz')}`, 'uz')}" />`;
+    const image = imageData.image ? `
+    <image:image>
+      <image:loc>${escapeXml(imageData.image)}</image:loc>
+      <image:title>${escapeXml(imageData.imageTitle || '')}</image:title>${imageData.imageCaption ? `
+      <image:caption>${escapeXml(imageData.imageCaption)}</image:caption>` : ''}
+    </image:image>` : '';
+
+    return `
+  <url>
+    <loc>${loc}</loc>
+${alternates}
+${xDefault}
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>${image}
+  </url>`;
+  }).join('');
+}
+
 function localizedUrl(path, lang) {
   return `${BASE_URL}${path === '/' ? `/${lang}` : `/${lang}${path}`}`;
 }
 
 function getCategorySlug(category, lang) {
   return getLocalizedText(category.slug, lang) || slugify(getLocalizedText(category.name, lang));
+}
+
+function getEntitySlug(entityType, entity, lang) {
+  const source = entityType === 'blog' ? entity.title : entity.name;
+  return `${getLocalizedText(entity.slug, lang) || slugify(getLocalizedText(source, lang))}-${entity.id}`;
 }
 
 function getLocalizedText(text, lang) {

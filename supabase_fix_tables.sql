@@ -12,6 +12,7 @@ alter table if exists public.categories
   add column if not exists "googleProductCategory" text;
 
 alter table if exists public.products
+  add column if not exists slug text,
   add column if not exists images text[] default '{}',
   add column if not exists "videoUrl" text;
 
@@ -19,6 +20,7 @@ alter table if exists public.products
   alter column specifications set default '[]'::jsonb;
 
 alter table if exists public.blog_posts
+  add column if not exists slug text,
   add column if not exists seo jsonb default '{}'::jsonb;
 
 do $$
