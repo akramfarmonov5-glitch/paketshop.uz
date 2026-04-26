@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
 import { slugify } from '../../lib/slugify';
+import { getCategorySlug } from '../../lib/categoryUtils';
 
 interface AdminCategoriesProps {
   categories: Category[];
@@ -17,7 +18,7 @@ type Lang = 'uz' | 'ru' | 'en';
 type CategoryFormData = {
   id?: number;
   name: LocalizedString;
-  slug: string;
+  slug: LocalizedString;
   image: string;
   description: LocalizedString;
   googleProductCategory: string;
@@ -33,7 +34,7 @@ const emptyLocalizedString = (): LocalizedString => ({
 
 const createEmptyFormData = (): CategoryFormData => ({
   name: emptyLocalizedString(),
-  slug: '',
+  slug: emptyLocalizedString(),
   image: '',
   description: emptyLocalizedString(),
   googleProductCategory: '',
@@ -59,6 +60,16 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     }));
   };
 
+  const updateSlug = (lang: Lang, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      slug: {
+        ...prev.slug,
+        [lang]: value,
+      },
+    }));
+  };
+
   const handleOpenAdd = () => {
     setActiveLang('uz');
     setSaveError('');
@@ -72,7 +83,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     setFormData({
       id: category.id,
       name: parseLocalizedObject(category.name),
-      slug: category.slug || '',
+      slug: parseLocalizedObject(category.slug),
       image: category.image || '',
       description: parseLocalizedObject(category.description),
       googleProductCategory: category.googleProductCategory || '',
@@ -102,7 +113,9 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     setIsGenerating(true);
     try {
       const data = await requestGeminiJson<{
-        slug: string;
+        slugUz: string;
+        slugRu: string;
+        slugEn: string;
         descriptionUz: string;
         descriptionRu: string;
         descriptionEn: string;
@@ -115,14 +128,18 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
           English: "${formData.name.en}"
 
           Generate:
-          1. slug: a clean kebab-case URL slug based on the Uzbek category name
-          2. descriptionUz: short elegant Uzbek description (max 1 sentence)
-          3. descriptionRu: short elegant Russian description (max 1 sentence)
-          4. descriptionEn: short elegant English description (max 1 sentence)
+          1. slugUz: a clean kebab-case URL slug based on the Uzbek category name
+          2. slugRu: a clean kebab-case latin transliteration URL slug based on the Russian category name
+          3. slugEn: a clean kebab-case URL slug based on the English category name
+          4. descriptionUz: short elegant Uzbek description (max 1 sentence)
+          5. descriptionRu: short elegant Russian description (max 1 sentence)
+          6. descriptionEn: short elegant English description (max 1 sentence)
 
           Return JSON:
           {
-            "slug": "...",
+            "slugUz": "...",
+            "slugRu": "...",
+            "slugEn": "...",
             "descriptionUz": "...",
             "descriptionRu": "...",
             "descriptionEn": "..."
@@ -132,7 +149,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
 
       setFormData(prev => ({
         ...prev,
-        slug: data.slug || slugify(prev.name.uz),
+        slug: {
+          uz: data.slugUz || slugify(prev.name.uz),
+          ru: data.slugRu || slugify(prev.name.ru || prev.name.uz),
+          en: data.slugEn || slugify(prev.name.en || prev.name.uz),
+        },
         description: {
           uz: data.descriptionUz || prev.description.uz,
           ru: data.descriptionRu || prev.description.ru,
@@ -157,11 +178,15 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       return;
     }
 
-    const slug = formData.slug.trim() || slugify(formData.name.uz);
+    const slugs: LocalizedString = {
+      uz: formData.slug.uz.trim() || slugify(formData.name.uz),
+      ru: formData.slug.ru.trim() || slugify(formData.name.ru || formData.name.uz),
+      en: formData.slug.en.trim() || slugify(formData.name.en || formData.name.uz),
+    };
 
     const dataToSave = {
       name: JSON.stringify(formData.name),
-      slug,
+      slug: JSON.stringify(slugs),
       image: formData.image.trim() || 'https://via.placeholder.com/400',
       description: JSON.stringify(formData.description),
       googleProductCategory: formData.googleProductCategory.trim(),
@@ -267,7 +292,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
             <div className="flex-1 flex flex-col justify-between overflow-hidden">
               <div>
                 <h3 className="text-lg font-bold text-white group-hover:text-gold-400 transition-colors truncate">{getLocalizedText(category.name, 'uz')}</h3>
-                <p className="text-xs text-gray-500 font-mono truncate">/{category.slug}</p>
+                <p className="text-xs text-gray-500 font-mono truncate">/{getCategorySlug(category, 'uz')}</p>
                 <p className="text-sm text-gray-400 mt-2 line-clamp-2 text-xs">{getLocalizedText(category.description, 'uz') || "Tavsif yo'q"}</p>
               </div>
               <div className="flex justify-end gap-2 mt-2">
@@ -360,11 +385,12 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                 </label>
                 <input
                   type="text"
-                  value={formData.slug}
-                  onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  value={formData.slug[activeLang]}
+                  onChange={e => updateSlug(activeLang, e.target.value)}
                   className="w-full bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none transition-colors font-mono text-sm"
-                  placeholder="paketlar (bo'sh qolsa avtomatik)"
+                  placeholder={activeLang === 'uz' ? "polietilen-paketlar" : activeLang === 'ru' ? 'polietilenovye-pakety' : 'polyethylene-bags'}
                 />
+                <p className="text-[10px] text-gray-500 ml-1">Har bir til uchun alohida SEO-friendly URL yoziladi. Bo'sh qolsa nomdan avtomatik yaratiladi.</p>
               </div>
 
               <div className="space-y-2">

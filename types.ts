@@ -22,7 +22,7 @@ export interface Product {
 export interface Category {
   id: number;
   name: string | LocalizedString;
-  slug: string;
+  slug: string | LocalizedString;
   image: string;
   description?: string | LocalizedString;
   googleProductCategory?: string; // For FB/Google Catalog mapping
