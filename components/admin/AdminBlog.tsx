@@ -247,12 +247,31 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
               </button>
             </div>
 
+            <div className="flex items-center justify-between gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm mb-5">
+              <div className="flex items-center gap-2">
+                <Globe size={18} />
+                <span>Hozir <b>{activeLang.toUpperCase()}</b> tili uchun maqola kiritilyapti.</span>
+              </div>
+              <div className="flex bg-black p-1 rounded-xl border border-white/10">
+                {(['uz', 'ru', 'en'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setActiveLang(lang)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${activeLang === lang ? 'bg-gold-400 text-black' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <form onSubmit={handleSave} className="space-y-5">
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Sarlavha</label>
+                <label className="text-sm text-gray-400">Sarlavha ({activeLang.toUpperCase()})</label>
                 <div className="flex gap-2">
                   <input
-                    required
+                    required={activeLang === 'uz'}
                     type="text"
                     value={formData.title?.[activeLang] || ''}
                     onChange={e => setFormData({ ...formData, title: { ...formData.title, [activeLang]: e.target.value } })}
@@ -299,9 +318,9 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Matn (Content)</label>
+                <label className="text-sm text-gray-400">Matn (Content) ({activeLang.toUpperCase()})</label>
                 <textarea
-                  required
+                  required={activeLang === 'uz'}
                   value={formData.content?.[activeLang] || ''}
                   onChange={e => setFormData({ ...formData, content: { ...formData.content, [activeLang]: e.target.value } })}
                   className="w-full h-40 bg-black border border-white/20 rounded-xl px-4 py-3 text-white focus:border-gold-400 outline-none resize-none custom-scrollbar leading-relaxed"
@@ -320,7 +339,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-400">SEO Title</label>
+                  <label className="text-sm text-gray-400">SEO Title ({activeLang.toUpperCase()})</label>
                   <input
                     type="text"
                     value={formData.seo?.title?.[activeLang] || ''}
