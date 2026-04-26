@@ -41,8 +41,7 @@ export default async function handler(req, res) {
     urls += renderLocalizedUrl('/', today, 'daily', '1.0');
 
     for (const cat of categories) {
-      const catSlug = cat.slug || slugify(getLocalizedText(cat.name, 'uz'));
-      urls += renderLocalizedUrl(`/category/${catSlug}`, today, 'weekly', '0.9', {
+      urls += renderLocalizedCategoryUrl(cat, today, 'weekly', '0.9', {
         image: cat.image,
         imageTitle: getLocalizedText(cat.name, 'uz'),
       });
@@ -115,8 +114,38 @@ ${xDefault}
   }).join('');
 }
 
+function renderLocalizedCategoryUrl(category, lastmod, changefreq, priority, imageData: SitemapImageData = {}) {
+  return LANGUAGES.map((lang) => {
+    const loc = localizedUrl(`/category/${getCategorySlug(category, lang)}`, lang);
+    const alternates = LANGUAGES.map((altLang) =>
+      `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${localizedUrl(`/category/${getCategorySlug(category, altLang)}`, altLang)}" />`
+    ).join('\n');
+    const xDefault = `    <xhtml:link rel="alternate" hreflang="x-default" href="${localizedUrl(`/category/${getCategorySlug(category, 'uz')}`, 'uz')}" />`;
+    const image = imageData.image ? `
+    <image:image>
+      <image:loc>${escapeXml(imageData.image)}</image:loc>
+      <image:title>${escapeXml(imageData.imageTitle || '')}</image:title>${imageData.imageCaption ? `
+      <image:caption>${escapeXml(imageData.imageCaption)}</image:caption>` : ''}
+    </image:image>` : '';
+
+    return `
+  <url>
+    <loc>${loc}</loc>
+${alternates}
+${xDefault}
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>${image}
+  </url>`;
+  }).join('');
+}
+
 function localizedUrl(path, lang) {
   return `${BASE_URL}${path === '/' ? `/${lang}` : `/${lang}${path}`}`;
+}
+
+function getCategorySlug(category, lang) {
+  return getLocalizedText(category.slug, lang) || slugify(getLocalizedText(category.name, lang));
 }
 
 function getLocalizedText(text, lang) {

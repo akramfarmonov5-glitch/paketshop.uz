@@ -61,7 +61,8 @@ function renderProductPage(slug, products, categories, lang) {
 
   const category = findCategoryByValue(product.category, categories);
   const categoryName = category ? getLocalizedText(category.name, lang) : getLocalizedText(product.category, lang);
-  const categorySlug = category ? getCategorySlug(category) : slugify(getLocalizedText(product.category, 'uz'));
+  const categorySlug = category ? getCategorySlug(category, lang) : slugify(getLocalizedText(product.category, lang));
+  const categoryKey = category ? getCategorySlug(category, 'uz') : slugify(getLocalizedText(product.category, 'uz'));
   const name = getLocalizedText(product.name, lang);
   const descriptionText = getLocalizedText(product.shortDescription || product.description || product.name, lang);
   const canonicalUrl = localizedUrl(`/product/${slug}`, lang);
@@ -94,7 +95,7 @@ function renderProductPage(slug, products, categories, lang) {
   ];
 
   const related = products
-    .filter(p => getProductCategoryKey(p.category, categories) === categorySlug && Number(p.id) !== Number(product.id))
+    .filter(p => getProductCategoryKey(p.category, categories, 'uz') === categoryKey && Number(p.id) !== Number(product.id))
     .slice(0, 4);
 
   return renderDocument({
@@ -179,11 +180,13 @@ function renderBlogPage(slug, blogPosts, lang) {
 }
 
 function renderCategoryPage(catSlug, products, categories, lang) {
-  const category = categories.find(c => getCategorySlug(c) === catSlug || slugify(getLocalizedText(c.name, 'uz')) === catSlug);
+  const category = categories.find(c => getCategorySlugs(c).includes(catSlug) || slugify(getLocalizedText(c.name, 'uz')) === catSlug);
   const categoryName = category ? getLocalizedText(category.name, lang) : catSlug;
   const description = category ? getLocalizedText(category.description, lang) : `${categoryName} - PaketShop.uz`;
-  const canonicalUrl = localizedUrl(`/category/${catSlug}`, lang);
-  const catProducts = products.filter(p => getProductCategoryKey(p.category, categories) === catSlug);
+  const categorySlug = category ? getCategorySlug(category, lang) : catSlug;
+  const categoryKey = category ? getCategorySlug(category, 'uz') : catSlug;
+  const canonicalUrl = localizedUrl(`/category/${categorySlug}`, lang);
+  const catProducts = products.filter(p => getProductCategoryKey(p.category, categories, 'uz') === categoryKey);
 
   const schema = {
     '@context': 'https://schema.org',
@@ -267,7 +270,7 @@ function renderHomePage(products, categories, blogPosts, lang) {
       <p>${esc(description)}</p>
       <section>
         <h2>${categoriesLabel(lang)}</h2>
-        <ul>${categories.map(c => `<li><a href="${localizedUrl(`/category/${getCategorySlug(c)}`, lang)}">${esc(getLocalizedText(c.name, lang))}</a></li>`).join('')}</ul>
+        <ul>${categories.map(c => `<li><a href="${localizedUrl(`/category/${getCategorySlug(c, lang)}`, lang)}">${esc(getLocalizedText(c.name, lang))}</a></li>`).join('')}</ul>
       </section>
       <section>
         <h2>${productsLabel(lang)}</h2>
@@ -366,17 +369,23 @@ function findCategoryByValue(value, categories) {
   const rawValue = getLocalizedText(value, 'uz');
   return categories.find(category => {
     const names = LANGUAGES.map(lang => getLocalizedText(category.name, lang));
-    return rawValue === getCategorySlug(category) || names.includes(rawValue);
+    return getCategorySlugs(category).includes(rawValue) || names.includes(rawValue);
   });
 }
 
-function getProductCategoryKey(value, categories) {
+function getProductCategoryKey(value, categories, lang = 'uz') {
   const category = findCategoryByValue(value, categories);
-  return category ? getCategorySlug(category) : getLocalizedText(value, 'uz');
+  return category ? getCategorySlug(category, lang) : getLocalizedText(value, lang);
 }
 
-function getCategorySlug(category) {
-  return category.slug || slugify(getLocalizedText(category.name, 'uz'));
+function getCategorySlug(category, lang = 'uz') {
+  return getLocalizedText(category.slug, lang) || slugify(getLocalizedText(category.name, lang));
+}
+
+function getCategorySlugs(category) {
+  return LANGUAGES
+    .map(lang => getCategorySlug(category, lang))
+    .filter((slug, index, slugs) => slug && slugs.indexOf(slug) === index);
 }
 
 function localizedUrl(path, lang) {

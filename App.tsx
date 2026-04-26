@@ -93,7 +93,7 @@ function parseRouteFromURL(): Route {
 /**
  * Route dan URL yaratish
  */
-function routeToPath(route: Route, products: Product[], blogPosts: BlogPost[]): string {
+function routeToPath(route: Route, products: Product[], blogPosts: BlogPost[], categories: Category[] = [], lang: SeoLanguage = 'uz'): string {
   switch (route.name) {
     case 'HOME':
       return '/';
@@ -105,8 +105,10 @@ function routeToPath(route: Route, products: Product[], blogPosts: BlogPost[]): 
       const post = blogPosts.find(p => p.id === route.postId);
       return post ? `/blog/${blogSlug(post)}` : '/';
     }
-    case 'CATEGORY':
-      return `/category/${route.categorySlug}`;
+    case 'CATEGORY': {
+      const category = findCategoryByValue(route.categorySlug, categories);
+      return `/category/${category ? getCategorySlug(category, lang) : route.categorySlug}`;
+    }
     case 'CHECKOUT':
       return '/checkout';
     case 'ADMIN':
@@ -122,8 +124,8 @@ function routeToPath(route: Route, products: Product[], blogPosts: BlogPost[]): 
   }
 }
 
-function routeToURL(route: Route, products: Product[], blogPosts: BlogPost[], lang: SeoLanguage): string {
-  const path = routeToPath(route, products, blogPosts);
+function routeToURL(route: Route, products: Product[], blogPosts: BlogPost[], categories: Category[], lang: SeoLanguage): string {
+  const path = routeToPath(route, products, blogPosts, categories, lang);
   return route.name === 'ADMIN' ? path : withLanguagePrefix(path, lang);
 }
 
@@ -202,7 +204,7 @@ const AppContent: React.FC = () => {
   // === URL Routing ===
   const navigate = useCallback((route: Route, replace = false) => {
     setCurrentRoute(route);
-    const url = routeToURL(route, products, blogPosts, lang);
+    const url = routeToURL(route, products, blogPosts, categories, lang);
     if (replace) {
       window.history.replaceState({ route }, '', url);
     } else {
@@ -211,7 +213,7 @@ const AppContent: React.FC = () => {
     if (route.name !== 'ADMIN') {
       window.scrollTo(0, 0);
     }
-  }, [products, blogPosts, lang]);
+  }, [products, blogPosts, categories, lang]);
 
   // Browser back/forward tugmalari
   useEffect(() => {
@@ -225,9 +227,9 @@ const AppContent: React.FC = () => {
 
   // Birinchi yuklashda URL ni tozalash (agar kerak bo'lsa)
   useEffect(() => {
-    const url = routeToURL(currentRoute, products, blogPosts, lang);
+    const url = routeToURL(currentRoute, products, blogPosts, categories, lang);
     window.history.replaceState({ route: currentRoute }, '', url);
-  }, [products, blogPosts, lang]); // products/blogPosts yuklanganidan keyin URL ni to'g'rilash
+  }, [products, blogPosts, categories, lang]); // products/blogPosts yuklanganidan keyin URL ni to'g'rilash
 
   useEffect(() => {
     let cancelled = false;
@@ -402,7 +404,7 @@ const AppContent: React.FC = () => {
   // CATEGORY route uchun activeCategory ni useEffect orqali o'rnatish (render ichida setState oldini olish)
   useEffect(() => {
     if (currentRoute.name === 'CATEGORY') {
-      const cat = categories.find(c => slugify(getLocalizedText(c.name, 'uz')) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
+      const cat = findCategoryByValue(currentRoute.categorySlug, categories);
       if (cat && activeCategory !== getCategorySlug(cat)) {
         setActiveCategory(getCategorySlug(cat));
       }
@@ -453,7 +455,7 @@ const AppContent: React.FC = () => {
       if (product) {
         const slug = productSlug(product);
         const categoryName = getCategoryDisplayName(product.category, categories, lang);
-        const categoryKey = getProductCategoryKey(product.category, categories);
+        const categoryKey = getProductCategoryKey(product.category, categories, lang);
         const productName = getLocalizedText(product.name, lang);
         const productDescription = getLocalizedText(product.shortDescription, lang);
         return (
@@ -501,20 +503,21 @@ const AppContent: React.FC = () => {
     }
 
     if (currentRoute.name === 'CATEGORY') {
-      const cat = categories.find(c => slugify(getLocalizedText(c.name, 'uz')) === currentRoute.categorySlug || c.slug === currentRoute.categorySlug);
+      const cat = findCategoryByValue(currentRoute.categorySlug, categories);
       if (cat) {
         const categoryName = getLocalizedText(cat.name, lang);
+        const categorySlug = getCategorySlug(cat, lang);
         return (
           <SEOHead
             title={`${categoryName} - PaketShop.uz`}
             description={getLocalizedText(cat.description, lang) || `${categoryName} - PaketShop.uz`}
             keywords={[categoryName, 'PaketShop', 'uzbekistan']}
-            canonical={localizedUrl(BASE_URL, `/category/${cat.slug}`, lang)}
+            canonical={localizedUrl(BASE_URL, `/category/${categorySlug}`, lang)}
             ogImage={cat.image}
             category={cat}
             breadcrumbs={[
               { name: t('breadcrumb_home'), url: localizedUrl(BASE_URL, '/', lang) },
-              { name: categoryName, url: localizedUrl(BASE_URL, `/category/${cat.slug}`, lang) }
+              { name: categoryName, url: localizedUrl(BASE_URL, `/category/${categorySlug}`, lang) }
             ]}
           />
         );
