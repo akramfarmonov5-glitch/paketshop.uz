@@ -6,6 +6,9 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
 
+const FREE_DELIVERY_THRESHOLD = 2_000_000;
+const DELIVERY_FEE = 40_000;
+
 interface CartSidebarProps {
   onCheckout: () => void;
 }
@@ -14,6 +17,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
   const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const { isDark } = useTheme();
   const { lang, t } = useLanguage();
+  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const finalTotal = cartTotal + deliveryFee;
 
   useEffect(() => {
     if (cart.length === 0 && isCartOpen) {
@@ -138,11 +143,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                   </div>
                   <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                     <span>{t('checkout_delivery')}</span>
-                    <span className="text-green-400">{t('checkout_delivery_free')}</span>
+                    <span className={deliveryFee > 0 ? 'text-gold-400' : 'text-green-400'}>
+                      {deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout_delivery_free')}
+                    </span>
                   </div>
                   <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
                     <span>{t('total_sum')}</span>
-                    <span>{formatPrice(cartTotal)}</span>
+                    <span>{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
 
