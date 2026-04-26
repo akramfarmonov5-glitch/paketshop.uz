@@ -69,11 +69,6 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
   const generateContent = async () => {
     const topic = getLocalizedText(formData.title, activeLang) || getLocalizedText(formData.title, 'uz');
-    const languageInstructions = {
-      uz: 'Uzbek language, Latin script',
-      ru: 'Russian language',
-      en: 'English language',
-    };
 
     if (!topic) {
       showToast("Iltimos, avval maqola mavzusi (Title)ni yozing.", 'warning');
@@ -83,31 +78,65 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     setIsGenerating(true);
     try {
       const data = await requestGeminiJson<{
-        content: string;
+        titleUz: string;
+        titleRu: string;
+        titleEn: string;
+        slugUz: string;
+        slugRu: string;
+        slugEn: string;
+        contentUz: string;
+        contentRu: string;
+        contentEn: string;
         seo: {
-          title: string;
-          description: string;
-          keywords: string[];
+          titleUz: string;
+          titleRu: string;
+          titleEn: string;
+          descriptionUz: string;
+          descriptionRu: string;
+          descriptionEn: string;
+          keywordsUz: string[];
+          keywordsRu: string[];
+          keywordsEn: string[];
         };
       }>({
-        systemInstruction: 'You are an expert content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON.',
+        systemInstruction: 'You are an expert multilingual SEO content writer for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON only.',
         message: `
           Topic: "${topic}"
 
-          Generate a blog post in ${languageInstructions[activeLang]}:
-          1. content: informative content about packaging, business, or wholesale (around 150 words)
-          2. seo.title: short catchy title
-          3. seo.description: meta description
-          4. seo.keywords: array of 5 related strings
-          5. Do not use another language. The whole response content and SEO must be in ${languageInstructions[activeLang]}.
+          Generate the same blog article in 3 languages:
+          1. Uzbek Latin script
+          2. Russian
+          3. English
+
+          Rules:
+          - Uzbek fields must be Uzbek Latin only.
+          - Russian fields must be Russian only.
+          - English fields must be English only.
+          - Each content field should be around 150 words.
+          - Slugs must be lowercase latin kebab-case.
+          - SEO keywords must be arrays of 5 strings in the same language.
 
           Return JSON:
           {
-            "content": "...",
+            "titleUz": "...",
+            "titleRu": "...",
+            "titleEn": "...",
+            "slugUz": "...",
+            "slugRu": "...",
+            "slugEn": "...",
+            "contentUz": "...",
+            "contentRu": "...",
+            "contentEn": "...",
             "seo": {
-              "title": "...",
-              "description": "...",
-              "keywords": ["...", "..."]
+              "titleUz": "...",
+              "titleRu": "...",
+              "titleEn": "...",
+              "descriptionUz": "...",
+              "descriptionRu": "...",
+              "descriptionEn": "...",
+              "keywordsUz": ["...", "..."],
+              "keywordsRu": ["...", "..."],
+              "keywordsEn": ["...", "..."]
             }
           }
         `,
@@ -115,11 +144,37 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
 
       setFormData(prev => ({
         ...prev,
-        content: { ...prev.content, [activeLang]: data.content },
+        title: {
+          uz: data.titleUz || prev.title?.uz || '',
+          ru: data.titleRu || prev.title?.ru || '',
+          en: data.titleEn || prev.title?.en || '',
+        },
+        slug: {
+          uz: data.slugUz || slugify(data.titleUz || prev.title?.uz || ''),
+          ru: data.slugRu || slugify(data.titleRu || prev.title?.ru || ''),
+          en: data.slugEn || slugify(data.titleEn || prev.title?.en || ''),
+        },
+        content: {
+          uz: data.contentUz || prev.content?.uz || '',
+          ru: data.contentRu || prev.content?.ru || '',
+          en: data.contentEn || prev.content?.en || '',
+        },
         seo: {
-          title: { ...prev.seo?.title, [activeLang]: data.seo.title },
-          description: { ...prev.seo?.description, [activeLang]: data.seo.description },
-          keywords: { ...prev.seo?.keywords, [activeLang]: data.seo.keywords.join(', ') }
+          title: {
+            uz: data.seo.titleUz || prev.seo?.title?.uz || '',
+            ru: data.seo.titleRu || prev.seo?.title?.ru || '',
+            en: data.seo.titleEn || prev.seo?.title?.en || '',
+          },
+          description: {
+            uz: data.seo.descriptionUz || prev.seo?.description?.uz || '',
+            ru: data.seo.descriptionRu || prev.seo?.description?.ru || '',
+            en: data.seo.descriptionEn || prev.seo?.description?.en || '',
+          },
+          keywords: {
+            uz: (data.seo.keywordsUz || []).join(', '),
+            ru: (data.seo.keywordsRu || []).join(', '),
+            en: (data.seo.keywordsEn || []).join(', '),
+          }
         }
       }));
     } catch (error) {
