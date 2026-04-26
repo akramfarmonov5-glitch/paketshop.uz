@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { checkRateLimit, getClientIp } from './_rateLimit';
 
+const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
+const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
+
 function createWavHeader(dataLength: number, sampleRate = 24000) {
   const buffer = Buffer.alloc(44);
   buffer.write('RIFF', 0);
@@ -49,7 +52,7 @@ export default async function handler(req: any, res: any) {
     
     // 1. Matnni generatsiya qilish
     const chat = ai.chats.create({
-      model: 'models/gemini-3-flash-preview',
+      model: TEXT_MODEL,
       config: {
         systemInstruction,
         ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
@@ -64,7 +67,7 @@ export default async function handler(req: any, res: any) {
     let audioBase64 = null;
     try {
       const audioResponse = await ai.models.generateContent({
-        model: 'models/gemini-3.1-flash-tts-preview',
+        model: TTS_MODEL,
         contents: [{ role: 'user', parts: [{ text: text }] }],
         config: {
           responseModalities: ['AUDIO'],
