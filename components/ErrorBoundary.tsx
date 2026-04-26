@@ -8,21 +8,53 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  isRecovering: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
+    isRecovering: false
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, isRecovering: false };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+
+    if (this.isChunkLoadError(error) && sessionStorage.getItem('paketshop_chunk_recovered') !== '1') {
+      sessionStorage.setItem('paketshop_chunk_recovered', '1');
+      this.clearCachesAndReload();
+    }
   }
+
+  private isChunkLoadError = (error: Error) => {
+    const message = `${error?.name || ''} ${error?.message || ''}`;
+    return /ChunkLoadError|Loading chunk|dynamically imported module|module script/i.test(message);
+  };
+
+  private clearCachesAndReload = async () => {
+    this.setState({ isRecovering: true });
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration => registration.unregister()));
+      }
+
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+    } catch (cacheError) {
+      console.warn('Cache recovery failed:', cacheError);
+    } finally {
+      window.location.reload();
+    }
+  };
 
   private handleReload = () => {
     window.location.reload();
@@ -43,7 +75,9 @@ class ErrorBoundary extends Component<Props, State> {
             Texnik xatolik yuz berdi
           </h1>
           <p className="text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
-            Kechirasiz, tizimda kutilmagan nosozlik kuzatildi. Iltimos, sahifani yangilang yoki bosh sahifaga qayting.
+            {this.state.isRecovering
+              ? 'Yangi versiya yuklanmoqda. Sahifa bir necha soniyada avtomatik yangilanadi.'
+              : "Kechirasiz, tizimda kutilmagan nosozlik kuzatildi. Iltimos, sahifani yangilang yoki bosh sahifaga qayting."}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
