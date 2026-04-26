@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { checkRateLimit, getClientIp } from './_rateLimit';
 
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
@@ -48,6 +47,7 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Message content is required' });
     }
 
+    const { GoogleGenAI } = await import("@google/genai");
     const ai = new GoogleGenAI({ apiKey });
     
     // 1. Matnni generatsiya qilish
