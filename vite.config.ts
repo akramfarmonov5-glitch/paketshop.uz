@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'logo-light.png'],
+      includeAssets: ['favicon.ico', 'favicon-48x48.png', 'logo.png', 'logo-light.png'],
       manifest: {
         name: 'PaketShop.uz Online Do\'kon',
         short_name: 'PaketShop',
