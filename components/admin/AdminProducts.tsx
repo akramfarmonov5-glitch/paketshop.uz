@@ -93,7 +93,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   };
 
   const generateProductDetails = async () => {
-    if (!formData.name || !formData.category) {
+    const productName = getLocalizedText(formData.name, activeLang) || getLocalizedText(formData.name, 'uz');
+    const categoryName = getCategoryDisplayName(formData.category, categories, activeLang) || getCategoryDisplayName(formData.category, categories, 'uz');
+
+    if (!productName || !formData.category) {
       showToast("Iltimos, avval Mahsulot nomi va Kategoriyani tanlang.", 'warning');
       return;
     }
@@ -101,23 +104,62 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     setIsGenerating(true);
     try {
       const data = await requestGeminiJson<{
-        shortDescription: string;
-        specs: { label: string; value: string }[];
+        nameUz: string;
+        nameRu: string;
+        nameEn: string;
+        slugUz: string;
+        slugRu: string;
+        slugEn: string;
+        shortDescriptionUz: string;
+        shortDescriptionRu: string;
+        shortDescriptionEn: string;
+        specs: {
+          labelUz: string;
+          labelRu: string;
+          labelEn: string;
+          valueUz: string;
+          valueRu: string;
+          valueEn: string;
+        }[];
       }>({
-        systemInstruction: 'You are a luxury product expert for an online store. Always answer in valid JSON.',
+        systemInstruction: 'You are a multilingual ecommerce product content expert for a packaging materials and wholesale store in Uzbekistan. Always answer in valid JSON only.',
         message: `
-          Product name: "${formData.name?.uz || formData.name}"
-          Category: "${getCategoryDisplayName(formData.category, categories, 'uz')}"
+          Product name: "${productName}"
+          Category: "${categoryName}"
+          Stock/items context: ${formData.stock || 0} units in stock, ${formData.itemsPerPackage || 1} items per package.
 
-          Generate in Uzbek language (Latin script):
-          1. A short premium description (max 2 sentences).
-          2. 4 key technical specifications relevant to this product.
+          Generate multilingual product content in:
+          1. Uzbek Latin script
+          2. Russian
+          3. English
+
+          Rules:
+          - Keep descriptions concise, sales-friendly, and relevant to packaging/disposable tableware/wholesale.
+          - Each shortDescription must be max 2 sentences.
+          - Generate 4 key specifications.
+          - Slugs must be lowercase latin kebab-case.
+          - Do not mix languages inside one field.
 
           Return JSON with this exact shape:
           {
-            "shortDescription": "...",
+            "nameUz": "...",
+            "nameRu": "...",
+            "nameEn": "...",
+            "slugUz": "...",
+            "slugRu": "...",
+            "slugEn": "...",
+            "shortDescriptionUz": "...",
+            "shortDescriptionRu": "...",
+            "shortDescriptionEn": "...",
             "specs": [
-              { "label": "...", "value": "..." }
+              {
+                "labelUz": "...",
+                "labelRu": "...",
+                "labelEn": "...",
+                "valueUz": "...",
+                "valueRu": "...",
+                "valueEn": "..."
+              }
             ]
           }
         `,
@@ -125,13 +167,32 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
       setFormData(prev => ({
         ...prev,
+        name: {
+          uz: data.nameUz || prev.name?.uz || '',
+          ru: data.nameRu || prev.name?.ru || '',
+          en: data.nameEn || prev.name?.en || '',
+        },
+        slug: {
+          uz: data.slugUz || slugify(data.nameUz || prev.name?.uz || ''),
+          ru: data.slugRu || slugify(data.nameRu || prev.name?.ru || ''),
+          en: data.slugEn || slugify(data.nameEn || prev.name?.en || ''),
+        },
         shortDescription: {
-          ...parseLocalizedObject(prev.shortDescription),
-          [activeLang]: data.shortDescription,
+          uz: data.shortDescriptionUz || prev.shortDescription?.uz || '',
+          ru: data.shortDescriptionRu || prev.shortDescription?.ru || '',
+          en: data.shortDescriptionEn || prev.shortDescription?.en || '',
         },
         specs: data.specs.map(spec => ({
-          label: { uz: '', ru: '', en: '', [activeLang]: spec.label },
-          value: { uz: '', ru: '', en: '', [activeLang]: spec.value },
+          label: {
+            uz: spec.labelUz || '',
+            ru: spec.labelRu || '',
+            en: spec.labelEn || '',
+          },
+          value: {
+            uz: spec.valueUz || '',
+            ru: spec.valueRu || '',
+            en: spec.valueEn || '',
+          },
         }))
       }));
     } catch (error) {
