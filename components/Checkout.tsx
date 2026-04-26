@@ -14,6 +14,10 @@ interface CheckoutProps {
   onBack: () => void;
 }
 
+const MIN_ORDER_AMOUNT = 500_000;
+const FREE_DELIVERY_THRESHOLD = 2_000_000;
+const DELIVERY_FEE = 40_000;
+
 const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { cart, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
@@ -39,7 +43,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     city: 'Toshkent',
   });
 
-  const finalTotal = Math.max(0, cartTotal - discountAmount);
+  const discountedSubtotal = Math.max(0, cartTotal - discountAmount);
+  const deliveryFee = discountedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const finalTotal = discountedSubtotal + deliveryFee;
+  const remainingForMinOrder = Math.max(0, MIN_ORDER_AMOUNT - cartTotal);
+  const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - discountedSubtotal);
 
   const PAYNET_URL = "https://app.paynet.uz/?m=49156&i=4805742d-d76c-4b39-8c02-8ddf1c450f33&branchId=&actTypeId=144";
   const PAYNET_QR_IMAGE = "/images/paynet-qr.jpg";
@@ -153,6 +161,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     ).join('\n');
 
     const totalFormatted = new Intl.NumberFormat('uz-UZ').format(finalTotal) + ' UZS';
+    const deliveryInfo = deliveryFee > 0
+      ? `\nYetkazib berish: ${new Intl.NumberFormat('uz-UZ').format(deliveryFee)} UZS`
+      : `\nYetkazib berish: Bepul`;
     const discountInfo = appliedPromo ? `\n🏷 <b>Promo:</b> ${appliedPromo} (-${new Intl.NumberFormat('uz-UZ').format(discountAmount)} UZS)` : '';
     const paymentLabel = paymentMethod === 'paynet' ? '📲 Paynet (Onlayn)' : '💵 Naqd (Yetkazilganda)';
 
@@ -170,6 +181,7 @@ ${itemsList}
 
 ------------------
 ${discountInfo}
+${deliveryInfo}
 💰 <b>JAMI TO'LOV:</b> ${totalFormatted}
     `;
 
@@ -211,10 +223,13 @@ ${discountInfo}
     }
 
     if (!formData.address.trim()) newErrors.address = t('checkout_req_address');
+    if (cartTotal < MIN_ORDER_AMOUNT) {
+      newErrors.order = `Minimal buyurtma summasi ${formatPrice(MIN_ORDER_AMOUNT)}. Yana ${formatPrice(remainingForMinOrder)} mahsulot qo'shing.`;
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      showToast(t('checkout_req_fill_all'), "error");
+      showToast(newErrors.order || t('checkout_req_fill_all'), "error");
       return;
     }
     
@@ -362,7 +377,7 @@ ${discountInfo}
               </div>
 
               <div className="pt-6">
-                <button type="submit" disabled={isLoading} className="w-full bg-gold-400 text-black font-bold text-lg py-4 rounded-xl hover:bg-gold-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden group">
+                <button type="submit" disabled={isLoading || cartTotal < MIN_ORDER_AMOUNT} className="w-full bg-gold-400 text-black font-bold text-lg py-4 rounded-xl hover:bg-gold-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden group">
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
@@ -414,9 +429,21 @@ ${discountInfo}
                   <span>-{formatPrice(discountAmount)}</span>
                 </div>
               )}
+              {cartTotal < MIN_ORDER_AMOUNT && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  Minimal buyurtma {formatPrice(MIN_ORDER_AMOUNT)}. Yana {formatPrice(remainingForMinOrder)} mahsulot qo'shing.
+                </div>
+              )}
+              {discountedSubtotal < FREE_DELIVERY_THRESHOLD && (
+                <div className="rounded-xl border border-gold-400/20 bg-gold-400/10 p-3 text-sm text-gold-300">
+                  {formatPrice(FREE_DELIVERY_THRESHOLD)} dan yuqori buyurtmalarga yetkazib berish bepul. Bepul dostavkagacha {formatPrice(remainingForFreeDelivery)} qoldi.
+                </div>
+              )}
               <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
                 <span>{t('checkout_delivery')}</span>
-                <span className="text-green-400">{t('checkout_delivery_free')}</span>
+                <span className={deliveryFee > 0 ? 'text-gold-400' : 'text-green-400'}>
+                  {deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout_delivery_free')}
+                </span>
               </div>
               <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
                 <span>{t('checkout_total')}</span>
