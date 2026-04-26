@@ -13,6 +13,7 @@ interface AdminHeroProps {
 
 const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) => {
     const { showToast } = useToast();
+    const normalizeImages = (images: unknown) => Array.isArray(images) ? images : [];
     // Ensure text fields are fully localized objects
     const [formData, setFormData] = useState<any>({
         ...heroContent,
@@ -20,7 +21,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
         title: parseLocalizedObject(heroContent.title),
         description: parseLocalizedObject(heroContent.description),
         buttonText: parseLocalizedObject(heroContent.buttonText),
-        images: heroContent.images || []
+        images: normalizeImages(heroContent.images)
     });
     const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
     const [isSaved, setIsSaved] = useState(false);
@@ -61,25 +62,26 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
     };
 
     const addImage = () => {
-        if (formData.images.length < 5) {
-            setFormData(prev => ({ ...prev, images: [...prev.images, ''] }));
+        if (normalizeImages(formData.images).length < 5) {
+            setFormData(prev => ({ ...prev, images: [...normalizeImages(prev.images), ''] }));
         }
     };
 
     const removeImage = (index: number) => {
-        const newImages = [...formData.images];
+        const newImages = [...normalizeImages(formData.images)];
         newImages.splice(index, 1);
         setFormData(prev => ({ ...prev, images: newImages }));
     };
 
     const updateImage = (index: number, value: string) => {
-        const newImages = [...formData.images];
+        const newImages = [...normalizeImages(formData.images)];
         newImages[index] = value;
         setFormData(prev => ({ ...prev, images: newImages }));
     };
 
     // Safe access to first image for preview
-    const previewImage = formData.images.length > 0 ? formData.images[0] : '';
+    const images = normalizeImages(formData.images);
+    const previewImage = images.length > 0 ? images[0] : '';
 
     return (
         <div className="max-w-4xl">
@@ -170,14 +172,14 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                             </button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {formData.images.map((url, index) => (
+                            {images.map((url, index) => (
                                 <div key={index} className="relative bg-black rounded-xl p-3 border border-white/10">
                                     <CloudinaryUpload 
                                         currentImage={url}
                                         label={`Slayd ${index + 1}`}
                                         onUpload={(newUrl) => updateImage(index, newUrl)}
                                     />
-                                    {formData.images.length > 1 && (
+                                    {images.length > 1 && (
                                         <button 
                                             type="button" 
                                             onClick={() => removeImage(index)} 
@@ -228,16 +230,16 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                                 {formData.title?.[activeLang] || ''}
                             </h2>
                             <p className="text-sm text-gray-300 line-clamp-3">
-                                {formData.description}
+                                {formData.description?.[activeLang] || ''}
                             </p>
                             <button className="px-4 py-2 bg-white text-black text-xs font-bold rounded-full mt-2">
                                 {formData.buttonText?.[activeLang] || ''}
                             </button>
                         </div>
 
-                        {formData.images.length > 1 && (
+                        {images.length > 1 && (
                             <div className="absolute top-4 right-4 bg-black/50 backdrop-blur px-2 py-1 rounded text-xs text-white border border-white/10">
-                                +{formData.images.length - 1} slides
+                                +{images.length - 1} slides
                             </div>
                         )}
                     </div>
