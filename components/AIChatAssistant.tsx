@@ -40,7 +40,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   }, [messages, isOpen, isRegistered]);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('paketshop_chat_user');
+    const savedUser = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_chat_user') : null);
     if (savedUser) {
       setIsRegistered(true);
       const user = JSON.parse(savedUser);

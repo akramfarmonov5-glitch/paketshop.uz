@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Product } from '../types';
 import { useAuth } from './AuthContext';
@@ -34,7 +35,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
         });
     } else {
-      const saved = localStorage.getItem('paketshop_wishlist');
+      const saved = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_wishlist') : null);
       if (saved) {
         try {
           setWishlist(JSON.parse(saved));

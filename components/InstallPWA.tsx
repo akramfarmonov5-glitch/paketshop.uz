@@ -12,7 +12,7 @@ const InstallPWA: React.FC = () => {
 
   useEffect(() => {
     // Check if already installed
-    const isAppStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    const isAppStandalone = (typeof window !== 'undefined' ? window.matchMedia : function(){return {matches:false}})('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
     setIsStandalone(isAppStandalone);
 
     if (isAppStandalone) return;
@@ -24,7 +24,7 @@ const InstallPWA: React.FC = () => {
 
     // Listen for Android/Chrome install prompt
     const isDismissedRecently = () => {
-      const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
+      const dismissedAt = (typeof window !== 'undefined' ? localStorage.getItem('pwa_prompt_dismissed') : null);
       if (!dismissedAt) return false;
       const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
       return daysSince < 1; // Show again after 1 day
