@@ -9,7 +9,7 @@ import FeaturedProducts from '../../components/FeaturedProducts';
 import Testimonials from '../../components/Testimonials';
 import BlogGrid from '../../components/BlogGrid';
 import { useGlobalData } from '../../context/GlobalContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { getCategorySlug } from '../../lib/categoryUtils';
 import * as fpixel from '../../lib/fpixel';
 import { getLocalizedText } from '../../lib/i18nUtils';
@@ -18,6 +18,8 @@ export default function HomePage() {
   const { products, categories, heroContent, blogPosts, isLoading } = useGlobalData();
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const router = useRouter();
+  const params = useParams();
+  const lang = params?.lang || 'uz';
 
   const handleCategorySelect = (categoryName: string) => {
     setActiveCategory(categoryName);
@@ -34,11 +36,11 @@ export default function HomePage() {
 
   const navigateToProduct = (id: number) => {
     // Navigate via id (in future map to slug)
-    router.push(`/product/${id}`);
+    router.push(`/${lang}/product/${id}`);
   };
 
   const navigateToBlogPost = (id: number) => {
-    router.push(`/blog/${id}`);
+    router.push(`/${lang}/blog/${id}`);
   };
 
   return (
