@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Product, CartItem } from '../types';
 import { trackAddToCart } from '../lib/fpixel';
@@ -24,7 +25,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Load cart from local storage on mount (optional persistence)
   useEffect(() => {
-    const savedCart = localStorage.getItem('paketshop_cart');
+    const savedCart = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_cart') : null);
     if (savedCart) {
       try {
         setCart(JSON.parse(savedCart));

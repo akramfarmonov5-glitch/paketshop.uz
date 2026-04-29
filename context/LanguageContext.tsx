@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { isSeoLanguage, LOCALE_BY_LANG, SeoLanguage, withLanguagePrefix } from '../lib/seoLanguage';
 
@@ -252,9 +253,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [lang, setLangState] = useState<Language>(() => {
-        const pathLang = window.location.pathname.split('/').filter(Boolean)[0];
+        const pathLang = (typeof window !== 'undefined' ? window.location.pathname : '/').split('/').filter(Boolean)[0];
         if (isSeoLanguage(pathLang)) return pathLang;
-        const saved = localStorage.getItem('paketshop_lang');
+        const saved = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_lang') : null);
         return (saved as Language) || 'uz';
     });
 
@@ -263,9 +264,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         localStorage.setItem('paketshop_lang', newLang);
         document.documentElement.lang = newLang;
 
-        const nextPath = withLanguagePrefix(window.location.pathname, newLang);
+        const nextPath = withLanguagePrefix((typeof window !== 'undefined' ? window.location.pathname : '/'), newLang);
         const nextUrl = `${nextPath}${window.location.search}${window.location.hash}`;
-        if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+        if (nextUrl !== `${(typeof window !== 'undefined' ? window.location.pathname : '/')}${window.location.search}${window.location.hash}`) {
             window.history.pushState({ lang: newLang }, '', nextUrl);
         }
     };
@@ -286,7 +287,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     useEffect(() => {
         const handlePopState = () => {
-            const pathLang = window.location.pathname.split('/').filter(Boolean)[0];
+            const pathLang = (typeof window !== 'undefined' ? window.location.pathname : '/').split('/').filter(Boolean)[0];
             if (isSeoLanguage(pathLang) && pathLang !== lang) {
                 setLangState(pathLang);
                 localStorage.setItem('paketshop_lang', pathLang);

@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -13,11 +14,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [theme, setTheme] = useState<Theme>(() => {
         // Check localStorage first
-        const saved = localStorage.getItem('paketshop_theme') as Theme;
+        const saved = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_theme') : null) as Theme;
         if (saved === 'light' || saved === 'dark') return saved;
 
         // Check system preference
-        if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        if (typeof window !== 'undefined' && (typeof window !== 'undefined' ? window.matchMedia : function(){return {matches:false}})('(prefers-color-scheme: light)').matches) {
             return 'light';
         }
         return 'dark';

@@ -298,7 +298,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
                 {t('tech_specs')}
               </h3>
               <div className="grid grid-cols-2 gap-y-3 gap-x-4 md:gap-x-8">
-                {product.specs.map((spec, index) => (
+                {(product.specs || []).map((spec, index) => (
                   <div key={index}>
                     <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-[10px] md:text-xs uppercase tracking-wider mb-1`}>{getLocalizedText(spec.label, lang)}</p>
                     <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-xs md:text-sm font-medium`}>{getLocalizedText(spec.value, lang)}</p>
