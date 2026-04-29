@@ -138,7 +138,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, allProducts = []
             onHomeClick={onBack}
             items={[
               { label: getCategoryDisplayName(product.category, categories, lang), onClick: onBack },
-              { label: typeof product.name === 'string' && product.name.includes('{') ? getLocalizedText(product.name, lang) : product.name, active: true }
+              { label: getLocalizedText(product.name, lang), active: true }
             ]}
           />
         </div>
