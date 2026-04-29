@@ -18,6 +18,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
 
   const [formData, setFormData] = useState<any>({
@@ -188,46 +189,122 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const postData: any = { 
-       ...formData,
-       title: JSON.stringify(formData.title),
-       slug: JSON.stringify({
-         uz: formData.slug?.uz?.trim() || slugify(getLocalizedText(formData.title, 'uz')),
-         ru: formData.slug?.ru?.trim() || slugify(getLocalizedText(formData.title, 'ru') || getLocalizedText(formData.title, 'uz')),
-         en: formData.slug?.en?.trim() || slugify(getLocalizedText(formData.title, 'en') || getLocalizedText(formData.title, 'uz')),
-       }),
-       content: JSON.stringify(formData.content),
-       seo: {
-           title: JSON.stringify(formData.seo?.title),
-           description: JSON.stringify(formData.seo?.description),
-           keywords: JSON.stringify(formData.seo?.keywords)
-       }
+    if (isSaving) return;
+
+    const title = parseLocalizedObject(formData.title);
+    const content = parseLocalizedObject(formData.content);
+    const slug = parseLocalizedObject(formData.slug);
+    const seoTitle = parseLocalizedObject(formData.seo?.title);
+    const seoDescription = parseLocalizedObject(formData.seo?.description);
+    const seoKeywords = parseLocalizedObject(formData.seo?.keywords);
+
+    if (!title.uz.trim() || !content.uz.trim()) {
+      showToast("Maqolaning o'zbekcha sarlavhasi va matni majburiy.", 'warning');
+      return;
+    }
+
+    const localizedSlug = {
+      uz: slug.uz.trim() || slugify(title.uz),
+      ru: slug.ru.trim() || slugify(title.ru || title.uz),
+      en: slug.en.trim() || slugify(title.en || title.uz),
     };
 
+    const modernPayload: Record<string, any> = {
+      title: JSON.stringify(title),
+      slug: JSON.stringify(localizedSlug),
+      image: formData.image,
+      content: JSON.stringify(content),
+      date: formData.date || new Date().toISOString().split('T')[0],
+      seo: {
+        title: JSON.stringify(seoTitle),
+        description: JSON.stringify(seoDescription),
+        keywords: JSON.stringify(seoKeywords),
+      },
+    };
+
+    const withLegacySeo = (payload: Record<string, any>) => {
+      const next = { ...payload };
+      delete next.seo;
+      next.seo_title = JSON.stringify(seoTitle);
+      next.seo_description = JSON.stringify(seoDescription);
+      next.seo_keywords = Object.values(seoKeywords).filter(Boolean);
+      return next;
+    };
+
+    const getMissingColumn = (error: any) => {
+      const message = [error?.message, error?.details, error?.hint].filter(Boolean).join(' ');
+      return message.match(/Could not find the '([^']+)' column/)?.[1] || '';
+    };
+
+    const normalizeSavedPost = (row: any): BlogPost => ({
+      ...row,
+      seo: row.seo || {
+        title: row.seo_title || modernPayload.seo.title,
+        description: row.seo_description || modernPayload.seo.description,
+        keywords: row.seo_keywords || modernPayload.seo.keywords,
+      },
+    });
+
     try {
-      if (postData.id) {
-        // Update existing
-        const { error } = await supabase
-          .from('blog_posts')
-          .update(postData)
-          .eq('id', postData.id);
-        if (error) throw error;
-        setPosts(prev => prev.map(p => p.id === postData.id ? (postData as BlogPost) : p));
-      } else {
-        // Insert new
-        const { data, error } = await supabase
-          .from('blog_posts')
-          .insert([postData])
-          .select();
-        if (error) throw error;
-        if (data && data.length > 0) {
-          setPosts(prev => [(data[0] as BlogPost), ...prev]);
+      setIsSaving(true);
+
+      let payload = modernPayload;
+      let savedRow: any = null;
+
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const query = formData.id
+          ? supabase.from('blog_posts').update(payload).eq('id', formData.id).select().single()
+          : supabase.from('blog_posts').insert([payload]).select().single();
+
+        const { data, error } = await query;
+
+        if (!error) {
+          savedRow = data;
+          break;
         }
+
+        const missingColumn = getMissingColumn(error);
+        if (missingColumn === 'seo') {
+          payload = withLegacySeo(payload);
+          continue;
+        }
+        if (missingColumn === 'slug') {
+          const next = { ...payload };
+          delete next.slug;
+          payload = next;
+          continue;
+        }
+        if (['seo_title', 'seo_description', 'seo_keywords'].includes(missingColumn)) {
+          const next = { ...payload };
+          delete next.seo_title;
+          delete next.seo_description;
+          delete next.seo_keywords;
+          payload = next;
+          continue;
+        }
+
+        throw error;
       }
+
+      if (!savedRow) {
+        throw new Error('Maqola saqlanmadi. Blog jadvali schema cache yoki ustunlarini tekshiring.');
+      }
+
+      const savedPost = normalizeSavedPost(savedRow);
+
+      if (formData.id) {
+        setPosts(prev => prev.map(p => p.id === savedPost.id ? savedPost : p));
+      } else {
+        setPosts(prev => [savedPost, ...prev]);
+      }
+
       setIsModalOpen(false);
+      showToast('Maqola saqlandi.', 'success');
     } catch (error) {
       console.error('Save error:', error);
       showToast('Saqlashda xatolik: ' + (error as any).message, 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -416,9 +493,9 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors">
                   Bekor qilish
                 </button>
-                <button type="submit" className="flex-1 py-3.5 bg-gold-400 hover:bg-gold-500 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
-                  <Save size={18} />
-                  Saqlash
+                <button type="submit" disabled={isSaving} className="flex-1 py-3.5 bg-gold-400 hover:bg-gold-500 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                  {isSaving ? <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <Save size={18} />}
+                  {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
                 </button>
               </div>
             </form>
