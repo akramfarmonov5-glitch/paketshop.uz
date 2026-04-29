@@ -11,7 +11,13 @@ export default function ProductClient({ id }: { id: string }) {
 
   if (isLoading) return <ProductDetailSkeleton />;
   
-  const product = products.find(p => p.id === Number(id));
+  let productId = id;
+  if (isNaN(Number(id)) && id.includes('-')) {
+    const parts = id.split('-');
+    productId = parts[parts.length - 1];
+  }
+
+  const product = products.find(p => p.id === Number(productId));
   
   if (!product) {
     return <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center">Mahsulot topilmadi</div>;

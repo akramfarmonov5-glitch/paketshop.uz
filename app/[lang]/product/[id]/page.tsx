@@ -3,19 +3,29 @@ import ProductClient from './ProductClient';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { getCategoryDisplayName } from '../../../../lib/categoryUtils';
 
-export async function generateMetadata({ params }: { params: { id: string, lang: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string, lang: string }> }) {
   try {
+    const { id, lang } = await params;
+    
+    // Support both direct ID (e.g. "2") and slug with ID (e.g. "product-name-2")
+    let productId = id;
+    if (isNaN(Number(id)) && id.includes('-')) {
+      const parts = id.split('-');
+      productId = parts[parts.length - 1];
+    }
+
     const { data: product } = await supabase
       .from('products')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', productId)
       .single();
 
     if (!product) return { title: 'Mahsulot topilmadi' };
 
-    const lang = params.lang || 'uz';
-    const productName = getLocalizedText(product.name, lang);
-    const productDesc = getLocalizedText(product.description, lang)?.substring(0, 160) || '';
+    const activeLang = lang || 'uz';
+    const productName = getLocalizedText(product.name, activeLang);
+    const productDesc = getLocalizedText(product.description, activeLang)?.substring(0, 160) || '';
+
     
     // Kategoriyani ham olish kerak agar nomi kerak bo'lsa, lekin hozircha oddiy qilamiz
     const title = `${productName} | PaketShop.uz`;
