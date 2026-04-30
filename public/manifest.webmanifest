@@ -1,0 +1,30 @@
+{
+  "name": "PaketShop.uz",
+  "short_name": "PaketShop",
+  "description": "PaketShop.uz - qadoqlash, oshxona va xo'jalik mahsulotlari onlayn do'koni.",
+  "start_url": "/uz",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#DC2626",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png?v=20260430",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png?v=20260430",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png?v=20260430",
+      "sizes": "320x320",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
