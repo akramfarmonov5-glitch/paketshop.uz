@@ -12,8 +12,8 @@ export default function BlogArchivePage() {
   const params = useParams();
   const lang = (params?.lang as string) || 'uz';
 
-  const navigateToBlogPost = (id: number) => {
-    router.push(`/${lang}/blog/${id}`);
+  const navigateToBlogPost = (slug: string) => {
+    router.push(`/${lang}/blog/${slug}`);
   };
 
   return (

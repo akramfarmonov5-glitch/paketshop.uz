@@ -7,10 +7,11 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BlogSkeleton } from './Skeleton';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { blogSlug } from '../lib/slugify';
 
 interface BlogGridProps {
   posts: BlogPost[];
-  onPostClick: (id: number) => void;
+  onPostClick: (slug: string) => void;
   isLoading?: boolean;
 }
 
@@ -55,7 +56,7 @@ const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick, isLoading }) =>
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              onClick={() => onPostClick(post.id)}
+              onClick={() => onPostClick(blogSlug(post, lang))}
               className="group cursor-pointer flex flex-col h-full"
             >
               <div className="relative aspect-[16/10] overflow-hidden rounded-2xl mb-6">

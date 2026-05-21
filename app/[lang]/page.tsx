@@ -45,8 +45,8 @@ export default function HomePage() {
     }
   };
 
-  const navigateToBlogPost = (id: number) => {
-    router.push(`/${lang}/blog/${id}`);
+  const navigateToBlogPost = (slug: string) => {
+    router.push(`/${lang}/blog/${slug}`);
   };
 
   return (
