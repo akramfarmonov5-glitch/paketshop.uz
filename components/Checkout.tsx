@@ -26,7 +26,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const { lang, t } = useLanguage();
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'paynet' | 'cash'>('paynet');
+  const [paymentMethod, setPaymentMethod] = useState<'click' | 'payme' | 'paynet' | 'cash'>('click');
   const [showPaynetModal, setShowPaynetModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -115,10 +115,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     setPromoCode('');
   };
 
-  const saveOrderToDatabase = async () => {
+  const saveOrderToDatabase = async (orderId: string) => {
     if (!hasSupabaseCredentials) return;
 
-    const orderId = `ORD-${Date.now()}`;
     const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     try {
@@ -129,7 +128,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
         total: finalTotal,
         status: 'Kutilmoqda',
         date: dateStr,
-        "paymentMethod": paymentMethod === 'paynet' ? 'Paynet' : 'Naqd',
+        "paymentMethod": paymentMethod === 'click' ? 'Click' : paymentMethod === 'payme' ? 'Payme' : paymentMethod === 'paynet' ? 'Paynet' : 'Naqd',
+        payment_status: 'Kutilmoqda',
         items: cart.map((item) => ({
           id: item.id,
           name: item.name,
@@ -144,18 +144,28 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
         orderData.user_id = user.id;
       }
 
-      const { error } = await supabase.from('orders').insert(orderData);
+      let { error } = await supabase.from('orders').insert(orderData);
+
+      // Fallback: if payment_status column doesn't exist yet, retry without it
+      if (error && error.message?.includes('payment_status')) {
+        console.warn("payment_status column not found, retrying without it...");
+        const { payment_status, ...fallbackData } = orderData;
+        const fallbackResult = await supabase.from('orders').insert(fallbackData);
+        error = fallbackResult.error;
+      }
 
       if (error) {
         console.error("Error saving order to Supabase:", error);
         showToast("Buyurtmani saqlashda xatolik: " + error.message, "error");
+        throw error;
       }
     } catch (e) {
       console.error("Supabase error:", e);
+      throw e;
     }
   };
 
-  const sendTelegramNotification = async () => {
+  const sendTelegramNotification = async (orderId: string) => {
     const itemsList = cart.map((item, index) =>
       `${index + 1}. ${item.name} (x${item.quantity}) - ${new Intl.NumberFormat('uz-UZ').format(item.price * item.quantity)} UZS`
     ).join('\n');
@@ -165,11 +175,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
       ? `\n${t('checkout_delivery')}: ${new Intl.NumberFormat('uz-UZ').format(deliveryFee)} UZS`
       : `\n${t('checkout_delivery')}: ${t('checkout_delivery_free')}`;
     const discountInfo = appliedPromo ? `\n🏷 <b>Promo:</b> ${appliedPromo} (-${new Intl.NumberFormat('uz-UZ').format(discountAmount)} UZS)` : '';
-    const paymentLabel = paymentMethod === 'paynet' ? '📲 Paynet (Onlayn)' : '💵 Naqd (Yetkazilganda)';
+    
+    let paymentLabel = '💵 Naqd (Yetkazilganda)';
+    if (paymentMethod === 'click') paymentLabel = '📲 Click (Onlayn)';
+    else if (paymentMethod === 'payme') paymentLabel = '📲 Payme (Onlayn)';
+    else if (paymentMethod === 'paynet') paymentLabel = '📲 Paynet (Onlayn)';
 
     const message = `
 📦 <b>YANGI BUYURTMA! (PaketShop)</b>
 
+🆔 <b>Buyurtma ID:</b> <code>${orderId}</code>
 👤 <b>Mijoz:</b> ${formData.firstName} ${formData.lastName}
 📞 <b>Tel:</b> ${formData.phone}
 📍 <b>Manzil:</b> ${formData.city}, ${formData.address}
@@ -196,10 +211,7 @@ ${deliveryInfo}
     }
   };
 
-  const completeOrder = async () => {
-    await saveOrderToDatabase();
-
-    const orderId = `ORD-${Date.now()}`;
+  const completeOrder = async (orderId: string) => {
     const productIds = cart.map(item => item.id.toString());
     fpixel.trackPurchase(orderId, finalTotal, productIds, 'UZS');
 
@@ -236,20 +248,54 @@ ${deliveryInfo}
     setErrors({});
     setIsLoading(true);
 
-    await sendTelegramNotification();
+    const orderId = `ORD-${Date.now()}`;
 
-    if (paymentMethod === 'paynet') {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-      if (isMobile) {
-        window.open(PAYNET_URL, '_blank');
-        setTimeout(completeOrder, 2000);
+    try {
+      // 1. Save order to DB first so it exists for webhooks
+      await saveOrderToDatabase(orderId);
+
+      // 2. Send Telegram notifications
+      await sendTelegramNotification(orderId);
+
+      // 3. Handle specific payment redirects or completes
+      if (paymentMethod === 'click') {
+        const serviceId = process.env.NEXT_PUBLIC_CLICK_SERVICE_ID || '34262'; // example click service ID
+        const merchantId = process.env.NEXT_PUBLIC_CLICK_MERCHANT_ID || '24564'; // example click merchant ID
+        const returnUrl = `${window.location.origin}/${lang}/profile`;
+        const clickUrl = `https://my.click.uz/services/pay?service_id=${serviceId}&merchant_id=${merchantId}&amount=${finalTotal}&transaction_param=${orderId}&return_url=${encodeURIComponent(returnUrl)}`;
+        
+        window.location.href = clickUrl;
+      } else if (paymentMethod === 'payme') {
+        const merchantId = process.env.NEXT_PUBLIC_PAYME_MERCHANT_ID || '6405bc77b9195b8cb460db7c'; // example payme merchant ID
+        const returnUrl = `${window.location.origin}/${lang}/profile`;
+        const paymeParams = `m=${merchantId};ac.order_id=${orderId};a=${finalTotal * 100};c=${encodeURIComponent(returnUrl)}`;
+        const base64Params = window.btoa(unescape(encodeURIComponent(paymeParams)));
+        const paymeUrl = `https://checkout.paycom.uz/${base64Params}`;
+        
+        window.location.href = paymeUrl;
+      } else if (paymentMethod === 'paynet') {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+        if (isMobile) {
+          window.open(PAYNET_URL, '_blank');
+          setTimeout(() => completeOrder(orderId), 2000);
+        } else {
+          setShowPaynetModal(true);
+          setIsLoading(false);
+        }
       } else {
-        setShowPaynetModal(true);
-        setIsLoading(false);
-        return;
+        // Cash payment
+        fetch('/api/sms/notify-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId })
+        }).catch(err => console.error("Failed to trigger cash order SMS:", err));
+
+        setTimeout(() => completeOrder(orderId), 1500);
       }
-    } else {
-      setTimeout(completeOrder, 1500);
+    } catch (err) {
+      console.error("Checkout process failed:", err);
+      showToast(t('error_occurred'), "error");
+      setIsLoading(false);
     }
   };
 
@@ -379,15 +425,25 @@ ${deliveryInfo}
 
               <div className="space-y-3 pt-2">
                 <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_payment_method')}</label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <button type="button" onClick={() => setPaymentMethod('click')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'click' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
+                    <CreditCard size={24} />
+                    <span className="font-medium text-xs">{t('checkout_click')}</span>
+                    {paymentMethod === 'click' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('payme')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'payme' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
+                    <Smartphone size={24} />
+                    <span className="font-medium text-xs">{t('checkout_payme')}</span>
+                    {paymentMethod === 'payme' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
+                  </button>
                   <button type="button" onClick={() => setPaymentMethod('paynet')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'paynet' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Wallet size={24} />
-                    <span className="font-medium text-sm">{t('checkout_paynet')}</span>
+                    <span className="font-medium text-xs">{t('checkout_paynet')}</span>
                     {paymentMethod === 'paynet' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
                   </button>
                   <button type="button" onClick={() => setPaymentMethod('cash')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'cash' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
                     <Banknote size={24} />
-                    <span className="font-medium text-sm">{t('checkout_cash')}</span>
+                    <span className="font-medium text-xs">{t('checkout_cash')}</span>
                     {paymentMethod === 'cash' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
                   </button>
                 </div>
@@ -402,7 +458,7 @@ ${deliveryInfo}
                     </div>
                   ) : (
                     <>
-                      <span>{paymentMethod === 'paynet' ? t('checkout_pay') : t('checkout_order_btn')}</span>
+                      <span>{paymentMethod !== 'cash' ? t('checkout_pay') : t('checkout_order_btn')}</span>
                       <span className="text-sm font-normal">({formatPrice(finalTotal)})</span>
                       <Send size={18} className="group-hover:translate-x-1 transition-transform" />
                     </>

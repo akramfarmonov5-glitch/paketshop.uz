@@ -54,23 +54,31 @@ const AdminOrders: React.FC = () => {
   };
 
   const updateStatus = async (id: string, newStatus: OrderStatus) => {
+    const originalOrders = [...orders];
+
     // Optimistic update
     setOrders(prev => prev.map(order =>
       order.id === id ? { ...order, status: newStatus } : order
     ));
 
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', id);
+      const response = await fetch('/api/orders/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      });
 
-      if (error) {
-        console.error("Status update failed:", error);
-        // Revert if needed
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Xatolik yuz berdi');
       }
-    } catch (err) {
-      console.error(err);
+
+      showToast("Buyurtma holati yangilandi va mijozga SMS yuborildi", "success");
+    } catch (err: any) {
+      console.error("Status update failed:", err);
+      showToast("Holatni yangilashda xatolik: " + err.message, "error");
+      // Revert optimistic update
+      setOrders(originalOrders);
     }
   };
 

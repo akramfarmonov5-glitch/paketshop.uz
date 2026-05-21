@@ -53,6 +53,8 @@ const translations: Translations = {
     checkout_promo_placeholder: { uz: 'Kodini kiriting', ru: 'Введите код', en: 'Enter code' },
     checkout_apply: { uz: 'Qo\'llash', ru: 'Применить', en: 'Apply' },
     checkout_payment_method: { uz: 'To\'lov usuli', ru: 'Способ оплаты', en: 'Payment Method' },
+    checkout_click: { uz: 'Click (Onlayn)', ru: 'Click (Онлайн)', en: 'Click (Online)' },
+    checkout_payme: { uz: 'Payme (Onlayn)', ru: 'Payme (Онлайн)', en: 'Payme (Online)' },
     checkout_paynet: { uz: 'Paynet (Onlayn)', ru: 'Paynet (Онлайн)', en: 'Paynet (Online)' },
     checkout_cash: { uz: 'Naqd (Qabulda)', ru: 'Наличными (При получении)', en: 'Cash (On delivery)' },
     checkout_pay: { uz: 'To\'lash', ru: 'Оплатить', en: 'Pay' },
