@@ -14,6 +14,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useGlobalData } from '../../context/GlobalContext';
 import { usePathname, useRouter } from 'next/navigation';
+import { productSlug } from '../../lib/slugify';
 
 export default function ClientLayout({ children, lang }: { children: React.ReactNode, lang?: string }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -36,9 +37,11 @@ export default function ClientLayout({ children, lang }: { children: React.React
 
   const navigateToHome = () => router.push('/');
   const navigateToProduct = (id: number) => {
-    // Topamiz va slug orqali otamiz
     const product = products.find(p => p.id === id);
-    if (product) router.push(`/product/${id}`); // Actually should use slug, but using id for simplicity first
+    if (product) {
+      const activeLang = lang || 'uz';
+      router.push(`/${activeLang}/product/${productSlug(product, activeLang)}`);
+    }
   };
   const navigateToWishlist = () => router.push('/wishlist');
   const navigateToTracking = () => router.push('/tracking');

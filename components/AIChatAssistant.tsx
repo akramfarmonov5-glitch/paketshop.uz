@@ -67,29 +67,44 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       }
     }
 
+    // Send Telegram alert
+    try {
+      const formattedPhone = formData.phone.startsWith('+') ? formData.phone : `+998${formData.phone}`;
+      const telegramMessage = `🔔 <b>Yangi AI Chat Lead!</b>\n\n👤 <b>Ismi:</b> ${formData.name}\n📞 <b>Telefoni:</b> ${formattedPhone}\n🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}\n\n💬 Mijoz sun'iy intellekt chat yordamchisi bilan suhbat boshladi.`;
+      
+      await fetch('/api/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: telegramMessage })
+      });
+    } catch (telegramError) {
+      console.error("Telegram notification error:", telegramError);
+    }
+
     setFormLoading(false);
     setIsRegistered(true);
   };
 
   const getSystemInstruction = () => {
     const productContext = products.map(p =>
-      `- ${getLocalizedText(p.name, 'uz')} (${getLocalizedText(p.category, 'uz')}): ${p.formattedPrice}. ${getLocalizedText(p.shortDescription, 'uz')}`
+      `- ${getLocalizedText(p.name, 'uz')} (${getLocalizedText(p.category, 'uz')}): ${p.formattedPrice}. ${getLocalizedText(p.shortDescription, 'uz') || ''}`
     ).join('\n');
 
     return `
-      Siz PaketShop onlayn do'konining sotuvchi-konsultantisiz.
-      Mijozingizning ismi: ${formData.name}. Unga ismi bilan murojaat qiling.
-      Siz xushmuomala, "siz"lab va o'zbek tilida gaplashing.
+      Siz PaketShop onlayn do'konining yuqori malakali, xushmuomala va samimiy sotuvchi-konsultantisiz.
+      Mijozingizning ismi: ${formData.name}. Unga hurmat bilan, ismi orqali murojaat qiling.
+      Muloqot tili: O'zbek tili. Mijoz bilan doimo "siz"lab, juda do'stona va iliq ohangda gaplashing.
       
-      Bizdagi mavjud mahsulotlar:
+      Bizdagi mavjud mahsulotlar va katalog ma'lumotlari:
       ${productContext}
 
-      Qoidalaringiz:
-      1. Faqat yuqoridagi mahsulotlarni tavsiya qiling.
-      2. Javoblaringiz juda qisqa bo'lsin, 1-2 gap yetarli. Oddiy inson kabi yozing.
-      3. Hech qachon *, **, #, - kabi belgilar ishlatmang. Faqat oddiy matn yozing, markdown formatlamasdan.
-      4. Narxlarni so'rashsa, aniq ayting.
-      5. Do'stona va tabiiy gaplashing, robot kabi emas.
+      Sizning asosiy vazifalaringiz va qoidalaringiz:
+      1. Faqat yuqorida ko'rsatilgan mahsulotlarni tavsiya qiling va ular haqida ma'lumot bering. Do'konda yo'q mahsulotlarni to'qib chiqarmang.
+      2. Javoblaringiz juda qisqa, aniq va lutfan boy bo'lsin (1-2 gapdan oshmasin). Mijoz ko'p matn o'qishni yoqtirmaydi, oddiy va jonli insondek yozing.
+      3. Hech qachon *, **, #, -, [ ], ( ) kabi markdown belgilarini ishlatmang. Faqat toza matn yozing, chunki bu matn ovozli (TTS) o'qiladi!
+      4. Mijoz biror mahsulot narxini yoki xususiyatini so'rasa, narxlarni aniq va to'liq ko'rsatib bering.
+      5. Aqlli sotuvchi (Cross-selling/Up-selling) bo'ling: Masalan, agar mijoz paket so'rasa, unga mos keladigan boshqa bir martalik idishlar yoki konteynerlarni ham muloyimlik bilan taklif qiling.
+      6. Do'stona, tabiiy va hayotiy gaplashing. Har bir javobingiz mijozga yordam berish istagingizni ko'rsatib tursin.
     `;
   };
 

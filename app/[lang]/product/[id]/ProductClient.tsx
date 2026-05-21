@@ -4,6 +4,7 @@ import { useGlobalData } from '../../../../context/GlobalContext';
 import ProductDetail from '../../../../components/ProductDetail';
 import { useRouter, useParams } from 'next/navigation';
 import { ProductDetailSkeleton } from '../../../../components/Skeleton';
+import { productSlug } from '../../../../lib/slugify';
 
 export default function ProductClient({ id }: { id: string }) {
   const { products, categories, isLoading } = useGlobalData();
@@ -25,5 +26,15 @@ export default function ProductClient({ id }: { id: string }) {
     return <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center">Mahsulot topilmadi</div>;
   }
 
-  return <ProductDetail product={product} allProducts={products} categories={categories} onProductSelect={(pid) => router.push(`/${lang}/product/${pid}`)} onBack={() => router.push(`/${lang}`)} onCheckout={() => router.push(`/${lang}/checkout`)} />;
+  const handleProductSelect = (pid: number) => {
+    const targetProduct = products.find(p => p.id === pid);
+    if (targetProduct) {
+      const activeLang = String(lang || 'uz');
+      router.push(`/${activeLang}/product/${productSlug(targetProduct, activeLang)}`);
+    } else {
+      router.push(`/${lang}/product/${pid}`);
+    }
+  };
+
+  return <ProductDetail product={product} allProducts={products} categories={categories} onProductSelect={handleProductSelect} onBack={() => router.push(`/${lang}`)} onCheckout={() => router.push(`/${lang}/checkout`)} />;
 }

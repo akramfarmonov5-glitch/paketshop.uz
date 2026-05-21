@@ -13,6 +13,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { getCategorySlug } from '../../lib/categoryUtils';
 import * as fpixel from '../../lib/fpixel';
 import { getLocalizedText } from '../../lib/i18nUtils';
+import { productSlug } from '../../lib/slugify';
 
 export default function HomePage() {
   const { products, categories, heroContent, blogPosts, isLoading } = useGlobalData();
@@ -35,8 +36,13 @@ export default function HomePage() {
   };
 
   const navigateToProduct = (id: number) => {
-    // Navigate via id (in future map to slug)
-    router.push(`/${lang}/product/${id}`);
+    const product = products.find(p => p.id === id);
+    if (product) {
+      const activeLang = String(lang || 'uz');
+      router.push(`/${activeLang}/product/${productSlug(product, activeLang)}`);
+    } else {
+      router.push(`/${lang}/product/${id}`);
+    }
   };
 
   const navigateToBlogPost = (id: number) => {
