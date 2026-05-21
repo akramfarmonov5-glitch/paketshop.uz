@@ -289,8 +289,8 @@ ${deliveryInfo}
         fetch('/api/sms/notify-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId })
-        }).catch(err => console.error("Failed to trigger cash order SMS:", err));
+        body: JSON.stringify({ orderId, phone: formData.phone })
+      }).catch(err => console.error("Failed to trigger cash order SMS:", err));
 
         setTimeout(() => completeOrder(orderId), 1500);
       }

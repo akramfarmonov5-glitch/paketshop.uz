@@ -5,6 +5,12 @@ import { checkRateLimit } from '@/lib/rateLimit';
 
 const notifiedOrders = new Set<string>();
 
+function normalizePhone(phone: unknown): string {
+  const digits = String(phone || '').replace(/[^0-9]/g, '');
+  if (digits.length === 9) return `998${digits}`;
+  return digits;
+}
+
 export async function POST(request: NextRequest) {
   // 1. Get client IP address
   const ip = (request as any).ip || request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
@@ -19,10 +25,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { orderId } = await request.json();
+  const { orderId, phone } = await request.json();
 
-  if (!orderId) {
-    return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+  if (!orderId || !phone) {
+    return NextResponse.json({ error: 'Order ID and phone are required' }, { status: 400 });
   }
 
   // 3. Prevent duplicate notifications for the same order ID
@@ -39,6 +45,10 @@ export async function POST(request: NextRequest) {
 
     if (orderError || !order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    if (normalizePhone(order.phone) !== normalizePhone(phone)) {
+      return NextResponse.json({ error: 'Order verification failed' }, { status: 403 });
     }
 
     // Trigger SMS notification for Cash purchases

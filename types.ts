@@ -63,7 +63,13 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
-export type OrderStatus = 'Kutilmoqda' | 'To\'landi' | 'Yetkazilmoqda' | 'Yakunlandi';
+export type OrderStatus =
+  | 'Kutilmoqda'
+  | 'To\'landi'
+  | 'Tasdiqlandi'
+  | 'Yetkazilmoqda'
+  | 'Yakunlandi'
+  | 'Bekor qilindi';
 
 export interface OrderItem {
   id?: number;
@@ -79,7 +85,7 @@ export interface Order {
   total: number;
   status: OrderStatus;
   date: string;
-  paymentMethod: 'Paynet' | 'Naqd';
+  paymentMethod: 'Click' | 'Payme' | 'Paynet' | 'Naqd';
   items?: OrderItem[];
   created_at?: string;
 }

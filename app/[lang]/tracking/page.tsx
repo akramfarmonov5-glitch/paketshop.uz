@@ -1,8 +1,11 @@
 'use client';
 import OrderTracker from '../../../components/OrderTracker';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function TrackingPage() {
   const router = useRouter();
-  return <OrderTracker onBack={() => router.push('/')} />;
+  const params = useParams();
+  const lang = String(params?.lang || 'uz');
+
+  return <OrderTracker onBack={() => router.push(`/${lang}`)} />;
 }
