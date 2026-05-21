@@ -197,7 +197,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                    placeholder="{t('enter_name_placeholder')}"
+                    placeholder={t('enter_name_placeholder')}
                   />
                 </div>
                 
@@ -232,7 +232,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors resize-none ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                  placeholder="{t('comment_placeholder')}"
+                  placeholder={t('comment_placeholder')}
                 />
               </div>
 

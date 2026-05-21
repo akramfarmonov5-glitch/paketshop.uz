@@ -11,6 +11,33 @@ const AdminLeads: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  async function fetchLeads() {
+    setLoading(true);
+    
+    if (!hasSupabaseCredentials) {
+        setLeads([
+            { id: '1', name: 'Alisher Valiyev', phone: '90 123 45 67', created_at: new Date().toISOString() },
+            { id: '2', name: 'Zarina Karimova', phone: '99 876 54 32', created_at: new Date(Date.now() - 86400000).toISOString() },
+        ]);
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('leads')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        setLeads(data || []);
+    } catch (error) {
+        console.error("Error fetching leads:", error);
+    } finally {
+        setLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchLeads();
 
@@ -42,33 +69,6 @@ const AdminLeads: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const fetchLeads = async () => {
-    setLoading(true);
-    
-    if (!hasSupabaseCredentials) {
-        setLeads([
-            { id: '1', name: 'Alisher Valiyev', phone: '90 123 45 67', created_at: new Date().toISOString() },
-            { id: '2', name: 'Zarina Karimova', phone: '99 876 54 32', created_at: new Date(Date.now() - 86400000).toISOString() },
-        ]);
-        setLoading(false);
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('leads')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        setLeads(data || []);
-    } catch (error) {
-        console.error("Error fetching leads:", error);
-    } finally {
-        setLoading(false);
-    }
-  };
 
   const deleteLead = async (id: string) => {
     try {

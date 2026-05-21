@@ -47,7 +47,6 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
 
     const updateSocialLink = (index: number, field: keyof SocialLink, value: string) => {
         const newItems = [...formData.socialLinks];
-        // @ts-ignore
         newItems[index] = { ...newItems[index], [field]: value };
         setFormData(prev => ({ ...prev, socialLinks: newItems }));
     };

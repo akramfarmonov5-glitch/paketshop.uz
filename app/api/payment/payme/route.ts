@@ -32,7 +32,16 @@ export async function POST(request: NextRequest) {
   const decodedAuth = Buffer.from(base64Auth, 'base64').toString('ascii');
   const [username, password] = decodedAuth.split(':');
 
-  const paymeSecret = process.env.PAYME_SECRET_KEY || 'sandbox_secret';
+  const paymeSecret = process.env.PAYME_SECRET_KEY;
+  if (!paymeSecret) {
+    console.error("PAYME_SECRET_KEY is missing on the server");
+    return NextResponse.json({
+      jsonrpc: '2.0',
+      id,
+      error: { code: -32400, message: 'System error (Misconfigured secret key)' }
+    }, { status: 200 });
+  }
+
   if (!safeEqual(username || '', 'Paycom') || !safeEqual(password || '', paymeSecret)) {
     return NextResponse.json({
       jsonrpc: '2.0',

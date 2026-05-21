@@ -7,8 +7,8 @@ interface CloudinaryUploadProps {
     label?: string;
 }
 
-const CLOUD_NAME = 'daazevmhg';
-const UPLOAD_PRESET = 'unsigned_preset';
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'daazevmhg';
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'unsigned_preset';
 
 const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
     onUpload,

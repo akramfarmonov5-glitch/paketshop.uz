@@ -9,6 +9,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing order id or status' }, { status: 400 });
   }
 
+  // Server-side auth check
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized (Missing token)' }, { status: 401 });
+  }
+
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized (Invalid token)' }, { status: 401 });
+  }
+
+  const { data: adminData, error: adminError } = await supabaseAdmin
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (adminError || !adminData) {
+    return NextResponse.json({ error: 'Forbidden (Admin role required)' }, { status: 403 });
+  }
+
   try {
     // 1. Fetch the order details first to know the customer information
     const { data: order, error: fetchError } = await supabaseAdmin

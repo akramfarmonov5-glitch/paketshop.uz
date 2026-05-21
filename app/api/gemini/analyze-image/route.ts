@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fetch from 'node-fetch';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+  const ip = (req as any).ip || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  const rateLimit = checkRateLimit(`gemini-image:${ip}`, 5, 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Siz juda ko'p so'rov yubordingiz. Iltimos, birozdan keyin qayta urining." },
+      { status: 429 }
+    );
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 
@@ -22,6 +33,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // SSRF Domain Protection
+    try {
+      const parsedUrl = new URL(imageUrl);
+      const hostname = parsedUrl.hostname;
+      const isValidDomain = hostname === 'cloudinary.com' || hostname.endsWith('.cloudinary.com');
+      
+      if (!isValidDomain) {
+        return NextResponse.json(
+          { error: "Rasm manzili faqat Cloudinary platformasidan bo'lishi kerak." },
+          { status: 400 }
+        );
+      }
+    } catch (urlError) {
+      return NextResponse.json(
+        { error: "Rasm manzili (URL) noto'g'ri." },
+        { status: 400 }
+      );
+    }
+
     console.log(`[AI Image Analyzer] Rasm tahlil qilinmoqda: ${imageUrl}`);
 
     // 1. Rasmni havola orqali yuklab olib, buffer va base64 formatiga o'tkazish
@@ -30,9 +60,33 @@ export async function POST(req: NextRequest) {
       throw new Error(`Rasm yuklab olishda xatolik: ${response.status} ${response.statusText}`);
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const base64Image = Buffer.from(arrayBuffer).toString('base64');
+    // Check content-type header
     const mimeType = response.headers.get('content-type') || 'image/jpeg';
+    if (!mimeType.startsWith('image/')) {
+      return NextResponse.json(
+        { error: "Faqat rasm fayllari qabul qilinadi." },
+        { status: 400 }
+      );
+    }
+
+    // Check content-length header
+    const contentLength = response.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Rasm hajmi juda katta. Maksimal hajm 10MB." },
+        { status: 400 }
+      );
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    if (arrayBuffer.byteLength > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Rasm hajmi juda katta. Maksimal hajm 10MB." },
+        { status: 400 }
+      );
+    }
+
+    const base64Image = Buffer.from(arrayBuffer).toString('base64');
 
     // 2. GoogleGenAI yordamida Gemini multimodal so'rovini yuborish
     const { GoogleGenAI } = await import("@google/genai");

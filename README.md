@@ -1,20 +1,22 @@
 # PaketShop.uz
 
-Vite + React + Supabase asosidagi e-commerce loyiha.
+Next.js App Router + Supabase + Tailwind CSS + Gemini AI asosidagi zamonaviy e-commerce loyiha.
 
 ## Run locally
 
 1. `npm install`
-2. `.env.local` faylida frontend uchun envlarni sozlang:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_KEY`
-3. Server-side envlarni Vercel yoki lokal server muhitingizga qo'shing:
-   - `GEMINI_API_KEY`
-   - `TELEGRAM_BOT_TOKEN`
-   - `TELEGRAM_CHAT_ID`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - ixtiyoriy: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
-4. `npm run dev`
+2. `.env.local` faylida frontend va backend uchun env o'zgaruvchilarini sozlang:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Supabase loyihasining URL manzili
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonim kaliti
+   - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` - Cloudinary bulut nomi (ixtiyoriy, fallback bor)
+   - `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` - Cloudinary yuklash preset (ixtiyoriy, fallback bor)
+   - `GEMINI_API_KEY` - Gemini AI API kaliti
+   - `TELEGRAM_BOT_TOKEN` - Telegram bot tokeni (buyurtma bildirishnomalari uchun)
+   - `TELEGRAM_CHAT_ID` - Telegram kanal/chat ID
+   - `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin/service role kaliti (xavfsiz API amallari uchun)
+   - `CLICK_SECRET_KEY` - Click to'lov webhook signaturasi kaliti
+   - `PAYME_SECRET_KEY` - Payme to'lov webhook basic authorization kaliti
+3. `npm run dev`
 
 ## Supabase
 

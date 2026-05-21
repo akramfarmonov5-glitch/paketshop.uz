@@ -4,12 +4,33 @@ import { Clock, CheckCircle, Truck, Package, Search, Download, Trash2 } from 'lu
 
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { playNotificationSound } from '../../lib/admin';
 
 const AdminOrders: React.FC = () => {
   const { showToast } = useToast();
+  const { session } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  async function fetchOrders() {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        setOrders(data as Order[]);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   React.useEffect(() => {
     fetchOrders();
@@ -46,25 +67,6 @@ const AdminOrders: React.FC = () => {
     };
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        setOrders(data as Order[]);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case 'Kutilmoqda': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
@@ -96,7 +98,10 @@ const AdminOrders: React.FC = () => {
     try {
       const response = await fetch('/api/orders/update-status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`
+        },
         body: JSON.stringify({ id, status: newStatus })
       });
 

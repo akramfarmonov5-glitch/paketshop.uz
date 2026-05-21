@@ -11,6 +11,13 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
   const [orders, setOrders] = useState<Order[]>([]);
 
+  async function fetchData() {
+    const { data: ordersData } = await supabase.from('orders').select('*');
+    if (ordersData) {
+      setOrders(ordersData as Order[]);
+    }
+  }
+
   useEffect(() => {
     fetchData();
 
@@ -43,13 +50,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const fetchData = async () => {
-    const { data: ordersData } = await supabase.from('orders').select('*');
-    if (ordersData) {
-      setOrders(ordersData as Order[]);
-    }
-  };
 
   const totalSales = orders.reduce((acc, order) => acc + Number(order.total || 0), 0);
 

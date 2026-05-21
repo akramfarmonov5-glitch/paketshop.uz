@@ -15,7 +15,11 @@ export async function POST(request: NextRequest) {
   const sign_time = params.sign_time;
   const sign_string = params.sign_string;
 
-  const secret_key = process.env.CLICK_SECRET_KEY || 'sandbox_secret';
+  const secret_key = process.env.CLICK_SECRET_KEY;
+  if (!secret_key) {
+    console.error("CLICK_SECRET_KEY is missing on the server");
+    return NextResponse.json({ error: -8, error_note: 'Internal server error (Misconfigured secret key)' }, { status: 500 });
+  }
 
   const raw_sign = `${click_trans_id}${service_id}${click_paydoc_id}${merchant_trans_id}${amount}${action}${sign_time}${secret_key}`;
   const my_sign = crypto.createHash('md5').update(raw_sign).digest('hex');

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.1-flash-lite';
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
@@ -23,6 +24,15 @@ function createWavHeader(dataLength: number, sampleRate = 24000) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = (req as any).ip || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  const rateLimit = checkRateLimit(`gemini:${ip}`, 10, 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Siz juda ko'p so'rov yubordingiz. Iltimos, birozdan keyin qayta urining." },
+      { status: 429 }
+    );
+  }
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {

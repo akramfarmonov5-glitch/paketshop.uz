@@ -36,7 +36,7 @@ export default function ClientLayout({ children, lang }: { children: React.React
   const hideNavAndFooter = isCheckout || isAdmin || isTracking;
   const hideFooter = hideNavAndFooter || isBlogPost || isWishlist;
 
-  const navigateToHome = () => router.push('/');
+  const navigateToHome = () => router.push(`/${lang || 'uz'}`);
   const navigateToProduct = (id: number) => {
     const product = products.find(p => p.id === id);
     if (product) {
@@ -44,13 +44,13 @@ export default function ClientLayout({ children, lang }: { children: React.React
       router.push(`/${activeLang}/product/${productSlug(product, activeLang)}`);
     }
   };
-  const navigateToWishlist = () => router.push('/wishlist');
-  const navigateToTracking = () => router.push('/tracking');
-  const navigateToAdmin = () => router.push('/admin');
+  const navigateToWishlist = () => router.push(`/${lang || 'uz'}/wishlist`);
+  const navigateToTracking = () => router.push(`/${lang || 'uz'}/tracking`);
+  const navigateToAdmin = () => router.push(`/${lang || 'uz'}/admin`);
 
   const handleProfileClick = () => {
     if (user) {
-      router.push('/profile');
+      router.push(`/${lang || 'uz'}/profile`);
     } else {
       setIsAuthModalOpen(true);
     }
@@ -73,7 +73,7 @@ export default function ClientLayout({ children, lang }: { children: React.React
 
       {children}
 
-      {!isAdmin && <CartSidebar onCheckout={() => router.push('/checkout')} />}
+      {!isAdmin && <CartSidebar onCheckout={() => router.push(`/${lang || 'uz'}/checkout`)} />}
 
       {!hideNavAndFooter && (
         <MobileNav
