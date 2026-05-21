@@ -4,6 +4,7 @@ import { Clock, CheckCircle, Truck, Package, Search, Download, Trash2 } from 'lu
 
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import { playNotificationSound } from '../../lib/admin';
 
 const AdminOrders: React.FC = () => {
   const { showToast } = useToast();
@@ -12,6 +13,37 @@ const AdminOrders: React.FC = () => {
 
   React.useEffect(() => {
     fetchOrders();
+
+    const channel = supabase
+      .channel('admin-orders-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order;
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === newOrder.id)) return prev;
+              return [newOrder, ...prev];
+            });
+            showToast(`Yangi buyurtma keldi! (${newOrder.customerName || ''})`, 'success');
+            playNotificationSound();
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as Order;
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id;
+            setOrders((prev) => prev.filter((o) => o.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchOrders = async () => {

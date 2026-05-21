@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import { Category } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -59,12 +60,13 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({ categories, onSelectCategor
             >
               {/* Image Background */}
               <div className="absolute inset-0">
-                <img
+                <Image
                   src={category.image}
                   alt={getLocalizedText(category.name, lang)}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  fill
+                  sizes={index === 0 ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 33vw, 25vw"}
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  priority={index === 0}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
               </div>

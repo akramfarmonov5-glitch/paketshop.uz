@@ -3,6 +3,7 @@ import { Users, Phone, Calendar, Search, MessageSquare, Trash2 } from 'lucide-re
 import { ChatLead } from '../../types';
 import { hasSupabaseCredentials, supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import { playNotificationSound } from '../../lib/admin';
 
 const AdminLeads: React.FC = () => {
   const { showToast } = useToast();
@@ -12,6 +13,34 @@ const AdminLeads: React.FC = () => {
 
   useEffect(() => {
     fetchLeads();
+
+    if (!hasSupabaseCredentials) return;
+
+    const channel = supabase
+      .channel('admin-leads-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leads' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newLead = payload.new as ChatLead;
+            setLeads((prev) => {
+              if (prev.some((l) => l.id === newLead.id)) return prev;
+              return [newLead, ...prev];
+            });
+            showToast(`Yangi qiziqqan mijoz (lead) qo'shildi! (${newLead.name})`, 'success');
+            playNotificationSound();
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id;
+            setLeads((prev) => prev.filter((l) => l.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchLeads = async () => {

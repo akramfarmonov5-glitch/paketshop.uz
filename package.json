@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "audit:prod": "npm audit --omit=dev"
+    "audit:prod": "npm audit --omit=dev",
+    "verify": "node scratch/execute-actions.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.35.0",

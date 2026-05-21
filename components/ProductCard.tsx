@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Heart } from 'lucide-react';
+import Image from 'next/image';
 import { Category, Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -51,12 +52,13 @@ const handleAddToCart = (e: React.MouseEvent) => {
         onClick={onNavigate}
         className="relative aspect-[4/5] w-full overflow-hidden bg-gray-900 cursor-pointer"
       >
-        <img
+        <Image
           src={product.image}
           alt={getLocalizedText(product.name, lang)}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          priority={false}
         />
 
         {/* Badges */}

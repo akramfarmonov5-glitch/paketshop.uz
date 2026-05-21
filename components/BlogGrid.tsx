@@ -2,6 +2,7 @@ import React from 'react';
 import { BlogPost } from '../types';
 import { Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BlogSkeleton } from './Skeleton';
@@ -59,10 +60,13 @@ const BlogGrid: React.FC<BlogGridProps> = ({ posts, onPostClick, isLoading }) =>
             >
               <div className="relative aspect-[16/10] overflow-hidden rounded-2xl mb-6">
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
-                <img
+                <Image
                   src={post.image}
                   alt={getLocalizedText(post.title, lang)}
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover transform group-hover:scale-105 transition-transform duration-700"
+                  priority={false}
                 />
                 <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs text-white flex items-center gap-1.5 border border-white/10">
                   <Calendar size={12} className="text-gold-400" />

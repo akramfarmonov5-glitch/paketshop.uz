@@ -1,10 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight } from 'lucide-react';
+import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff } from 'lucide-react';
 import { Product } from '../types';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Message {
   role: 'user' | 'model';
@@ -30,6 +31,59 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const { lang } = useLanguage();
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      
+      rec.onstart = () => {
+        setIsListening(true);
+      };
+      
+      rec.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+        }
+      };
+      
+      rec.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+      
+      rec.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = rec;
+    }
+  }, [lang]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Kechirasiz, ushbu brauzerda ovozli kiritish qo'llab-quvvatlanmaydi.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.lang = lang === 'uz' ? 'uz-UZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -297,8 +351,19 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyPress}
                       placeholder="Xabaringizni yozing..."
-                      className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-12 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
+                      className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-24 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
                     />
+                    <button
+                      onClick={toggleListening}
+                      className={`absolute right-12 p-2 rounded-full transition-all duration-300 ${
+                        isListening
+                          ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-white/10'
+                      }`}
+                      title="Ovozli kiritish"
+                    >
+                      {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                    </button>
                     <button
                       onClick={handleSend}
                       disabled={!input.trim() || isLoading}

@@ -10,20 +10,48 @@ interface AdminDashboardProps {
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [totalSales, setTotalSales] = useState(0);
 
   useEffect(() => {
     fetchData();
+
+    const channel = supabase
+      .channel('admin-dashboard-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order;
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === newOrder.id)) return prev;
+              return [newOrder, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as Order;
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id;
+            setOrders((prev) => prev.filter((o) => o.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchData = async () => {
     const { data: ordersData } = await supabase.from('orders').select('*');
     if (ordersData) {
       setOrders(ordersData as Order[]);
-      const total = ordersData.reduce((acc, order) => acc + Number(order.total || 0), 0);
-      setTotalSales(total);
     }
   };
+
+  const totalSales = orders.reduce((acc, order) => acc + Number(order.total || 0), 0);
 
   const processSalesData = () => {
       const last7Days = Array.from({length: 7}, (_, i) => {

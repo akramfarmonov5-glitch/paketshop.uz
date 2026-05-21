@@ -198,8 +198,31 @@ function getLocalizedText(text, lang) {
 
 function slugify(text) {
   if (!text) return '';
-  return text.toString().toLowerCase().trim()
-    .replace(/['`']/g, '')
+  
+  const mapping: Record<string, string> = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'ў': 'o', 'қ': 'q', 'ғ': 'g', 'ҳ': 'h',
+    'А': 'a', 'Б': 'b', 'В': 'v', 'Г': 'g', 'Д': 'd', 'Е': 'e', 'Ё': 'yo',
+    'Ж': 'zh', 'З': 'z', 'И': 'i', 'Й': 'y', 'К': 'k', 'Л': 'l', 'М': 'm',
+    'Н': 'n', 'О': 'o', 'П': 'p', 'Р': 'r', 'С': 's', 'Т': 't', 'У': 'u',
+    'Ф': 'f', 'Х': 'kh', 'Ц': 'ts', 'Ч': 'ch', 'Ш': 'sh', 'Щ': 'shch',
+    'Ъ': '', 'Ы': 'y', 'Ь': '', 'Э': 'e', 'Ю': 'yu', 'Я': 'ya',
+    'Ў': 'o', 'Қ': 'q', 'Ғ': 'g', 'Ҳ': 'h',
+    "o'": 'o', "g'": 'g', "o’": 'o', "g’": 'g', "o`": 'o', "g`": 'g',
+    'O\'': 'o', 'G\'': 'g', 'O’': 'o', 'G’': 'g', 'O`': 'o', 'G`': 'g'
+  };
+
+  let str = text.toString();
+  for (const [cyr, lat] of Object.entries(mapping)) {
+    str = str.split(cyr).join(lat);
+  }
+
+  return str.toLowerCase().trim()
+    .replace(/['`’‘"]/g, '')
     .replace(/[^\w\s-]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/-+/g, '-')

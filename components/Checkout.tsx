@@ -29,6 +29,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   const [paymentMethod, setPaymentMethod] = useState<'click' | 'payme' | 'paynet' | 'cash'>('click');
   const [showPaynetModal, setShowPaynetModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [activeOrderId, setActiveOrderId] = useState<string>('');
 
   const [promoCode, setPromoCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -249,6 +250,7 @@ ${deliveryInfo}
     setIsLoading(true);
 
     const orderId = `ORD-${Date.now()}`;
+    setActiveOrderId(orderId);
 
     try {
       // 1. Save order to DB first so it exists for webhooks
@@ -555,7 +557,7 @@ ${deliveryInfo}
                 <img src={PAYNET_QR_IMAGE} alt="Paynet QR Code" className="w-48 h-48 object-contain" onError={(e) => { e.currentTarget.src = QR_FALLBACK; }} />
               </div>
               <div className="flex flex-col gap-3 w-full">
-                <button onClick={completeOrder} className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors">{t('checkout_paynet_btn')}</button>
+                <button onClick={() => completeOrder(activeOrderId)} className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors">{t('checkout_paynet_btn')}</button>
                 <a href={PAYNET_URL} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm"><ExternalLink size={16} /> {t('checkout_paynet_link')}</a>
               </div>
             </motion.div>
