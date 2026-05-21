@@ -1,4 +1,14 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/generate-posts?secret=paketshop_auto_blog_2026_secret",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/generate-posts?secret=paketshop_auto_blog_2026_secret",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
