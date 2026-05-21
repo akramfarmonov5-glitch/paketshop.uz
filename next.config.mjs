@@ -65,10 +65,6 @@ const nextConfig = {
   turbopack: {
     root: rootDir,
   },
-  // Ignore typescript and eslint errors during build for smooth migration
-  typescript: {
-    ignoreBuildErrors: true,
-  },
 };
 
 export default nextConfig;
