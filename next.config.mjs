@@ -30,6 +30,34 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'zamin.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qalampir.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.qalampir.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'kun.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.kun.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'daryo.uz',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.daryo.uz',
+      },
+      {
+        protocol: 'https',
         hostname: 'i.ytimg.com',
       },
     ],
