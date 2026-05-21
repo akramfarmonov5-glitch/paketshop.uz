@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { message, history, systemInstruction, jsonMode } = await req.json();
-    
+    const { message, history, systemInstruction, jsonMode, voiceMode } = await req.json();
+
     if (!message) {
       return NextResponse.json({ error: 'Message content is required' }, { status: 400 });
     }
@@ -52,38 +52,40 @@ export async function POST(req: NextRequest) {
     const textResult = await chat.sendMessage({ message });
     const text = textResult.text || "Uzr, tushunmadim. Qayta so'ray olasizmi?";
 
-    // 2. TTS Generation
+    // 2. TTS Generation ??? faqat ovozli rejimda chaqiriladi
     let audioBase64 = null;
-    try {
-      const audioResponse = await ai.models.generateContent({
-        model: TTS_MODEL,
-        contents: [{ role: 'user', parts: [{ text: text }] }],
-        config: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: 'Puck'
+    if (voiceMode) {
+      try {
+        const audioResponse = await ai.models.generateContent({
+          model: TTS_MODEL,
+          contents: [{ role: 'user', parts: [{ text: text }] }],
+          config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: 'Puck'
+                }
               }
             }
           }
-        }
-      });
+        });
 
-      const candidate = audioResponse.candidates?.[0];
-      if (candidate?.content?.parts) {
-        for (const part of candidate.content.parts) {
-          if (part.inlineData) {
-            const pcmBuffer = Buffer.from(part.inlineData.data, 'base64');
-            const wavHeader = createWavHeader(pcmBuffer.length, 24000);
-            const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
-            audioBase64 = wavBuffer.toString('base64');
-            break;
+        const candidate = audioResponse.candidates?.[0];
+        if (candidate?.content?.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.inlineData) {
+              const pcmBuffer = Buffer.from(part.inlineData.data, 'base64');
+              const wavHeader = createWavHeader(pcmBuffer.length, 24000);
+              const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
+              audioBase64 = wavBuffer.toString('base64');
+              break;
+            }
           }
         }
+      } catch (ttsError) {
+        console.error("TTS Generation Error:", ttsError);
       }
-    } catch (ttsError) {
-      console.error("TTS Generation Error:", ttsError);
     }
 
     return NextResponse.json({ text, audioBase64 });

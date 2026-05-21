@@ -1,5 +1,13 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -25,7 +33,7 @@ export async function POST(request: NextRequest) {
   const [username, password] = decodedAuth.split(':');
 
   const paymeSecret = process.env.PAYME_SECRET_KEY || 'sandbox_secret';
-  if (username !== 'Paycom' || password !== paymeSecret) {
+  if (!safeEqual(username || '', 'Paycom') || !safeEqual(password || '', paymeSecret)) {
     return NextResponse.json({
       jsonrpc: '2.0',
       id,

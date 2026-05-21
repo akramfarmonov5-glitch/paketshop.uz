@@ -25,3 +25,17 @@ tsconfig.tsbuildinfo
 *.sw?
 
 .vercel
+
+# Local env files (contain secrets ??? must never be committed)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Local one-off test/debug scripts in scratch/ (lokal ad-hoc skriptlar)
+scratch/test_*.mjs
+scratch/test_*.js
+scratch/check_*.mjs
+scratch/temp_*.mjs

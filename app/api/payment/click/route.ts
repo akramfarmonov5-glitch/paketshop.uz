@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
   const raw_sign = `${click_trans_id}${service_id}${click_paydoc_id}${merchant_trans_id}${amount}${action}${sign_time}${secret_key}`;
   const my_sign = crypto.createHash('md5').update(raw_sign).digest('hex');
 
-  if (my_sign !== sign_string) {
+  const my_sign_buf = Buffer.from(my_sign, 'hex');
+  const their_sign_buf = Buffer.from(String(sign_string || ''), 'hex');
+  const signValid =
+    my_sign_buf.length === their_sign_buf.length &&
+    crypto.timingSafeEqual(my_sign_buf, their_sign_buf);
+
+  if (!signValid) {
     return NextResponse.json({ error: -1, error_note: 'Sign string mismatch' }, { status: 200 });
   }
 

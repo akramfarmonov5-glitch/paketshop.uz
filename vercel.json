@@ -1,18 +1,9 @@
 {
   "crons": [
     {
-      "path": "/api/cron/generate-posts?secret=paketshop_auto_blog_2026_secret",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/generate-posts?secret=paketshop_auto_blog_2026_secret",
-      "schedule": "0 12 * * *"
+      "path": "/api/cron/generate-posts",
+      "schedule": "0 6 * * 1,3,5"
     }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/catalog.xml", "destination": "/api/catalog" }
   ],
   "headers": [
     {
@@ -21,13 +12,6 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" }
-      ]
-    },
-    {
-      "source": "/sitemap.xml",
-      "headers": [
-        { "key": "Content-Type", "value": "application/xml" },
-        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
       ]
     }
   ]

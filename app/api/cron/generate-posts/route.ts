@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { generateSEOPost } from '../../../../lib/gemini';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
@@ -13,22 +14,59 @@ const TOPICS = [
   "Kuryerlik, kargo va yetkazib berish xizmatlari uchun yuklarni mustahkam qadoqlash"
 ];
 
-// Loyihada next.config.mjs da ruxsat berilgan rasm manbalaridan foydalanamiz
-const IMAGES = [
-  "https://i.ytimg.com/vi/bXq9pP3vK0I/maxresdefault.jpg"
-];
+// Kategoriyaga qarab Unsplash rasm pool'lari (next.config.mjs da ruxsat etilgan)
+const IMAGE_POOL: Record<string, string[]> = {
+  qadoqlash: [
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1530587191325-3db32d826c18?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop',
+  ],
+  biznes: [
+    'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=1200&auto=format&fit=crop',
+  ],
+  ekologiya: [
+    'https://images.unsplash.com/photo-1547996160-71df45082e0e?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1530587191325-3db32d826c18?q=80&w=1200&auto=format&fit=crop',
+  ],
+  'uy-ruzgor': [
+    'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1523293182086-7651a899d37f?q=80&w=1200&auto=format&fit=crop',
+  ],
+};
+
+const FALLBACK_POOL = IMAGE_POOL.qadoqlash;
+
+function pickImage(category: string | undefined): string {
+  const pool = (category && IMAGE_POOL[category]) || FALLBACK_POOL;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 export async function GET(req: Request) {
-  // 1. Xavfsizlik tekshiruvi (Authorization Header yoki Query Secret)
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('CRON_SECRET muhit o\'zgaruvchisi sozlanmagan');
+    return NextResponse.json(
+      { error: 'Server xato sozlangan' },
+      { status: 500 }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get('secret');
-  
   const authHeader = req.headers.get('authorization');
   const bearerToken = authHeader ? authHeader.split(' ')[1] : null;
-  
-  const cronSecret = process.env.CRON_SECRET || 'paketshop_auto_blog_2026_secret';
-  
-  if (secret !== cronSecret && bearerToken !== cronSecret) {
+
+  const provided = bearerToken || secret || '';
+  const providedBuf = Buffer.from(provided);
+  const expectedBuf = Buffer.from(cronSecret);
+  const valid =
+    providedBuf.length === expectedBuf.length &&
+    crypto.timingSafeEqual(providedBuf, expectedBuf);
+
+  if (!valid) {
     return NextResponse.json(
       { error: "Ruxsat berilmadi (Noto'g'ri maxfiy kalit)" },
       { status: 401 }
@@ -39,13 +77,13 @@ export async function GET(req: Request) {
     // 2. Tasodifiy mavzu tanlash
     const randomIndex = Math.floor(Math.random() * TOPICS.length);
     const selectedTopic = TOPICS[randomIndex];
-    
-    // 3. Tasodifiy rasm tanlash
-    const image = IMAGES[0]; 
 
-    // 4. Gemini 3.1 Flash Lite orqali maqolani 3 tilda generatsiya qilish
+    // 3. Gemini 3.1 Flash Lite orqali maqolani 3 tilda generatsiya qilish
     console.log(`Gemini orqali yangi post yaratilmoqda. Mavzu: "${selectedTopic}"`);
     const generated = await generateSEOPost(selectedTopic);
+
+    // 4. Generatsiya qilingan kategoriyaga qarab rasm tanlash
+    const image = pickImage(generated.category);
 
     // 5. Bazadagi getLocalizedText funksiyasiga mos kelishi uchun JSON-string formatga o'tkazish
     const titleStr = JSON.stringify(generated.title);
