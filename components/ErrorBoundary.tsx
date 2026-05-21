@@ -1,3 +1,5 @@
+'use client';
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCcw, Home } from 'lucide-react';
 
@@ -97,7 +99,7 @@ class ErrorBoundary extends Component<Props, State> {
             </button>
           </div>
 
-          {import.meta.env?.DEV && this.state.error && (
+          {process.env.NODE_ENV === 'development' && this.state.error && (
             <div className="mt-12 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-left max-w-2xl w-full overflow-auto">
               <p className="text-red-400 font-mono text-sm whitespace-pre-wrap">
                 {this.state.error.toString()}

@@ -42,9 +42,22 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const { data: productData } = await supabase.from('products').select('*');
-        if (productData && productData.length > 0) {
-          const mappedProducts = productData.map(p => ({
+        const [
+          productsRes,
+          categoriesRes,
+          heroRes,
+          blogRes,
+          navRes,
+        ] = await Promise.all([
+          supabase.from('products').select('*'),
+          supabase.from('categories').select('*'),
+          supabase.from('hero_content').select('*').single(),
+          supabase.from('blog_posts').select('*').order('date', { ascending: false }),
+          supabase.from('navigation_settings').select('*').single(),
+        ]);
+
+        if (productsRes.data && productsRes.data.length > 0) {
+          const mappedProducts = productsRes.data.map(p => ({
             ...p,
             formattedPrice: new Intl.NumberFormat('uz-UZ').format(Number(p.price)) + ' UZS',
             shortDescription: p.description || '',
@@ -54,53 +67,44 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           setProducts(mappedProducts as Product[]);
         }
 
-        const { data: categoryData } = await supabase.from('categories').select('*');
-        if (categoryData && categoryData.length > 0) {
-          const mappedCategories = categoryData.map(c => ({
+        if (categoriesRes.data && categoriesRes.data.length > 0) {
+          const mappedCategories = categoriesRes.data.map(c => ({
             ...c,
             slug: c.slug || slugify(getLocalizedText(c.name, 'uz'))
           }));
           setCategories(mappedCategories as Category[]);
         }
 
-        try {
-          const { data: heroData } = await supabase.from('hero_content').select('*').single();
-          if (heroData) {
-            setHeroContent({
-              badge: heroData.badge || 'Yangi Mavsum',
-              title: heroData.title || 'Premium Collection',
-              description: heroData.description || '',
-              buttonText: heroData.buttonText || heroData.button_text || 'Sotib olish',
-              images: heroData.images || [],
-            });
-          }
-        } catch (e) {}
+        if (heroRes.data) {
+          const heroData = heroRes.data;
+          setHeroContent({
+            badge: heroData.badge || 'Yangi Mavsum',
+            title: heroData.title || 'Premium Collection',
+            description: heroData.description || '',
+            buttonText: heroData.buttonText || heroData.button_text || 'Sotib olish',
+            images: heroData.images || [],
+          });
+        }
 
-        try {
-          const { data: blogData } = await supabase.from('blog_posts').select('*').order('date', { ascending: false });
-          if (blogData) {
-            const mappedPosts = blogData.map((post) => ({
-              ...post,
-              seo: post.seo || {
-                title: post.seo_title || post.title,
-                description: post.seo_description || '',
-                keywords: post.seo_keywords || [],
-              },
-            }));
-            setBlogPosts(mappedPosts as BlogPost[]);
-          }
-        } catch (e) {}
+        if (blogRes.data) {
+          const mappedPosts = blogRes.data.map((post) => ({
+            ...post,
+            seo: post.seo || {
+              title: post.seo_title || post.title,
+              description: post.seo_description || '',
+              keywords: post.seo_keywords || [],
+            },
+          }));
+          setBlogPosts(mappedPosts as BlogPost[]);
+        }
 
-        try {
-          const { data: navData } = await supabase.from('navigation_settings').select('*').single();
-          if (navData) {
-            setNavigationSettings({
-              menuItems: navData.menuItems || navData.menu_items || [],
-              socialLinks: navData.socialLinks || navData.social_links || [],
-            });
-          }
-        } catch (e) {}
-
+        if (navRes.data) {
+          const navData = navRes.data;
+          setNavigationSettings({
+            menuItems: navData.menuItems || navData.menu_items || [],
+            socialLinks: navData.socialLinks || navData.social_links || [],
+          });
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

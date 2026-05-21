@@ -3,6 +3,7 @@ import ProductClient from './ProductClient';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { getCategoryDisplayName } from '../../../../lib/categoryUtils';
 import { MOCK_PRODUCTS } from '../../../../constants';
+import { fetchGlobalData } from '../../../../lib/fetchGlobalData';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string, lang: string }> }) {
   try {
@@ -59,21 +60,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     productId = parts[parts.length - 1];
   }
 
-  let product = null;
-  try {
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .maybeSingle();
-    product = data;
-  } catch (error) {
-    console.error("Schema fetch failed:", error);
-  }
-
-  if (!product) {
-    product = MOCK_PRODUCTS.find(p => p.id === Number(productId)) as any || null;
-  }
+  // Pre-fetch all products and categories using unified server data fetcher
+  const { products, categories } = await fetchGlobalData();
+  const product = products.find(p => p.id === Number(productId)) || null;
 
   const activeLang = lang || 'uz';
   const schemaMarkup = product ? {
@@ -81,7 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     "@type": "Product",
     "name": getLocalizedText(product.name, activeLang),
     "image": product.image ? [product.image] : [],
-    "description": getLocalizedText(product.description || product.shortDescription || product.name, activeLang),
+    "description": getLocalizedText(product.shortDescription || product.name, activeLang),
     "sku": String(product.id),
     "mpn": String(product.id),
     "brand": {
@@ -113,7 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }}
         />
       )}
-      <ProductClient id={id} />
+      <ProductClient id={id} initialProducts={products} initialCategories={categories} />
     </>
   );
 }

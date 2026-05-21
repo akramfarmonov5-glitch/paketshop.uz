@@ -10,6 +10,7 @@ import AuthModal from '../../components/AuthModal';
 import AIChatAssistant from '../../components/AIChatAssistant';
 import InstallPWA from '../../components/InstallPWA';
 import MetaPixel from '../../components/MetaPixel';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useGlobalData } from '../../context/GlobalContext';
@@ -56,9 +57,9 @@ export default function ClientLayout({ children, lang }: { children: React.React
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <MetaPixel />
-      
+
       {!hideNavAndFooter && (
         <Navbar
           onNavigateHome={navigateToHome}
@@ -100,6 +101,6 @@ export default function ClientLayout({ children, lang }: { children: React.React
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <InstallPWA />
-    </>
+    </ErrorBoundary>
   );
 }

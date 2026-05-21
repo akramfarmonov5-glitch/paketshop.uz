@@ -264,7 +264,8 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         body: JSON.stringify({
           message: userMessage,
           history: history,
-          systemInstruction: getSystemInstruction()
+          systemInstruction: getSystemInstruction(),
+          voiceMode: isVoiceMode
         })
       });
 

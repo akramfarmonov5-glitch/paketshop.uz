@@ -5,9 +5,20 @@ import ProductDetail from '../../../../components/ProductDetail';
 import { useRouter, useParams } from 'next/navigation';
 import { ProductDetailSkeleton } from '../../../../components/Skeleton';
 import { productSlug } from '../../../../lib/slugify';
+import { Product, Category } from '../../../../types';
 
-export default function ProductClient({ id }: { id: string }) {
-  const { products, categories, isLoading } = useGlobalData();
+interface ProductClientProps {
+  id: string;
+  initialProducts?: Product[];
+  initialCategories?: Category[];
+}
+
+export default function ProductClient({ id, initialProducts, initialCategories }: ProductClientProps) {
+  const globalData = useGlobalData();
+  const products = initialProducts || globalData.products;
+  const categories = initialCategories || globalData.categories;
+  const isLoading = initialProducts ? false : globalData.isLoading;
+  
   const router = useRouter();
   const params = useParams();
   const lang = params?.lang || 'uz';

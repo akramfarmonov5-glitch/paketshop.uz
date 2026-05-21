@@ -2,6 +2,7 @@ import { supabase } from '../../../../lib/supabaseClient';
 import BlogClient from './BlogClient';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { getBlogIdFromSlug } from '../../../../lib/slugify';
+import { fetchGlobalData } from '../../../../lib/fetchGlobalData';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
   try {
@@ -55,5 +56,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  return <BlogClient slug={slug} />;
+  const postId = getBlogIdFromSlug(slug);
+
+  let post = null;
+  if (postId) {
+    try {
+      const { data } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('id', postId)
+        .single();
+      post = data;
+    } catch (error) {
+      console.error("Blog post fetch failed, using fallback:", error);
+    }
+  }
+
+  if (!post && postId) {
+    const { blogPosts } = await fetchGlobalData();
+    post = blogPosts.find(p => p.id === postId) || null;
+  }
+
+  return <BlogClient slug={slug} initialPost={post} />;
 }
