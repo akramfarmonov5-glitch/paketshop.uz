@@ -22,6 +22,9 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [imageAnalysisResult, setImageAnalysisResult] = useState<any>(null);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
   const [formData, setFormData] = useState<any>({
     name: '',
@@ -201,6 +204,79 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const analyzeProductImage = async () => {
+    const mainImageUrl = formData.images?.[0] || formData.image;
+    if (!mainImageUrl) {
+      showToast("Iltimos, avval mahsulot rasmini yuklang.", 'warning');
+      return;
+    }
+
+    setIsAnalyzingImage(true);
+    try {
+      const response = await fetch('/api/gemini/analyze-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: mainImageUrl })
+      });
+
+      if (!response.ok) {
+        throw new Error("Rasm tahlilida xatolik yuz berdi.");
+      }
+
+      const data = await response.json();
+      if (data.success && data.analysis) {
+        setImageAnalysisResult(data.analysis);
+        setIsAnalysisModalOpen(true);
+        showToast("Rasm muvaffaqiyatli tahlil qilindi!", 'success');
+      } else {
+        throw new Error(data.error || "Tahlil natijasi topilmadi.");
+      }
+    } catch (error: any) {
+      console.error("Image Analysis Error:", error);
+      showToast("Rasm tahlilida xatolik: " + error.message, 'error');
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  };
+
+  const applyAnalysisResult = () => {
+    if (!imageAnalysisResult) return;
+
+    setFormData((prev: any) => ({
+      ...prev,
+      name: {
+        uz: imageAnalysisResult.name?.uz || prev.name?.uz || '',
+        ru: imageAnalysisResult.name?.ru || prev.name?.ru || '',
+        en: imageAnalysisResult.name?.en || prev.name?.en || '',
+      },
+      slug: {
+        uz: imageAnalysisResult.alt?.uz || prev.slug?.uz || '',
+        ru: imageAnalysisResult.alt?.ru || prev.slug?.ru || '',
+        en: imageAnalysisResult.alt?.en || prev.slug?.en || '',
+      },
+      shortDescription: {
+        uz: imageAnalysisResult.description?.uz || prev.shortDescription?.uz || '',
+        ru: imageAnalysisResult.description?.ru || prev.shortDescription?.ru || '',
+        en: imageAnalysisResult.description?.en || prev.shortDescription?.en || '',
+      },
+      specs: (imageAnalysisResult.specs || []).map((spec: any) => ({
+        label: {
+          uz: spec.label?.uz || '',
+          ru: spec.label?.ru || '',
+          en: spec.label?.en || '',
+        },
+        value: {
+          uz: spec.value?.uz || '',
+          ru: spec.value?.ru || '',
+          en: spec.value?.en || '',
+        }
+      }))
+    }));
+
+    setIsAnalysisModalOpen(false);
+    showToast("Ma'lumotlar formaga muvaffaqiyatli o'tkazildi!", 'success');
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -419,6 +495,16 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                 >
                   {isGenerating ? <div className="w-3 h-3 border-2 border-purple-400 rounded-full animate-spin border-t-transparent" /> : <Sparkles size={14} />}
                   AI To'ldirish
+                </button>
+                <button
+                  type="button"
+                  onClick={analyzeProductImage}
+                  disabled={isAnalyzingImage || (!formData.images?.[0] && !formData.image)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold hover:bg-indigo-500/20 transition-all disabled:opacity-50 animate-pulse"
+                  title="Yuklangan rasm asosida AI yordamida SEO ma'lumotlarni yaratish"
+                >
+                  {isAnalyzingImage ? <div className="w-3 h-3 border-2 border-indigo-400 rounded-full animate-spin border-t-transparent" /> : <ImageIcon size={14} />}
+                  📸 Rasm SEO Tahlili
                 </button>
               </div>
               <div className="flex items-center gap-3">
@@ -640,6 +726,75 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isAnalysisModalOpen && imageAnalysisResult && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="bg-zinc-900 border border-white/10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 shadow-2xl custom-scrollbar flex flex-col">
+            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles size={20} className="text-indigo-400" />
+                <h4 className="text-xl font-bold text-white">Rasm SEO Tahlili Natijalari</h4>
+              </div>
+              <button type="button" onClick={() => setIsAnalysisModalOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-6 overflow-y-auto pr-1">
+              <div className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
+                <p className="text-sm text-indigo-300 leading-relaxed">
+                  Gemini sun'iy intellekti mahsulot rasmini vizual tahlil qildi va 3 xil til (UZ, RU, EN) uchun quyidagi maqbul SEO matnlarini generatsiya qildi:
+                </p>
+              </div>
+
+              {(['uz', 'ru', 'en'] as const).map(l => (
+                <div key={l} className="space-y-3 p-4 bg-black/30 border border-white/5 rounded-2xl">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <span className="px-2 py-0.5 rounded bg-gold-400 text-black text-xs font-black uppercase">{l}</span>
+                    <span className="text-sm font-bold text-white">Tildagi Tavsiyalar</span>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-400"><strong className="text-gray-200">Sarlavha (Name):</strong> {imageAnalysisResult.name?.[l]}</p>
+                    <p className="text-gray-400"><strong className="text-gray-200">Rasm Alt tegi (Slug/Alt):</strong> <code className="text-indigo-300 bg-black px-1.5 py-0.5 rounded text-xs">{imageAnalysisResult.alt?.[l]}</code></p>
+                    <p className="text-gray-400"><strong className="text-gray-200">Tavsif (Description):</strong> {imageAnalysisResult.description?.[l]}</p>
+                    <p className="text-gray-400">
+                      <strong className="text-gray-200">Kalit so'zlar:</strong>{" "}
+                      {(imageAnalysisResult.keywords?.[l] || []).map((k: string, i: number) => (
+                        <span key={i} className="inline-block bg-white/5 px-2 py-0.5 rounded text-xs text-gray-300 mr-1.5 border border-white/5">#{k}</span>
+                      ))}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              <div className="space-y-3 p-4 bg-black/30 border border-white/5 rounded-2xl">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                  <span className="text-sm font-bold text-white">📋 Vizual Xususiyatlar (AI Specs)</span>
+                </div>
+                <div className="space-y-2">
+                  {imageAnalysisResult.specs?.map((spec: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-2 gap-4 text-sm border-b border-white/5 pb-1">
+                      <span className="text-gray-400">{spec.label?.uz || spec.label?.en}</span>
+                      <span className="text-white font-medium">{spec.value?.uz || spec.value?.en}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-white/5 flex gap-4 mt-6">
+              <button type="button" onClick={() => setIsAnalysisModalOpen(false)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors text-sm font-medium">
+                Bekor qilish
+              </button>
+              <button type="button" onClick={applyAnalysisResult} className="flex-1 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-500/20">
+                <Check size={18} />
+                Formaga tatbiq etish
+              </button>
+            </div>
           </div>
         </div>
       )}

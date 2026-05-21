@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff } from 'lucide-react';
+import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff, Volume2, Headphones } from 'lucide-react';
 import { Product } from '../types';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { getLocalizedText } from '../lib/i18nUtils';
@@ -36,6 +36,47 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   const recognitionRef = useRef<any>(null);
   const { lang } = useLanguage();
 
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  const isVoiceModeRef = useRef(false);
+  const isPlayingAudioRef = useRef(false);
+  const isLoadingRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync refs to avoid speech recognition closure issues
+  useEffect(() => {
+    isVoiceModeRef.current = isVoiceMode;
+  }, [isVoiceMode]);
+
+  useEffect(() => {
+    isPlayingAudioRef.current = isPlayingAudio;
+  }, [isPlayingAudio]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  // Helper methods to safely start/stop recognition
+  const startRecognition = () => {
+    if (!recognitionRef.current) return;
+    recognitionRef.current.lang = lang === 'uz' ? 'uz-UZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.warn("Speech recognition start warning:", e);
+    }
+  };
+
+  const stopRecognition = () => {
+    if (!recognitionRef.current) return;
+    try {
+      recognitionRef.current.stop();
+    } catch (e) {
+      console.warn("Speech recognition stop warning:", e);
+    }
+  };
+
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -50,7 +91,11 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       rec.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         if (transcript) {
-          setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+          if (isVoiceModeRef.current) {
+            handleSendRef.current?.(transcript);
+          } else {
+            setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+          }
         }
       };
       
@@ -61,11 +106,50 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       
       rec.onend = () => {
         setIsListening(false);
+        // If we are in voice mode and NOT playing audio and NOT loading, restart listening so the user can speak
+        if (isVoiceModeRef.current && !isPlayingAudioRef.current && !isLoadingRef.current) {
+          setTimeout(() => {
+            if (isVoiceModeRef.current && !isPlayingAudioRef.current && !isLoadingRef.current) {
+              startRecognition();
+            }
+          }, 300);
+        }
       };
       
       recognitionRef.current = rec;
     }
   }, [lang]);
+
+  // Voice mode toggle effects
+  useEffect(() => {
+    if (isVoiceMode) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsPlayingAudio(false);
+      startRecognition();
+    } else {
+      stopRecognition();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsPlayingAudio(false);
+    }
+  }, [isVoiceMode]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsVoiceMode(false);
+      stopRecognition();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsPlayingAudio(false);
+    }
+  }, [isOpen]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -76,12 +160,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     if (isListening) {
       recognitionRef.current.stop();
     } else {
-      recognitionRef.current.lang = lang === 'uz' ? 'uz-UZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
-      try {
-        recognitionRef.current.start();
-      } catch (e) {
-        console.error(e);
-      }
+      startRecognition();
     }
   };
 
@@ -162,11 +241,13 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     `;
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (overrideText?: string | React.MouseEvent) => {
+    const userMessage = (overrideText && typeof overrideText === 'string') ? overrideText : input;
+    if (!userMessage.trim()) return;
 
-    const userMessage = input;
-    setInput('');
+    if (typeof overrideText !== 'string') {
+      setInput('');
+    }
     const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
@@ -204,18 +285,61 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       if (data.audioBase64) {
         try {
           const audio = new Audio('data:audio/wav;base64,' + data.audioBase64);
-          audio.play().catch(e => console.error("Audio play error:", e));
+          audioRef.current = audio;
+          setIsPlayingAudio(true);
+          
+          audio.onended = () => {
+            setIsPlayingAudio(false);
+            audioRef.current = null;
+            if (isVoiceModeRef.current) {
+              startRecognition();
+            }
+          };
+
+          audio.onerror = () => {
+            setIsPlayingAudio(false);
+            audioRef.current = null;
+            if (isVoiceModeRef.current) {
+              startRecognition();
+            }
+          };
+
+          audio.play().catch(e => {
+            console.error("Audio play error:", e);
+            setIsPlayingAudio(false);
+            audioRef.current = null;
+            if (isVoiceModeRef.current) {
+              startRecognition();
+            }
+          });
         } catch (e) {
           console.error("Audio element error:", e);
+          setIsPlayingAudio(false);
+          if (isVoiceModeRef.current) {
+            startRecognition();
+          }
+        }
+      } else {
+        if (isVoiceModeRef.current) {
+          startRecognition();
         }
       }
     } catch (error: any) {
       console.error("Chat Error:", error);
       setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, xatolik yuz berdi: ${error.message || error}` }]);
+      if (isVoiceModeRef.current) {
+        startRecognition();
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // fresh ref for stale closure safeguard
+  const handleSendRef = useRef<any>(null);
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSend();
@@ -244,7 +368,23 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1">
+                {isRegistered && (
+                  <button
+                    onClick={() => setIsVoiceMode(!isVoiceMode)}
+                    className={`p-2 rounded-full transition-all duration-300 flex items-center justify-center relative ${
+                      isVoiceMode
+                        ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse shadow-lg shadow-red-500/30 ring-2 ring-red-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                    title={isVoiceMode ? "Ovozli rejimni o'chirish" : "Hands-free Ovozli rejimni yoqish"}
+                  >
+                    {isVoiceMode ? <Mic className="animate-bounce" size={18} /> : <MicOff size={18} />}
+                    {isVoiceMode && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-black animate-ping"></span>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
@@ -312,67 +452,137 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
               </div>
             ) : (
               <>
-                <div
-                  ref={scrollContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/20"
-                >
-                  {messages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                          ? 'bg-gold-500 text-black font-medium rounded-tr-sm'
-                          : 'bg-white/10 text-gray-200 rounded-tl-sm border border-white/5'
-                          }`}
-                      >
-                        {msg.text}
-                      </div>
+                {isVoiceMode ? (
+                  /* Premium Voice Call Overlay Visualizer */
+                  <div className="flex-1 bg-gradient-to-b from-dark-950 to-black flex flex-col items-center justify-between p-6 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.08)_0%,transparent_60%)] pointer-events-none blur-xl"></div>
+                    
+                    <div className="text-center z-10 mt-2">
+                      <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-gold-400 font-black uppercase tracking-widest animate-pulse">
+                        {isPlayingAudio ? "Javob berilmoqda" : isLoading ? "Fikrlanmoqda" : isListening ? "Eshitilmoqda" : "Kutilmoqda"}
+                      </span>
                     </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white/5 p-4 rounded-2xl rounded-tl-sm flex gap-1.5 items-center">
-                        <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-                        <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100"></span>
-                        <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200"></span>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
 
-                <div className="p-4 border-t border-white/10 bg-dark-900/50">
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="Xabaringizni yozing..."
-                      className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-24 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
-                    />
-                    <button
-                      onClick={toggleListening}
-                      className={`absolute right-12 p-2 rounded-full transition-all duration-300 ${
-                        isListening
-                          ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
-                          : 'text-gray-400 hover:text-white hover:bg-white/10'
-                      }`}
-                      title="Ovozli kiritish"
-                    >
-                      {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-                    </button>
-                    <button
-                      onClick={handleSend}
-                      disabled={!input.trim() || isLoading}
-                      className="absolute right-2 p-2 bg-gold-400 text-black rounded-full hover:bg-gold-500 disabled:opacity-50 disabled:hover:bg-gold-400 transition-colors"
-                    >
-                      <Send size={16} />
-                    </button>
+                    <div className="flex flex-col items-center justify-center z-10 my-auto gap-6 w-full">
+                      <div className="relative flex items-center justify-center">
+                        {(isPlayingAudio || isListening || isLoading) && (
+                          <>
+                            <div className={`absolute w-36 h-36 rounded-full border border-gold-400/30 animate-ping duration-1000 ${isLoading ? 'border-dashed' : ''}`}></div>
+                            <div className={`absolute w-44 h-44 rounded-full border border-gold-500/20 animate-ping duration-1500 delay-300 ${isLoading ? 'border-dashed' : ''}`}></div>
+                            <div className={`absolute w-52 h-52 rounded-full border border-gold-600/10 animate-ping duration-2000 delay-700 ${isLoading ? 'border-dashed' : ''}`}></div>
+                          </>
+                        )}
+                        
+                        <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-[0_0_40px_rgba(251,191,36,0.3)] transition-all duration-500 relative z-20 ${
+                          isPlayingAudio ? 'scale-110 shadow-[0_0_50px_rgba(251,191,36,0.5)]' : isListening ? 'scale-105 ring-4 ring-green-500/30 animate-pulse' : isLoading ? 'animate-spin duration-3000' : ''
+                        }`}>
+                          {isPlayingAudio ? (
+                            <Volume2 size={32} className="text-black animate-bounce" />
+                          ) : isListening ? (
+                            <Mic size={32} className="text-black" />
+                          ) : isLoading ? (
+                            <Sparkles size={32} className="text-black" />
+                          ) : (
+                            <Headphones size={32} className="text-black" />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-center max-w-[280px] space-y-2">
+                        <p className="text-white text-sm font-bold px-4 leading-relaxed max-h-[110px] overflow-y-auto custom-scrollbar">
+                          {isPlayingAudio 
+                            ? messages[messages.length - 1]?.text 
+                            : isLoading 
+                              ? "PaketShop o'ylamoqda..." 
+                              : isListening 
+                                ? (input || "Sizni eshitayapman, gapiring...") 
+                                : "Gapirishni boshlang..."
+                          }
+                        </p>
+                        {isListening && input && (
+                          <p className="text-[11px] text-gray-500 italic">"{input}"</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="w-full flex flex-col items-center gap-3 z-10 mb-2">
+                      <button
+                        onClick={() => setIsVoiceMode(false)}
+                        className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs text-gray-400 hover:text-white transition-all font-bold"
+                      >
+                        Matnli chatga qaytish
+                      </button>
+                      <p className="text-[9px] text-gray-600 font-medium">
+                        Qo'llarsiz (Hands-free) rejim faol.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* Standard Text Mode Chat */
+                  <>
+                    <div
+                      ref={scrollContainerRef}
+                      className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/20"
+                    >
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
+                              ? 'bg-gold-500 text-black font-medium rounded-tr-sm'
+                              : 'bg-white/10 text-gray-200 rounded-tl-sm border border-white/5'
+                              }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                      {isLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-white/5 p-4 rounded-2xl rounded-tl-sm flex gap-1.5 items-center">
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100"></span>
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200"></span>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    <div className="p-4 border-t border-white/10 bg-dark-900/50">
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Xabaringizni yozing..."
+                          className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-24 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
+                        />
+                        <button
+                          onClick={toggleListening}
+                          className={`absolute right-12 p-2 rounded-full transition-all duration-300 ${
+                            isListening
+                              ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
+                              : 'text-gray-400 hover:text-white hover:bg-white/10'
+                          }`}
+                          title="Ovozli kiritish"
+                        >
+                          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                        </button>
+                        <button
+                          onClick={handleSend}
+                          disabled={!input.trim() || isLoading}
+                          className="absolute right-2 p-2 bg-gold-400 text-black rounded-full hover:bg-gold-500 disabled:opacity-50 disabled:hover:bg-gold-400 transition-colors"
+                        >
+                          <Send size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </motion.div>
