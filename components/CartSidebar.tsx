@@ -1,174 +1,53 @@
+'use client';
+
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, Minus, Package, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { saleUnitLabel } from '../lib/domain/catalogMapping';
 
-const FREE_DELIVERY_THRESHOLD = 2_000_000;
-const DELIVERY_FEE = 40_000;
+interface CartSidebarProps { onCheckout: () => void }
 
-interface CartSidebarProps {
-  onCheckout: () => void;
-}
+const copy = {
+  uz: { title: 'Buyurtma ro‘yxati', products: 'mahsulot', empty: 'Ro‘yxat hozircha bo‘sh', catalog: 'Katalogni ko‘rish', piece: 'dona', estimated: 'Taxminiy summa', note: 'Yakuniy narx va qoldiqni menejer tasdiqlaydi.', checkout: 'Buyurtma so‘rovini rasmiylashtirish', remove: 'Mahsulotni olib tashlash' },
+  ru: { title: 'Список заказа', products: 'товаров', empty: 'Список пока пуст', catalog: 'Перейти в каталог', piece: 'шт.', estimated: 'Примерная сумма', note: 'Итоговую цену и наличие подтверждает менеджер.', checkout: 'Оформить запрос заказа', remove: 'Удалить товар' },
+} as const;
 
-const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
-  const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
-  const { isDark } = useTheme();
-  const { lang, t } = useLanguage();
-  const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const finalTotal = cartTotal + deliveryFee;
+export default function CartSidebar({ onCheckout }: CartSidebarProps) {
+  const { cart, isCartOpen, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { lang } = useLanguage();
+  const locale = lang === 'ru' ? 'ru' : 'uz';
+  const t = copy[locale];
+  const money = (value: number) => `${new Intl.NumberFormat('uz-UZ').format(value)} UZS`;
 
-  useEffect(() => {
-    if (cart.length === 0 && isCartOpen) {
-      closeCart();
-    }
-  }, [cart.length, isCartOpen, closeCart]);
-
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
-  };
+  useEffect(() => { if (cart.length === 0 && isCartOpen) closeCart(); }, [cart.length, isCartOpen, closeCart]);
 
   return (
     <AnimatePresence>
-      {isCartOpen && (
-        <motion.div
-          key="cart-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={closeCart}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-        />
-      )}
-
-      {isCartOpen && (
-        <motion.div
-          key="cart-sidebar"
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className={`fixed top-0 right-0 h-full w-full md:w-[450px] border-l z-[70] shadow-2xl flex flex-col transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
-        >
-            {/* Header */}
-            <div className={`flex items-center justify-between p-6 border-b backdrop-blur-md ${isDark ? 'border-white/10 bg-dark-900/50' : 'border-light-border bg-white/50'}`}>
-              <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-gold-400" />
-                <h2 className={`text-xl font-bold tracking-wide ${isDark ? 'text-white' : 'text-light-text'}`}>{t('cart_title')}</h2>
-                <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-white/10 text-gray-300' : 'bg-light-card text-light-muted'}`}>
-                  {cart.length} {t('cart_items_count')}
-                </span>
-              </div>
-              <button
-                onClick={closeCart}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-light-card text-light-muted hover:text-light-text'}`}
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {cart.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                  <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-light-card'}`}>
-                    <ShoppingBag size={32} className={isDark ? 'text-gray-600' : 'text-light-muted'} />
-                  </div>
-                  <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('cart_empty')}</p>
-                  <button onClick={closeCart} className="text-gold-400 hover:text-gold-500 underline underline-offset-4">
-                    {t('continue_shopping')}
-                  </button>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex gap-4 group"
-                  >
-                    <div className="w-24 aspect-[4/5] rounded-xl overflow-hidden bg-gray-800 border border-white/5 shrink-0">
-                      <img src={item.image} alt={getLocalizedText(item.name, lang)} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <h3 className={`font-medium line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(item.name, lang)}</h3>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-gray-500 hover:text-red-400 transition-colors p-1"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{getLocalizedText(item.category, lang)}</p>
-                      </div>
-
-                      <div className="flex items-end justify-between">
-                        <p className="text-gold-400 font-medium">{formatPrice(item.price)}</p>
-
-                        <div className="flex items-center gap-3 bg-white/5 rounded-full px-2 py-1 border border-white/5">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - (item.itemsPerPackage || 1))}
-                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <span className="text-sm w-8 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + (item.itemsPerPackage || 1))}
-                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                          >
-                            <Plus size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-
-            {/* Footer */}
-            {cart.length > 0 && (
-              <div className={`p-6 border-t ${isDark ? 'border-white/10 bg-dark-900' : 'border-light-border bg-light-card'}`}>
-                <div className="space-y-3 mb-6">
-                  <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                    <span>{t('checkout_products_sum')}</span>
-                    <span>{formatPrice(cartTotal)}</span>
-                  </div>
-                  <div className={`flex justify-between text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                    <span>{t('checkout_delivery')}</span>
-                    <span className={deliveryFee > 0 ? 'text-gold-400' : 'text-green-400'}>
-                      {deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout_delivery_free')}
-                    </span>
-                  </div>
-                  <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
-                    <span>{t('total_sum')}</span>
-                    <span>{formatPrice(finalTotal)}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    closeCart();
-                    onCheckout();
-                  }}
-                  className="w-full py-4 bg-gold-400 text-black font-bold rounded-xl hover:bg-gold-500 transition-colors flex items-center justify-center gap-2 group"
-                >
-                  {t('checkout_order_btn')}
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            )}
-          </motion.div>
-      )}
+      {isCartOpen && <>
+        <motion.button type="button" aria-label="Close cart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeCart} className="fixed inset-0 z-[60] cursor-default bg-slate-950/55 backdrop-blur-sm" />
+        <motion.aside initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 28, stiffness: 240 }} className="fixed right-0 top-0 z-[70] flex h-full w-full flex-col border-l border-slate-200 bg-white text-slate-950 shadow-2xl sm:w-[480px]">
+          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-5">
+            <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600"><ShoppingCart size={21} /></span><div><h2 className="text-lg font-black">{t.title}</h2><p className="text-xs text-slate-500">{cart.length} {t.products}</p></div></div>
+            <button onClick={closeCart} className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-950" aria-label="Close"><X size={23} /></button>
+          </header>
+          <div className="flex-1 space-y-5 overflow-y-auto p-5">
+            {cart.length === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><Package size={48} className="text-slate-300" /><p className="mt-4 font-semibold text-slate-600">{t.empty}</p><button onClick={closeCart} className="mt-4 font-bold text-red-700">{t.catalog}</button></div> : cart.map((item) => {
+              const key = item.catalogId || String(item.id);
+              const step = Math.max(1, item.orderStep || 1);
+              const unit = saleUnitLabel(item.saleUnit || 'PACK', locale);
+              const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage;
+              return <article key={key} className="rounded-2xl border border-slate-200 p-4">
+                <div className="flex gap-4"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-24 w-24 shrink-0 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div><p className="font-mono text-xs font-semibold text-slate-500">{item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-bold leading-5">{getLocalizedText(item.name, locale)}</h3></div><button onClick={() => removeFromCart(key)} className="p-1 text-slate-400 hover:text-red-600" aria-label={t.remove}><Trash2 size={17} /></button></div><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-2 font-black">{money(item.quoteUnitPrice * item.quantity)}</p></div></div>
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-xs text-slate-500">{item.quoteUnitPrice > 0 ? `${money(item.quoteUnitPrice)} / ${unit}` : t.note}</span><div className="flex items-center gap-1 rounded-xl border border-slate-200 p-1"><button onClick={() => updateQuantity(key, item.quantity - step)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-slate-100" aria-label="Minus"><Minus size={15} /></button><span className="min-w-16 text-center text-sm font-bold">{item.quantity} {unit}</span><button onClick={() => updateQuantity(key, item.quantity + step)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-slate-100" aria-label="Plus"><Plus size={15} /></button></div></div>
+              </article>;
+            })}
+          </div>
+          {cart.length > 0 && <footer className="border-t border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between"><span className="text-sm text-slate-600">{t.estimated}</span><strong className="text-xl">{money(cartTotal)}</strong></div><p className="mt-2 text-xs leading-5 text-amber-800">{t.note}</p><button onClick={() => { closeCart(); onCheckout(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3.5 font-bold text-white hover:bg-red-700">{t.checkout}<ArrowRight size={19} /></button></footer>}
+        </motion.aside>
+      </>}
     </AnimatePresence>
   );
-};
-
-export default CartSidebar;
+}

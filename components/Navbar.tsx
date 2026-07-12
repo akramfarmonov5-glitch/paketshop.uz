@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { NavigationSettings } from '../types';
 import { DEFAULT_NAVIGATION } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
+import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
   onNavigateHome: () => void;
@@ -22,6 +23,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
   const { wishlist } = useWishlist();
   const { isDark, toggleTheme } = useTheme();
   const { lang, setLang, t } = useLanguage();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
 
@@ -33,8 +35,13 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
   const languages = [
     { code: 'uz', label: 'UZ' },
     { code: 'ru', label: 'RU' },
-    { code: 'en', label: 'EN' },
   ] as const;
+
+  const b2bLinks = [
+    { path: 'wholesale', label: lang === 'ru' ? 'Опт' : 'Ulgurji' },
+    { path: 'organizations', label: lang === 'ru' ? 'Организациям' : 'Tashkilotlarga' },
+    { path: 'starter-kits', label: lang === 'ru' ? 'Стартовые наборы' : 'Start to‘plamlar' },
+  ];
 
   const getSocialIcon = (platform: string) => {
     switch (platform) {
@@ -73,9 +80,14 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
           <button onClick={onNavigateHome} className="hover:text-gold-400 transition-colors">
             {t('nav_home')}
           </button>
-          <button onClick={() => { onNavigateHome(); setTimeout(() => { const el = document.getElementById('featured-products'); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: y, behavior: 'smooth' }); }}, 150); }} className="hover:text-gold-400 transition-colors">
+          <button onClick={() => router.push(`/${lang}/catalog`)} className="hover:text-gold-400 transition-colors">
             {t('nav_catalog')}
           </button>
+          {b2bLinks.map((link) => (
+            <button key={link.path} onClick={() => router.push(`/${lang}/${link.path}`)} className="hover:text-gold-400 transition-colors">
+              {link.label}
+            </button>
+          ))}
           <button onClick={() => { onNavigateHome(); setTimeout(() => { const el = document.querySelector('section:last-of-type'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 150); }} className="hover:text-gold-400 transition-colors">
             {t('nav_blog')}
           </button>
@@ -255,10 +267,16 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, navigationSettings = DE
                     <span className="font-medium">{t('nav_home')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
-                  <button key="catalog" onClick={() => { onNavigateHome(); setIsMobileMenuOpen(false); setTimeout(() => { const el = document.getElementById('featured-products'); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top: y, behavior: 'smooth' }); }}, 300); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
+                  <button key="catalog" onClick={() => { router.push(`/${lang}/catalog`); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
                     <span className="font-medium">{t('nav_catalog')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
                   </button>
+                  {b2bLinks.map((link) => (
+                    <button key={link.path} onClick={() => { router.push(`/${lang}/${link.path}`); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
+                      <span className="font-medium">{link.label}</span>
+                      <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />
+                    </button>
+                  ))}
                   <button key="blog" onClick={() => { onNavigateHome(); setIsMobileMenuOpen(false); setTimeout(() => { const el = document.querySelector('section:last-of-type'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 300); }} className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-colors group ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-light-card hover:bg-gray-100 text-light-text'}`}>
                     <span className="font-medium">{t('nav_blog')}</span>
                     <ChevronRight size={16} className={`${isDark ? 'text-gray-500' : 'text-light-muted'} group-hover:text-gold-400`} />

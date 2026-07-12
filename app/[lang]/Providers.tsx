@@ -9,25 +9,30 @@ import { WishlistProvider } from '../../context/WishlistContext';
 import { CartProvider } from '../../context/CartContext';
 import { GlobalProvider } from '../../context/GlobalContext';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import AttributionTracker from '../../components/AttributionTracker';
+import { SessionProvider } from 'next-auth/react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
-      <LanguageProvider>
-        <ThemeProvider>
-          <GlobalProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <WishlistProvider>
-                  <CartProvider>
-                    {children}
-                  </CartProvider>
-                </WishlistProvider>
-              </AuthProvider>
-            </ToastProvider>
-          </GlobalProvider>
-        </ThemeProvider>
-      </LanguageProvider>
+      <SessionProvider>
+        <AttributionTracker />
+        <LanguageProvider>
+          <ThemeProvider>
+            <GlobalProvider>
+              <ToastProvider>
+                <AuthProvider>
+                  <WishlistProvider>
+                    <CartProvider>
+                      {children}
+                    </CartProvider>
+                  </WishlistProvider>
+                </AuthProvider>
+              </ToastProvider>
+            </GlobalProvider>
+          </ThemeProvider>
+        </LanguageProvider>
+      </SessionProvider>
     </ErrorBoundary>
   );
 }

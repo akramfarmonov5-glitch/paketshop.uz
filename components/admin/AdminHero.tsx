@@ -63,20 +63,20 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
 
     const addImage = () => {
         if (normalizeImages(formData.images).length < 5) {
-            setFormData(prev => ({ ...prev, images: [...normalizeImages(prev.images), ''] }));
+            setFormData((prev: any) => ({ ...prev, images: [...normalizeImages(prev.images), ''] }));
         }
     };
 
     const removeImage = (index: number) => {
         const newImages = [...normalizeImages(formData.images)];
         newImages.splice(index, 1);
-        setFormData(prev => ({ ...prev, images: newImages }));
+        setFormData((prev: any) => ({ ...prev, images: newImages }));
     };
 
     const updateImage = (index: number, value: string) => {
         const newImages = [...normalizeImages(formData.images)];
         newImages[index] = value;
-        setFormData(prev => ({ ...prev, images: newImages }));
+        setFormData((prev: any) => ({ ...prev, images: newImages }));
     };
 
     // Safe access to first image for preview

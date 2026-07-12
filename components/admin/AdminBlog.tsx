@@ -143,7 +143,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
         `,
       });
 
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         title: {
           uz: data.titleUz || prev.title?.uz || '',

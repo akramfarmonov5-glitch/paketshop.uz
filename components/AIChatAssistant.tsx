@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff, Volume2, Headphones } from 'lucide-react';
 import { Product } from '../types';
-import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { getLocalizedText } from '../lib/i18nUtils';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -22,6 +21,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [formLoading, setFormLoading] = useState(false);
+  const [formStartedAt] = useState(() => Date.now());
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: "Assalomu alaykum! Men PaketShop onlayn do'koni yordamchisiman. Sizga qanday yordam bera olaman? Masalan, 'qanday paketlar bor' yoki 'konteyner narxini ayt' deb so'rashingiz mumkin." }
@@ -187,31 +187,22 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
 
     localStorage.setItem('paketshop_chat_user', JSON.stringify(formData));
 
-    if (hasSupabaseCredentials) {
-      try {
-        await supabase.from('leads').insert({
-          id: `lead_${Date.now()}`,
-          name: formData.name,
-          phone: formData.phone,
-          created_at: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error("Error saving lead:", error);
-      }
-    }
-
-    // Send Telegram alert
     try {
-      const formattedPhone = formData.phone.startsWith('+') ? formData.phone : `+998${formData.phone}`;
-      const telegramMessage = `🔔 <b>Yangi AI Chat Lead!</b>\n\n👤 <b>Ismi:</b> ${formData.name}\n📞 <b>Telefoni:</b> ${formattedPhone}\n🕒 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}\n\n💬 Mijoz sun'iy intellekt chat yordamchisi bilan suhbat boshladi.`;
-      
-      await fetch('/api/telegram', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: telegramMessage })
+        body: JSON.stringify({
+          type: 'chat',
+          name: formData.name,
+          phone: formData.phone,
+          note: "Mijoz AI chat yordamchisi bilan suhbat boshladi",
+          website: '',
+          startedAt: formStartedAt,
+        }),
       });
-    } catch (telegramError) {
-      console.error("Telegram notification error:", telegramError);
+      if (!response.ok) throw new Error('Lead request failed');
+    } catch (leadError) {
+      console.error("Lead registration error:", leadError);
     }
 
     setFormLoading(false);

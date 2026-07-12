@@ -97,8 +97,8 @@ You MUST return ONLY a valid JSON object matching the following TypeScript schem
     const textResult = responseData.candidates[0].content.parts[0].text;
     const parsedData = JSON.parse(textResult.trim()) as SEOPostResult;
     return parsedData;
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Gemini JSON parsing error. Raw response text:", responseData);
-    throw new Error(`Gemini dan qaytgan javobni JSON formatida o'qib bo'lmadi: ${err.message}`);
+    throw new Error(`Gemini dan qaytgan javobni JSON formatida o'qib bo'lmadi: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
 }

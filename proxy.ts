@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const locales = ['uz', 'ru', 'en'];
+const locales = ['uz', 'ru'];
 const defaultLocale = 'uz';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === '/en' || pathname.startsWith('/en/')) {
+    request.nextUrl.pathname = `/uz${pathname.slice(3)}` || '/uz';
+    return NextResponse.redirect(request.nextUrl, 308);
+  }
 
   if (
     pathname.startsWith('/_next') ||

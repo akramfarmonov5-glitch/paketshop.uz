@@ -6,6 +6,9 @@ export interface LocalizedString {
 
 export interface Product {
   id: number;
+  catalogId?: string;
+  sku?: string;
+  legacySku?: string;
   name: string | LocalizedString;
   slug?: string | LocalizedString;
   price: number;
@@ -18,6 +21,18 @@ export interface Product {
   specs: { label: string | LocalizedString; value: string | LocalizedString }[];
   stock?: number;
   itemsPerPackage?: number;
+  packsPerCarton?: number;
+  unitsPerCarton?: number;
+  minimumOrderQuantity?: number;
+  orderStep?: number;
+  baseUnit?: 'PIECE' | 'METER' | 'KILOGRAM' | 'ROLL' | 'LITER';
+  saleUnit?: 'PIECE' | 'PACK' | 'CARTON' | 'ROLL' | 'KILOGRAM';
+  priceMode?: 'PUBLIC_EXACT' | 'FROM_PRICE' | 'LOGIN_REQUIRED' | 'REQUEST_ONLY';
+  availabilityStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'CHECK_AVAILABILITY' | 'ON_ORDER' | 'OUT_OF_STOCK' | 'DISCONTINUED';
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isBestSeller?: boolean;
+  originCountry?: string;
 }
 
 export interface Category {
@@ -61,6 +76,7 @@ export interface NavItem {
 
 export interface CartItem extends Product {
   quantity: number;
+  quoteUnitPrice: number;
 }
 
 export type OrderStatus =

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Product } from '../types';
-import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 import * as fpixel from '../lib/fpixel';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,8 +25,13 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [formStartedAt] = useState(() => Date.now());
 
-  const total = product.price * quantity;
+  const saleUnit = product.saleUnit || (product.itemsPerPackage && product.itemsPerPackage > 1 ? 'PACK' : 'PIECE');
+  const saleQuantity = saleUnit === 'PACK' ? Math.max(1, Math.round(quantity / Math.max(1, product.itemsPerPackage || 1))) : quantity;
+  const unitPrice = product.catalogId || saleUnit !== 'PACK' ? product.price : product.price * Math.max(1, product.itemsPerPackage || 1);
+  const total = unitPrice * saleQuantity;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
@@ -37,79 +41,42 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const saveOrderToDatabase = async (orderId: string, dateStr: string) => {
-    if (!hasSupabaseCredentials) return;
-
-    try {
-      const { error } = await supabase.from('orders').insert({
-        id: orderId,
-        customerName: formData.firstName,
-        phone: formData.phone,
-        total,
-        status: 'Kutilmoqda',
-        date: dateStr,
-        paymentMethod: 'Naqd',
-        items: [
-          {
-            id: product.id,
-            name: getLocalizedText(product.name, lang),
-            quantity,
-            price: product.price,
-          },
-        ],
-      });
-
-      if (error) {
-        console.error('Error saving quick order to Supabase:', error);
-      }
-    } catch (e) {
-      console.error('Supabase quick order error:', e);
-    }
-  };
-
-  const sendTelegramNotification = async () => {
-    const message = `
-<b>TEZKOR BUYURTMA</b>
-
-<b>Ism:</b> ${formData.firstName}
-<b>Telefon:</b> ${formData.phone}
-<b>Tolov:</b> Operator aniqlaydi
-
-<b>Mahsulot:</b>
-1. ${getLocalizedText(product.name, lang)} (x${quantity}) - ${formatPrice(total)}
-
-<b>Jami:</b> ${formatPrice(total)}
-    `.trim();
-
-    try {
-      await fetch('/api/telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
-      });
-    } catch (error) {
-      console.error('Failed to send Telegram message', error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
-    const orderId = `QORD-${Date.now()}`;
-    const dateStr = new Date().toISOString().split('T')[0];
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerType: 'individual',
+          customerName: formData.firstName,
+          phone: formData.phone,
+          region: 'Toshkent',
+          deliveryMethod: 'manager_confirmation',
+          paymentMethod: 'cash',
+          locale: lang === 'ru' ? 'ru' : 'uz',
+          items: [{ productId: product.catalogId || String(product.id), quantity: saleQuantity, saleUnit }],
+          website: '',
+          startedAt: formStartedAt,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Buyurtma so'rovini yuborib bo'lmadi");
 
-    await saveOrderToDatabase(orderId, dateStr);
-    await sendTelegramNotification();
-    fpixel.trackPurchase(orderId, total, [product.id.toString()], 'UZS');
-
-    setIsLoading(false);
-    setIsSuccess(true);
-
-    setTimeout(() => {
-      onClose();
-      setTimeout(() => setIsSuccess(false), 500);
-    }, 3000);
+      fpixel.trackPurchase(result.orderNumber, result.total, [product.catalogId || product.id.toString()], 'UZS');
+      setIsSuccess(true);
+      setTimeout(() => {
+        onClose();
+        setTimeout(() => setIsSuccess(false), 500);
+      }, 3000);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Buyurtma so'rovini yuborib bo'lmadi");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -155,12 +122,13 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
                   </div>
                   <div>
                     <h3 className={`font-medium text-sm line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h3>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Soni: {quantity} ta</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Miqdor: {saleQuantity} {saleUnit.toLowerCase()}</p>
                     <p className="text-gold-400 font-bold mt-1 max-w-full truncate">{formatPrice(total)}</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-500">{error}</p>}
                   <div className="space-y-1.5">
                     <label className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Ismingiz</label>
                     <input

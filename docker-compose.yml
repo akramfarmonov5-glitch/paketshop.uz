@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: paketshop
+      POSTGRES_USER: paketshop
+      POSTGRES_PASSWORD: paketshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - paketshop_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paketshop -d paketshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://paketshop:paketshop@postgres:5432/paketshop?schema=public
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  paketshop_postgres:

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Loader2, Lock, Mail } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
-import { isAdminUser } from '../../lib/admin';
+import { signIn } from 'next-auth/react';
 
 interface AdminLoginProps {
   onBack: () => void;
@@ -19,23 +18,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onBack }) => {
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const result = await signIn('credentials', {
         email,
         password,
+        redirect: false,
       });
-
-      if (signInError) {
-        throw signInError;
-      }
-
-      const allowed = await isAdminUser(data.user?.id);
-
-      if (!allowed) {
-        await supabase.auth.signOut();
-        throw new Error("Bu akkaunt uchun admin ruxsati berilmagan.");
-      }
-    } catch (err: any) {
-      setError(err.message || 'Kirishda xatolik yuz berdi.');
+      if (!result?.ok) throw new Error('Email yoki parol noto‘g‘ri, yoxud akkaunt faol emas.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Kirishda xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +47,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onBack }) => {
           </div>
           <h2 className="text-2xl font-bold text-white">Admin Kirish</h2>
           <p className="text-gray-400 text-sm mt-2 text-center">
-            Faqat `admin_users` jadvalida ruxsati bor akkauntlar kirishi mumkin
+            Faqat PaketShop RBAC roli berilgan akkauntlar kirishi mumkin
           </p>
         </div>
 

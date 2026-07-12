@@ -1,84 +1,36 @@
-'use client';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight, Boxes, Building2, CheckCircle2, MapPin, Phone, RotateCcw, Send, Store, Truck } from 'lucide-react';
+import { getCategorySlug } from '@/lib/categoryUtils';
+import { getLocalizedText } from '@/lib/i18nUtils';
+import { productSlug } from '@/lib/slugify';
+import type { BlogPost, Category, HeroContent, Product } from '@/types';
 
-import React, { useState } from 'react';
-import Hero from '../../components/Hero';
-import TrustBadges from '../../components/TrustBadges';
-import CategoryGrid from '../../components/CategoryGrid';
-import PromoBanner from '../../components/PromoBanner';
-import FeaturedProducts from '../../components/FeaturedProducts';
-import Testimonials from '../../components/Testimonials';
-import BlogGrid from '../../components/BlogGrid';
-import { useRouter } from 'next/navigation';
-import * as fpixel from '../../lib/fpixel';
-import { getLocalizedText } from '../../lib/i18nUtils';
-import { productSlug } from '../../lib/slugify';
-import type { Product, Category, HeroContent, BlogPost } from '../../types';
+interface HomeContentProps { lang: string; products: Product[]; categories: Category[]; heroContent: HeroContent; blogPosts: BlogPost[] }
 
-interface HomeContentProps {
-  lang: string;
-  products: Product[];
-  categories: Category[];
-  heroContent: HeroContent;
-  blogPosts: BlogPost[];
-}
+const text = {
+  uz: {
+    eyebrow: 'PaketShop.uz ulgurji katalogi', title: 'Bir martalik idishlar va qadoqlash mahsulotlari ulgurji savdosi', description: 'Kafe, savdo nuqtalari, tashkilotlar va qayta sotuvchilar uchun ombordagi va buyurtma asosidagi mahsulotlar.', catalog: 'Katalogni ko‘rish', telegram: 'Telegram orqali narx olish', categories: 'Asosiy kategoriyalar', categoriesDesc: 'Biznesingiz uchun kerakli mahsulot turini tanlang.', products: 'Ko‘p so‘raladigan mahsulotlar', allProducts: 'Barcha mahsulotlar', pack: 'Qadoqda', price: '1 qadoq', askPrice: 'Narxni aniqlang', segments: 'Kimlar bilan ishlaymiz?', starter: 'Yangi biznes', starterDesc: 'Kofe, fast-food va qandolatchilik uchun tayyor start to‘plamlar.', reseller: 'Qayta sotuvchilar', resellerDesc: 'Katta qadoq, korobka va muntazam ulgurji takliflar.', organization: 'Tashkilotlar', organizationDesc: 'Hisob-faktura, shartnoma va bank orqali to‘lov.', notFound: 'Kerakli mahsulotni topmadingizmi?', notFoundDesc: 'Rasmini yoki tavsifini Telegram orqali yuboring — topib beramiz.', delivery: 'Yetkazib berish shartlari', deliveryDesc: 'Toshkent bo‘yicha kuryer yoki Yandex, viloyatlarga kargo/yuk transporti. Yakuniy narx hajm va manzilga qarab menejer bilan kelishiladi.', contact: 'Savdo bo‘limi bilan bog‘laning', work: 'Dushanba–Shanba, 09:00–20:00', details: 'Batafsil', stock: 'Qoldiqni menejer tasdiqlaydi', wholesale: 'Ulgurji narxlar', regions: 'Viloyatlarga jo‘natish', business: 'Tashkilotlar bilan ishlash', supply: 'Import va ishlab chiqaruvchi mahsulotlari',
+  },
+  ru: {
+    eyebrow: 'Оптовый каталог PaketShop.uz', title: 'Оптовая продажа одноразовой посуды и упаковочных материалов', description: 'Товары со склада и под заказ для кафе, торговых точек, организаций и реселлеров.', catalog: 'Открыть каталог', telegram: 'Узнать цену в Telegram', categories: 'Основные категории', categoriesDesc: 'Выберите необходимые товары для вашего бизнеса.', products: 'Популярные товары', allProducts: 'Все товары', pack: 'В упаковке', price: '1 упаковка', askPrice: 'Уточнить цену', segments: 'С кем мы работаем?', starter: 'Новый бизнес', starterDesc: 'Готовые наборы для кофеен, fast-food и кондитерских.', reseller: 'Реселлеры', resellerDesc: 'Крупная упаковка, коробки и регулярные оптовые предложения.', organization: 'Организации', organizationDesc: 'Счёт-фактура, договор и безналичная оплата.', notFound: 'Не нашли нужный товар?', notFoundDesc: 'Отправьте фото или описание в Telegram — мы найдём товар.', delivery: 'Условия доставки', deliveryDesc: 'По Ташкенту курьер или Yandex, в регионы — карго/грузовой транспорт. Итоговая стоимость согласуется с менеджером.', contact: 'Свяжитесь с отделом продаж', work: 'Понедельник–Суббота, 09:00–20:00', details: 'Подробнее', stock: 'Наличие подтверждает менеджер', wholesale: 'Оптовые цены', regions: 'Доставка в регионы', business: 'Работа с организациями', supply: 'Импорт и товары производителей',
+  },
+};
 
-export default function HomeContent({
-  lang,
-  products,
-  categories,
-  heroContent,
-  blogPosts,
-}: HomeContentProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  const router = useRouter();
+export default function HomeContent({ lang, products, categories }: HomeContentProps) {
+  const locale = lang === 'ru' ? 'ru' : 'uz'; const t = text[locale]; const shownCategories = categories.slice(0, 8); const shownProducts = products.slice(0, 8);
+  const telegramBase = 'https://t.me/paketshopuz';
+  return <main className="bg-slate-50 pb-20 pt-20 text-slate-950">
+    <section className="border-b border-slate-200 bg-white"><div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_.8fr] lg:px-8 lg:py-24"><div><p className="mb-4 text-sm font-bold uppercase tracking-[.18em] text-red-700">{t.eyebrow}</p><h1 className="max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">{t.title}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">{t.description}</p><div className="mt-8 flex flex-wrap gap-3"><Link href={`/${locale}/catalog`} className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3.5 font-bold text-white hover:bg-red-700">{t.catalog}<ArrowRight size={18} /></Link><a href={`${telegramBase}?text=${encodeURIComponent(locale === 'ru' ? 'Здравствуйте. Хочу получить оптовый прайс PaketShop.' : 'Assalomu alaykum. PaketShop ulgurji narxlarini olmoqchiman.')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3.5 font-bold text-slate-800 hover:border-red-300"><Send size={18} className="text-red-600" />{t.telegram}</a></div></div><div className="grid grid-cols-2 gap-3">{[[Boxes,t.wholesale],[Truck,t.regions],[Building2,t.business],[CheckCircle2,t.supply]].map(([Icon,label]) => { const IconComponent = Icon as typeof Boxes; return <div key={String(label)} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><IconComponent className="mb-4 text-red-600" size={28} /><p className="font-bold leading-6">{String(label)}</p></div>; })}</div></div></section>
 
-  const handleCategorySelect = (categoryName: string) => {
-    setActiveCategory(categoryName);
-    const category = categories.find(
-      (c) => getLocalizedText(c.name, 'uz') === categoryName || c.slug === categoryName
-    );
-    if (category) {
-      fpixel.trackViewCategory(getLocalizedText(category.name, 'uz'));
-    }
-    const element = document.getElementById('featured-products');
-    if (element) {
-      const y = element.getBoundingClientRect().top + window.scrollY - 100;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><div className="mb-8"><h2 className="text-3xl font-bold">{t.categories}</h2><p className="mt-2 text-slate-600">{t.categoriesDesc}</p></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{shownCategories.map((category) => <Link key={category.id} href={`/${locale}/category/${getCategorySlug(category, locale)}`} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="relative aspect-[16/9] bg-slate-100"><Image src={category.image || '/logo.png'} alt={getLocalizedText(category.name, locale)} fill sizes="(max-width: 640px) 100vw, 25vw" className="object-contain p-4" /></div><div className="flex items-center justify-between p-4"><h3 className="font-bold group-hover:text-red-700">{getLocalizedText(category.name, locale)}</h3><ArrowRight size={17} /></div></Link>)}</div></section>
 
-  const navigateToProduct = (id: number) => {
-    const product = products.find((p) => p.id === id);
-    if (product) {
-      router.push(`/${lang}/product/${productSlug(product, lang)}`);
-    } else {
-      router.push(`/${lang}/product/${id}`);
-    }
-  };
+    <section className="border-y border-slate-200 bg-white"><div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><div className="mb-8 flex items-end justify-between gap-4"><h2 className="text-3xl font-bold">{t.products}</h2><Link href={`/${locale}/catalog`} className="font-bold text-red-700">{t.allProducts} →</Link></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{shownProducts.map((product) => { const name = getLocalizedText(product.name, locale); const url = `/${locale}/product/${productSlug(product, locale)}`; return <article key={product.id} className="rounded-2xl border border-slate-200 bg-white p-4"><Link href={url} className="relative mb-4 block aspect-[4/3] rounded-xl bg-slate-100"><Image src={product.image} alt={name} fill sizes="(max-width: 640px) 100vw, 25vw" className="object-contain p-3" /></Link><span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs font-bold">{product.sku || `PS-${product.id}`}</span><Link href={url}><h3 className="mt-3 min-h-12 font-bold leading-6 hover:text-red-700">{name}</h3></Link><p className="mt-2 text-sm text-slate-600">{t.pack}: <b>{product.itemsPerPackage || 1}</b></p><p className="mt-3 text-lg font-black">{product.priceMode === 'REQUEST_ONLY' ? t.askPrice : product.formattedPrice}</p><p className="mt-1 text-xs text-amber-700">{t.stock}</p></article>; })}</div></div></section>
 
-  const navigateToBlogPost = (slug: string) => {
-    router.push(`/${lang}/blog/${slug}`);
-  };
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><h2 className="text-3xl font-bold">{t.segments}</h2><div className="mt-8 grid gap-5 lg:grid-cols-3">{[[Store,t.starter,t.starterDesc,'starter-kits'],[RotateCcw,t.reseller,t.resellerDesc,'wholesale'],[Building2,t.organization,t.organizationDesc,'organizations']].map(([Icon,title,desc,path]) => { const IconComponent = Icon as typeof Store; return <Link key={String(path)} href={`/${locale}/${path}`} className="rounded-2xl border border-slate-200 bg-white p-6 hover:border-red-300"><IconComponent size={30} className="text-red-600" /><h3 className="mt-5 text-xl font-bold">{String(title)}</h3><p className="mt-2 leading-7 text-slate-600">{String(desc)}</p><span className="mt-5 inline-flex items-center gap-2 font-bold text-red-700">{t.details}<ArrowRight size={17} /></span></Link>; })}</div></section>
 
-  return (
-    <main className="pb-20">
-      <Hero content={heroContent} />
-      <TrustBadges />
-      <CategoryGrid
-        categories={categories}
-        onSelectCategory={handleCategorySelect}
-        isLoading={false}
-      />
-      <PromoBanner />
-      <FeaturedProducts
-        products={products}
-        categories={categories}
-        activeCategory={activeCategory}
-        onNavigateToProduct={navigateToProduct}
-        isLoading={false}
-      />
-      <Testimonials />
-      <BlogGrid posts={blogPosts} onPostClick={navigateToBlogPost} isLoading={false} />
-    </main>
-  );
+    <section className="bg-slate-900 text-white"><div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8"><div><h2 className="text-3xl font-bold">{t.notFound}</h2><p className="mt-3 max-w-xl text-slate-300">{t.notFoundDesc}</p><a href={telegramBase} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-bold"><Send size={18} /> Telegram</a></div><div className="rounded-2xl border border-white/10 bg-white/5 p-6"><Truck className="text-red-400" /><h3 className="mt-4 text-xl font-bold">{t.delivery}</h3><p className="mt-2 leading-7 text-slate-300">{t.deliveryDesc}</p><Link href={`/${locale}/delivery`} className="mt-4 inline-block font-bold text-red-400">{t.details} →</Link></div></div></section>
+
+    <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"><div className="flex flex-col justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-6 md:flex-row md:items-center"><div><h2 className="text-2xl font-bold">{t.contact}</h2><p className="mt-2 text-slate-600">{t.work}</p></div><div className="flex flex-wrap gap-3"><a href="tel:+998996448444" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white"><Phone size={18} />+998 99 644 84 44</a><a href="https://maps.google.com/?q=Tashkent" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-bold"><MapPin size={18} /> Toshkent</a></div></div></section>
+  </main>;
 }

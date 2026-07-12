@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, Twitter, Facebook, Mail, Lock, Phone, MapPin, Clock, Send } from 'lucide-react';
+import { Instagram, Facebook, Mail, Lock, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -9,7 +9,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
   const { isDark } = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <footer className={`pt-16 pb-8 border-t transition-colors duration-300 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-light-card border-light-border'}`}>
@@ -28,20 +28,20 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_categories')}</h4>
             <ul className={`space-y-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Chiqindi paketlari</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Salfetka va lattalar</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Zip-Lock paketlar</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Konteynerlar va idishlar</a></li>
+              <li><a href={`/${lang}/catalog?category=chiqindi-paketlari`} className="hover:text-gold-400 transition-colors">Chiqindi paketlari</a></li>
+              <li><a href={`/${lang}/catalog?category=salfetka-va-qogoz`} className="hover:text-gold-400 transition-colors">Salfetka va qog‘oz</a></li>
+              <li><a href={`/${lang}/catalog?category=zip-paketlar`} className="hover:text-gold-400 transition-colors">Zip-Lock paketlar</a></li>
+              <li><a href={`/${lang}/catalog?category=ovqat-konteynerlari`} className="hover:text-gold-400 transition-colors">Konteynerlar va idishlar</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className={`font-semibold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('footer_help')}</h4>
             <ul className={`space-y-3 text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Yetkazib berish</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">To'lov usullari</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">Qaytarish siyosati</a></li>
-              <li><a href="#!" className="hover:text-gold-400 transition-colors">FAQ</a></li>
+              <li><a href={`/${lang}/delivery`} className="hover:text-gold-400 transition-colors">Yetkazib berish</a></li>
+              <li><a href={`/${lang}/payment`} className="hover:text-gold-400 transition-colors">To‘lov usullari</a></li>
+              <li><a href={`/${lang}/faq`} className="hover:text-gold-400 transition-colors">FAQ</a></li>
+              <li><a href={`/${lang}/about`} className="hover:text-gold-400 transition-colors">Biz haqimizda</a></li>
             </ul>
           </div>
 
@@ -91,8 +91,8 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
         <div className={`border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs ${isDark ? 'border-white/5 text-gray-600' : 'border-light-border text-light-muted'}`}>
           <p>&copy; 2026 PaketShop.uz. {t('all_rights_reserved')}.</p>
           <div className="flex gap-6 mt-4 md:mt-0 items-center">
-            <a href="#!" className="hover:text-gold-400 transition-colors">Maxfiylik siyosati</a>
-            <a href="#!" className="hover:text-gold-400 transition-colors">Foydalanish shartlari</a>
+            <a href={`/${lang}/privacy`} className="hover:text-gold-400 transition-colors">Maxfiylik siyosati</a>
+            <a href={`/${lang}/terms`} className="hover:text-gold-400 transition-colors">Foydalanish shartlari</a>
             {/* Secret Admin Link */}
             {onAdminClick && (
               <button onClick={onAdminClick} className="flex items-center gap-1 hover:text-gold-400 transition-colors ml-4 opacity-50 hover:opacity-100">

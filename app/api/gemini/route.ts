@@ -85,7 +85,9 @@ export async function POST(req: NextRequest) {
         if (candidate?.content?.parts) {
           for (const part of candidate.content.parts) {
             if (part.inlineData) {
-              const pcmBuffer = Buffer.from(part.inlineData.data, 'base64');
+              const encodedAudio = part.inlineData.data;
+              if (!encodedAudio) continue;
+              const pcmBuffer = Buffer.from(encodedAudio, 'base64');
               const wavHeader = createWavHeader(pcmBuffer.length, 24000);
               const wavBuffer = Buffer.concat([wavHeader, pcmBuffer]);
               audioBase64 = wavBuffer.toString('base64');

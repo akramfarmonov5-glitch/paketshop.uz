@@ -1,585 +1,87 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, CreditCard, Truck, Send, Wallet, Banknote, X, Smartphone, ExternalLink, Ticket, Loader2 } from 'lucide-react';
+'use client';
+
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, CheckCircle2, Loader2, MessageCircle, PackageCheck, Send, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
-import * as fpixel from '../lib/fpixel';
-import { useToast } from '../context/ToastContext';
-import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { getSubmissionAttribution } from '../lib/attribution';
+import { saleUnitLabel } from '../lib/domain/catalogMapping';
 
-interface CheckoutProps {
-  onBack: () => void;
-}
+interface CheckoutProps { onBack: () => void }
+type CustomerType = 'entrepreneur' | 'organization' | 'reseller' | 'individual';
+type PaymentMethod = 'cash' | 'card_transfer' | 'bank' | 'terminal' | 'other';
 
-const MIN_ORDER_AMOUNT = 500_000;
-const FREE_DELIVERY_THRESHOLD = 2_000_000;
-const DELIVERY_FEE = 40_000;
+const copy = {
+  uz: {
+    title: 'Ulgurji buyurtma so‘rovi', intro: 'Menejer qoldiq, yakuniy narx va yetkazishni tekshirib, siz bilan bog‘lanadi.', back: 'Katalogga qaytish', customerType: 'Mijoz turi', entrepreneur: 'Biznes / YTT', organization: 'Tashkilot', reseller: 'Qayta sotuvchi', individual: 'Jismoniy shaxs', name: 'Ism yoki mas’ul shaxs *', phone: 'Telefon *', telegram: 'Telegram username', region: 'Shahar yoki viloyat *', address: 'Yetkazish manzili (ixtiyoriy)', note: 'Buyurtma bo‘yicha izoh', payment: 'Qulay to‘lov usuli', cash: 'Naqd', card: 'Karta o‘tkazmasi', bank: 'Bank hisob raqami', terminal: 'Terminal', other: 'Kelishiladi', consent: 'Ma’lumotlarim buyurtmani qayta ishlash va men bilan bog‘lanish uchun ishlatilishiga roziman.', submit: 'So‘rov yuborish', submitting: 'Yuborilmoqda…', summary: 'So‘rov tarkibi', piece: 'dona', estimated: 'Mahsulotlar taxminiy summasi', confirm: 'Yakuniy narx va yetkazish menejer tomonidan tasdiqlanadi.', success: 'So‘rov qabul qilindi', successText: 'Menejer qoldiq va narxni tekshirib, ko‘rsatilgan telefon orqali bog‘lanadi.', orderNumber: 'So‘rov raqami', telegramCta: 'Telegramda yozish', home: 'Bosh sahifaga qaytish', required: 'Majburiy maydonlarni to‘ldiring.', phoneError: 'Telefon raqamini to‘g‘ri kiriting.', consentError: 'Davom etish uchun rozilikni belgilang.', error: 'So‘rov yuborilmadi. Qayta urinib ko‘ring yoki bizga qo‘ng‘iroq qiling.', empty: 'Savat bo‘sh', emptyText: 'Katalogdan kerakli mahsulotlarni tanlang.', sku: 'SKU',
+  },
+  ru: {
+    title: 'Запрос оптового заказа', intro: 'Менеджер проверит остаток, итоговую цену и доставку, затем свяжется с вами.', back: 'Вернуться в каталог', customerType: 'Тип клиента', entrepreneur: 'Бизнес / ИП', organization: 'Организация', reseller: 'Реселлер', individual: 'Физическое лицо', name: 'Имя или ответственное лицо *', phone: 'Телефон *', telegram: 'Telegram username', region: 'Город или область *', address: 'Адрес доставки (необязательно)', note: 'Комментарий к заказу', payment: 'Удобный способ оплаты', cash: 'Наличные', card: 'Перевод на карту', bank: 'Расчётный счёт', terminal: 'Терминал', other: 'По согласованию', consent: 'Согласен на обработку данных для оформления заказа и связи со мной.', submit: 'Отправить запрос', submitting: 'Отправка…', summary: 'Состав запроса', piece: 'шт.', estimated: 'Примерная сумма товаров', confirm: 'Итоговую цену и доставку подтверждает менеджер.', success: 'Запрос принят', successText: 'Менеджер проверит остаток и цену и свяжется по указанному телефону.', orderNumber: 'Номер запроса', telegramCta: 'Написать в Telegram', home: 'Вернуться на главную', required: 'Заполните обязательные поля.', phoneError: 'Введите корректный номер телефона.', consentError: 'Подтвердите согласие, чтобы продолжить.', error: 'Не удалось отправить запрос. Попробуйте ещё раз или позвоните нам.', empty: 'Корзина пуста', emptyText: 'Выберите нужные товары в каталоге.', sku: 'SKU',
+  },
+} as const;
 
-const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
+const inputClass = 'h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-slate-950 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100';
+
+export default function Checkout({ onBack }: CheckoutProps) {
   const { cart, cartTotal, clearCart } = useCart();
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const { isDark } = useTheme();
-  const { lang, t } = useLanguage();
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'click' | 'payme' | 'paynet' | 'cash'>('click');
-  const [showPaynetModal, setShowPaynetModal] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [activeOrderId, setActiveOrderId] = useState<string>('');
+  const { lang } = useLanguage();
+  const locale = lang === 'ru' ? 'ru' : 'uz';
+  const t = copy[locale];
+  const startedAt = useMemo(() => Date.now(), []);
+  const [customerType, setCustomerType] = useState<CustomerType>('entrepreneur');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [form, setForm] = useState({ name: '', phone: '', telegram: '', region: 'Toshkent', address: '', note: '', website: '' });
+  const [consent, setConsent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [orderNumber, setOrderNumber] = useState('');
 
-  const [promoCode, setPromoCode] = useState('');
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [appliedPromo, setAppliedPromo] = useState('');
-  const [isCheckingPromo, setIsCheckingPromo] = useState(false);
+  const set = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm((previous) => ({ ...previous, [field]: event.target.value }));
+  const money = (value: number) => `${new Intl.NumberFormat('uz-UZ').format(value)} UZS`;
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    address: '',
-    city: 'Toshkent',
-  });
-
-  const discountedSubtotal = Math.max(0, cartTotal - discountAmount);
-  const deliveryFee = discountedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const finalTotal = discountedSubtotal + deliveryFee;
-  const remainingForMinOrder = Math.max(0, MIN_ORDER_AMOUNT - cartTotal);
-  const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - discountedSubtotal);
-
-  const PAYNET_URL = "https://app.paynet.uz/?m=49156&i=4805742d-d76c-4b39-8c02-8ddf1c450f33&branchId=&actTypeId=144";
-  const PAYNET_QR_IMAGE = "/images/paynet-qr.jpg";
-  const QR_FALLBACK = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(PAYNET_URL)}&color=000000&bgcolor=ffffff`;
-
-  useEffect(() => {
-    if (cart.length > 0) {
-      const productIds = cart.map(item => item.id.toString());
-      fpixel.trackInitiateCheckout(cartTotal, productIds);
-    }
-  }, []);
-
-  const cities = [
-    'city_toshkent',
-    'city_samarqand',
-    'city_buxoro',
-    'city_andijon',
-    'city_fargona',
-    'city_namangan',
-    'city_xorazm',
-    'city_qashqadaryo',
-    'city_surxondaryo',
-    'city_jizzax',
-    'city_sirdaryo',
-    'city_navoiy',
-    'city_qoraqalpogiston'
-  ];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear error for this field when user starts typing
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
-    }
-  };
-
-  const handleApplyPromo = async () => {
-    if (!promoCode.trim()) return;
-    setIsCheckingPromo(true);
-
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const code = promoCode.trim().toUpperCase();
-    if (code === 'PAKET2026') {
-      const discount = cartTotal * 0.1;
-      setDiscountAmount(discount);
-      setAppliedPromo(code);
-      showToast(t('checkout_promo_success'), "success");
-    } else if (code === 'ADMIN') {
-      const discount = cartTotal * 0.5;
-      setDiscountAmount(discount);
-      setAppliedPromo(code);
-      showToast(t('checkout_promo_special'), "success");
-    } else {
-      showToast(t('checkout_promo_error'), "error");
-      setDiscountAmount(0);
-      setAppliedPromo('');
-    }
-    setIsCheckingPromo(false);
-  };
-
-  const handleRemovePromo = () => {
-    setDiscountAmount(0);
-    setAppliedPromo('');
-    setPromoCode('');
-  };
-
-  const saveOrderToDatabase = async (orderId: string) => {
-    if (!hasSupabaseCredentials) return;
-
-    const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault(); setError('');
+    if (!form.name.trim() || !form.region.trim()) return setError(t.required);
+    if (form.phone.replace(/\D/g, '').length < 9) return setError(t.phoneError);
+    if (!consent) return setError(t.consentError);
+    setLoading(true);
     try {
-      const orderData: any = {
-        id: orderId,
-        "customerName": `${formData.firstName} ${formData.lastName}`,
-        phone: formData.phone,
-        total: finalTotal,
-        status: 'Kutilmoqda',
-        date: dateStr,
-        "paymentMethod": paymentMethod === 'click' ? 'Click' : paymentMethod === 'payme' ? 'Payme' : paymentMethod === 'paynet' ? 'Paynet' : 'Naqd',
-        payment_status: 'Kutilmoqda',
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        shipping_address: formData.address,
-        city: formData.city,
-      };
-
-      if (user) {
-        orderData.user_id = user.id;
-      }
-
-      let { error } = await supabase.from('orders').insert(orderData);
-
-      // Fallback: if payment_status column doesn't exist yet, retry without it
-      if (error && error.message?.includes('payment_status')) {
-        console.warn("payment_status column not found, retrying without it...");
-        const { payment_status, ...fallbackData } = orderData;
-        const fallbackResult = await supabase.from('orders').insert(fallbackData);
-        error = fallbackResult.error;
-      }
-
-      if (error) {
-        console.error("Error saving order to Supabase:", error);
-        showToast("Buyurtmani saqlashda xatolik: " + error.message, "error");
-        throw error;
-      }
-    } catch (e) {
-      console.error("Supabase error:", e);
-      throw e;
-    }
-  };
-
-  const sendTelegramNotification = async (orderId: string) => {
-    const itemsList = cart.map((item, index) =>
-      `${index + 1}. ${item.name} (x${item.quantity}) - ${new Intl.NumberFormat('uz-UZ').format(item.price * item.quantity)} UZS`
-    ).join('\n');
-
-    const totalFormatted = new Intl.NumberFormat('uz-UZ').format(finalTotal) + ' UZS';
-    const deliveryInfo = deliveryFee > 0
-      ? `\n${t('checkout_delivery')}: ${new Intl.NumberFormat('uz-UZ').format(deliveryFee)} UZS`
-      : `\n${t('checkout_delivery')}: ${t('checkout_delivery_free')}`;
-    const discountInfo = appliedPromo ? `\n🏷 <b>Promo:</b> ${appliedPromo} (-${new Intl.NumberFormat('uz-UZ').format(discountAmount)} UZS)` : '';
-    
-    let paymentLabel = '💵 Naqd (Yetkazilganda)';
-    if (paymentMethod === 'click') paymentLabel = '📲 Click (Onlayn)';
-    else if (paymentMethod === 'payme') paymentLabel = '📲 Payme (Onlayn)';
-    else if (paymentMethod === 'paynet') paymentLabel = '📲 Paynet (Onlayn)';
-
-    const message = `
-📦 <b>YANGI BUYURTMA! (PaketShop)</b>
-
-🆔 <b>Buyurtma ID:</b> <code>${orderId}</code>
-👤 <b>Mijoz:</b> ${formData.firstName} ${formData.lastName}
-📞 <b>Tel:</b> ${formData.phone}
-📍 <b>Manzil:</b> ${formData.city}, ${formData.address}
-
-💳 <b>To'lov turi:</b> ${paymentLabel}
-
-🛒 <b>Mahsulotlar:</b>
-${itemsList}
-
-------------------
-${discountInfo}
-${deliveryInfo}
-💰 <b>JAMI TO'LOV:</b> ${totalFormatted}
-    `;
-
-    try {
-      await fetch('/api/telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+      const response = await fetch('/api/orders', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerType, customerName: form.name.trim(), phone: form.phone.trim(), telegram: form.telegram.trim() || undefined,
+          region: form.region.trim(), address: form.address.trim() || undefined, deliveryMethod: 'manager_confirmation', note: form.note.trim() || undefined,
+          paymentMethod, locale,
+          items: cart.map((item) => ({ productId: item.catalogId || String(item.id), quantity: item.quantity, saleUnit: item.saleUnit || 'PACK' })),
+          attribution: getSubmissionAttribution(), website: form.website, startedAt,
+        }),
       });
-    } catch (error) {
-      console.error("Failed to send Telegram message via API", error);
-    }
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.error || t.error);
+      setOrderNumber(result.orderNumber); clearCart();
+    } catch (submitError) { setError(submitError instanceof Error ? submitError.message : t.error); }
+    finally { setLoading(false); }
   };
 
-  const completeOrder = async (orderId: string) => {
-    const productIds = cart.map(item => item.id.toString());
-    fpixel.trackPurchase(orderId, finalTotal, productIds, 'UZS');
-
-    setShowPaynetModal(false);
-    setIsLoading(false);
-    setIsSuccess(true);
-    clearCart();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Custom Validation
-    const newErrors: Record<string, string> = {};
-    if (!formData.firstName.trim()) newErrors.firstName = t('checkout_req_firstName');
-    if (!formData.lastName.trim()) newErrors.lastName = t('checkout_req_lastName');
-    
-    const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
-    if (phoneDigits.length < 9) {
-       newErrors.phone = t('checkout_req_phone');
-    }
-
-    if (!formData.address.trim()) newErrors.address = t('checkout_req_address');
-    if (cartTotal < MIN_ORDER_AMOUNT) {
-      newErrors.order = minOrderNotice;
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      showToast(newErrors.order || t('checkout_req_fill_all'), "error");
-      return;
-    }
-    
-    setErrors({});
-    setIsLoading(true);
-
-    const orderId = `ORD-${Date.now()}`;
-    setActiveOrderId(orderId);
-
-    try {
-      // 1. Save order to DB first so it exists for webhooks
-      await saveOrderToDatabase(orderId);
-
-      // 2. Send Telegram notifications
-      await sendTelegramNotification(orderId);
-
-      // 3. Handle specific payment redirects or completes
-      if (paymentMethod === 'click') {
-        const serviceId = process.env.NEXT_PUBLIC_CLICK_SERVICE_ID || '34262'; // example click service ID
-        const merchantId = process.env.NEXT_PUBLIC_CLICK_MERCHANT_ID || '24564'; // example click merchant ID
-        const returnUrl = `${window.location.origin}/${lang}/profile`;
-        const clickUrl = `https://my.click.uz/services/pay?service_id=${serviceId}&merchant_id=${merchantId}&amount=${finalTotal}&transaction_param=${orderId}&return_url=${encodeURIComponent(returnUrl)}`;
-        
-        window.location.href = clickUrl;
-      } else if (paymentMethod === 'payme') {
-        const merchantId = process.env.NEXT_PUBLIC_PAYME_MERCHANT_ID || '6405bc77b9195b8cb460db7c'; // example payme merchant ID
-        const returnUrl = `${window.location.origin}/${lang}/profile`;
-        const paymeParams = `m=${merchantId};ac.order_id=${orderId};a=${finalTotal * 100};c=${encodeURIComponent(returnUrl)}`;
-        const base64Params = window.btoa(unescape(encodeURIComponent(paymeParams)));
-        const paymeUrl = `https://checkout.paycom.uz/${base64Params}`;
-        
-        window.location.href = paymeUrl;
-      } else if (paymentMethod === 'paynet') {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-        if (isMobile) {
-          window.open(PAYNET_URL, '_blank');
-          setTimeout(() => completeOrder(orderId), 2000);
-        } else {
-          setShowPaynetModal(true);
-          setIsLoading(false);
-        }
-      } else {
-        // Cash payment
-        fetch('/api/sms/notify-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, phone: formData.phone })
-      }).catch(err => console.error("Failed to trigger cash order SMS:", err));
-
-        setTimeout(() => completeOrder(orderId), 1500);
-      }
-    } catch (err) {
-      console.error("Checkout process failed:", err);
-      showToast(t('error_occurred'), "error");
-      setIsLoading(false);
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';
-  };
-
-  const formatTemplate = (key: string, values: Record<string, string>) => {
-    return Object.entries(values).reduce(
-      (text, [token, value]) => text.split(`{${token}}`).join(value),
-      t(key),
-    );
-  };
-
-  const minOrderNotice = formatTemplate('checkout_min_order_notice', {
-    min: formatPrice(MIN_ORDER_AMOUNT),
-    remaining: formatPrice(remainingForMinOrder),
-  });
-
-  const freeDeliveryNotice = formatTemplate('checkout_free_delivery_notice', {
-    threshold: formatPrice(FREE_DELIVERY_THRESHOLD),
-    remaining: formatPrice(remainingForFreeDelivery),
-  });
-
-  if (cart.length === 0 && !isSuccess) {
-    return (
-      <div className={`min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-6 transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-light-bg'}`}>
-        <h2 className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('cart_empty')}</h2>
-        <p className={`mb-8 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('cart_empty_desc')}</p>
-        <button onClick={onBack} className={`px-8 py-3 rounded-full transition-colors ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-light-card text-light-text hover:bg-gray-200'}`}>
-          {t('checkout_back_to_shop')}
-        </button>
-      </div>
-    );
+  if (orderNumber) {
+    const telegramText = locale === 'ru' ? `Здравствуйте. Мой запрос ${orderNumber}.` : `Assalomu alaykum. Mening so‘rov raqamim ${orderNumber}.`;
+    return <main className="min-h-screen bg-slate-50 px-4 pb-20 pt-32 text-slate-950"><section className="mx-auto max-w-xl rounded-3xl border border-emerald-200 bg-white p-8 text-center shadow-sm sm:p-12"><CheckCircle2 className="mx-auto text-emerald-600" size={52} /><h1 className="mt-5 text-3xl font-black">{t.success}</h1><p className="mt-3 leading-7 text-slate-600">{t.successText}</p><div className="mt-6 rounded-xl bg-slate-100 p-4"><span className="block text-sm text-slate-500">{t.orderNumber}</span><strong className="mt-1 block font-mono text-lg">{orderNumber}</strong></div><div className="mt-7 grid gap-3 sm:grid-cols-2"><a href={`https://t.me/paketshopuz?text=${encodeURIComponent(telegramText)}`} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-sky-600 font-bold text-white"><MessageCircle size={19} />{t.telegramCta}</a><Link href={`/${locale}`} className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-300 font-bold">{t.home}</Link></div></section></main>;
   }
+  if (cart.length === 0) return <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 text-center text-slate-950"><PackageCheck className="text-slate-400" size={52} /><h1 className="mt-5 text-3xl font-black">{t.empty}</h1><p className="mt-2 text-slate-600">{t.emptyText}</p><Link href={`/${locale}/catalog`} className="mt-7 rounded-xl bg-red-600 px-6 py-3 font-bold text-white">{t.back}</Link></main>;
 
-  return (
-    <div className={`min-h-screen pt-24 pb-12 relative transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-light-bg text-light-text'}`}>
-      <div className="container mx-auto px-6 max-w-6xl relative z-10">
-        <button onClick={onBack} className={`flex items-center gap-2 mb-8 transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-light-muted hover:text-light-text'}`}>
-          <ArrowLeft size={18} />
-          <span>{t('checkout_back_to_shop')}</span>
-        </button>
+  const customerTypes: Array<[CustomerType, string]> = [['entrepreneur', t.entrepreneur], ['organization', t.organization], ['reseller', t.reseller], ['individual', t.individual]];
+  const payments: Array<[PaymentMethod, string]> = [['cash', t.cash], ['card_transfer', t.card], ['bank', t.bank], ['terminal', t.terminal], ['other', t.other]];
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className={`text-3xl font-bold mb-8 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('checkout_title')}</h1>
-            <form onSubmit={handleSubmit} noValidate className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_firstName')}</label>
-                  <input name="firstName" type="text" value={formData.firstName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder={t('checkout_placeholder_firstname')} />
-                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
-                </div>
-                <div className="space-y-2">
-                  <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_lastName')}</label>
-                  <input name="lastName" type="text" value={formData.lastName} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder={t('checkout_placeholder_lastname')} />
-                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_phone')}</label>
-                <div className="relative">
-                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>+998</span>
-                  <input name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={`w-full border rounded-lg pl-16 pr-4 py-3 focus:outline-none transition-all ${errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="90 123 45 67" />
-                </div>
-                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('city_label')}</label>
-                <select name="city" value={formData.city} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400 transition-all appearance-none ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}>
-                  {cities.map(cityKey => (
-                    <option key={cityKey} className={isDark ? 'bg-zinc-900 text-white' : 'bg-white text-light-text'} value={t(cityKey)}>
-                      {t(cityKey)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_address')}</label>
-                <input name="address" type="text" value={formData.address} onChange={handleInputChange} className={`w-full border rounded-lg px-4 py-3 focus:outline-none transition-all ${errors.address ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : isDark ? 'bg-dark-800 border-white/10 text-white focus:border-gold-400 focus:ring-1 focus:ring-gold-400' : 'bg-white border-light-border text-light-text focus:border-gold-400 focus:ring-1 focus:ring-gold-400'}`} placeholder="Amir Temur ko'chasi, 15-uy" />
-                {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-              </div>
-
-              <div className="pt-2">
-                <label className={`text-sm mb-2 block ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_promo')}</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Ticket className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`} size={18} />
-                    <input
-                      type="text"
-                      value={promoCode}
-                      disabled={!!appliedPromo}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder={t('checkout_promo_placeholder')}
-                      className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:border-gold-400 focus:outline-none disabled:opacity-50 ${isDark ? 'bg-dark-800 border-white/10 text-white' : 'bg-white border-light-border text-light-text'}`}
-                    />
-                  </div>
-                  {!appliedPromo ? (
-                    <button
-                      type="button"
-                      onClick={handleApplyPromo}
-                      disabled={!promoCode || isCheckingPromo}
-                      className={`px-6 rounded-lg font-medium transition-colors disabled:opacity-50 ${isDark ? 'bg-white/10 hover:bg-gold-400 hover:text-black text-white' : 'bg-light-card hover:bg-gold-400 hover:text-black text-light-text'}`}
-                    >
-                      {isCheckingPromo ? <Loader2 className="animate-spin" size={20} /> : t('checkout_apply')}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleRemovePromo}
-                      className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-4 rounded-lg font-medium transition-colors"
-                    >
-                      <X size={20} />
-                    </button>
-                  )}
-                </div>
-                {appliedPromo && (
-                  <p className="text-green-400 text-sm mt-2 flex items-center gap-1">
-                    <CheckCircle2 size={14} /> {t('checkout_promo_applied_1')} {formatPrice(discountAmount)} {t('checkout_promo_applied_2')}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <label className={`text-sm ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{t('checkout_payment_method')}</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <button type="button" onClick={() => setPaymentMethod('click')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'click' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
-                    <CreditCard size={24} />
-                    <span className="font-medium text-xs">{t('checkout_click')}</span>
-                    {paymentMethod === 'click' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('payme')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'payme' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
-                    <Smartphone size={24} />
-                    <span className="font-medium text-xs">{t('checkout_payme')}</span>
-                    {paymentMethod === 'payme' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('paynet')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'paynet' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
-                    <Wallet size={24} />
-                    <span className="font-medium text-xs">{t('checkout_paynet')}</span>
-                    {paymentMethod === 'paynet' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
-                  </button>
-                  <button type="button" onClick={() => setPaymentMethod('cash')} className={`relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${paymentMethod === 'cash' ? 'bg-gold-500/10 border-gold-400 text-gold-400 ring-1 ring-gold-400' : isDark ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20' : 'bg-light-card border-light-border text-light-muted hover:bg-gray-200'}`}>
-                    <Banknote size={24} />
-                    <span className="font-medium text-xs">{t('checkout_cash')}</span>
-                    {paymentMethod === 'cash' && <motion.div layoutId="check" className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <button type="submit" disabled={isLoading || cartTotal < MIN_ORDER_AMOUNT} className="w-full bg-gold-400 text-black font-bold text-lg py-4 rounded-xl hover:bg-gold-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden group">
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                      <span>{t('checkout_in_progress')}</span>
-                    </div>
-                  ) : (
-                    <>
-                      <span>{paymentMethod !== 'cash' ? t('checkout_pay') : t('checkout_order_btn')}</span>
-                      <span className="text-sm font-normal">({formatPrice(finalTotal)})</span>
-                      <Send size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-                <p className="text-center text-gray-500 text-sm mt-4 flex items-center justify-center gap-2">
-                  <ShieldCheck size={16} /> {t('checkout_secure_payment')}
-                </p>
-              </div>
-            </form>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`border rounded-2xl p-8 h-fit sticky top-28 ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border shadow-sm'}`}>
-            <h3 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('checkout_order_summary')}</h3>
-            <div className="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {cart.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className={`w-16 aspect-[4/5] rounded-lg overflow-hidden shrink-0 ${isDark ? 'bg-gray-800' : 'bg-light-card'}`}>
-                    <img src={item.image} alt={getLocalizedText(item.name, lang)} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(item.name, lang)}</h4>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>{item.category}</p>
-                    <div className="flex justify-between mt-2">
-                      <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>x{item.quantity}</span>
-                      <span className="text-sm font-medium text-gold-400">{formatPrice(item.price * item.quantity)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className={`space-y-3 pt-6 border-t ${isDark ? 'border-white/10' : 'border-light-border'}`}>
-              <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                <span>{t('checkout_products_sum')}</span>
-                <span>{formatPrice(cartTotal)}</span>
-              </div>
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-green-400">
-                  <span>{t('checkout_discount')}</span>
-                  <span>-{formatPrice(discountAmount)}</span>
-                </div>
-              )}
-              {cartTotal < MIN_ORDER_AMOUNT && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                  {minOrderNotice}
-                </div>
-              )}
-              {discountedSubtotal < FREE_DELIVERY_THRESHOLD && (
-                <div className="rounded-xl border border-gold-400/20 bg-gold-400/10 p-3 text-sm text-gold-300">
-                  {freeDeliveryNotice}
-                </div>
-              )}
-              <div className={`flex justify-between ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>
-                <span>{t('checkout_delivery')}</span>
-                <span className={deliveryFee > 0 ? 'text-gold-400' : 'text-green-400'}>
-                  {deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout_delivery_free')}
-                </span>
-              </div>
-              <div className={`flex justify-between text-xl font-bold pt-4 border-t ${isDark ? 'text-white border-white/5' : 'text-light-text border-light-border'}`}>
-                <span>{t('checkout_total')}</span>
-                <span>{formatPrice(finalTotal)}</span>
-              </div>
-            </div>
-
-            <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
-                <Truck className="text-gold-400 mb-2" size={24} />
-                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>{t('checkout_fast_delivery')}</span>
-              </div>
-              <div className={`flex flex-col items-center justify-center p-4 rounded-xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-light-card border-light-border'}`}>
-                <CreditCard className="text-gold-400 mb-2" size={24} />
-                <span className={`text-xs text-center ${isDark ? 'text-gray-300' : 'text-light-muted'}`}>{t('checkout_easy_payment')}</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showPaynetModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPaynetModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-dark-900 border border-gold-400/30 rounded-3xl p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(251,191,36,0.1)] flex flex-col items-center">
-              <button onClick={() => setShowPaynetModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/5 rounded-full hover:bg-white/10 transition-colors">
-                <X size={20} />
-              </button>
-              <div className="w-16 h-16 bg-gold-400/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-gold-400/30">
-                <Smartphone size={32} className="text-gold-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">{t('checkout_paynet_title')}</h2>
-              <p className="text-gray-400 text-sm mb-6">{t('checkout_paynet_desc')}</p>
-              <div className="p-4 bg-white rounded-2xl mb-6 shadow-xl">
-                <img src={PAYNET_QR_IMAGE} alt="Paynet QR Code" className="w-48 h-48 object-contain" onError={(e) => { e.currentTarget.src = QR_FALLBACK; }} />
-              </div>
-              <div className="flex flex-col gap-3 w-full">
-                <button onClick={() => completeOrder(activeOrderId)} className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors">{t('checkout_paynet_btn')}</button>
-                <a href={PAYNET_URL} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition-colors text-sm"><ExternalLink size={16} /> {t('checkout_paynet_link')}</a>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isSuccess && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-dark-900 border border-white/10 rounded-3xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl">
-              <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} className="text-green-500" /></div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{t('checkout_success_title')}</h2>
-              <p className="text-gray-400 mb-8 leading-relaxed">{t('checkout_success_desc_1')} {formData.firstName}! {t('checkout_success_desc_2')} <b>{formData.phone}</b> {t('checkout_success_desc_3')}</p>
-              <button onClick={onBack} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors">{t('checkout_back_home')}</button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-export default Checkout;
+  return <main className="min-h-screen bg-slate-50 pb-20 pt-28 text-slate-950"><div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"><button onClick={onBack} className="inline-flex items-center gap-2 font-semibold text-slate-600 hover:text-red-700"><ArrowLeft size={18} />{t.back}</button><div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
+    <section><h1 className="text-3xl font-black sm:text-4xl">{t.title}</h1><p className="mt-3 max-w-2xl leading-7 text-slate-600">{t.intro}</p><form onSubmit={submit} noValidate className="mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <fieldset><legend className="mb-3 font-bold">{t.customerType}</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{customerTypes.map(([value, label]) => <label key={value} className={`cursor-pointer rounded-xl border p-3 text-center text-sm font-semibold ${customerType === value ? 'border-red-600 bg-red-50 text-red-700' : 'border-slate-200'}`}><input type="radio" className="sr-only" checked={customerType === value} onChange={() => { setCustomerType(value); if (value === 'organization') setPaymentMethod('bank'); }} />{label}</label>)}</div></fieldset>
+      <div className="grid gap-4 sm:grid-cols-2"><input required value={form.name} onChange={set('name')} placeholder={t.name} aria-label={t.name} className={inputClass} /><input required type="tel" value={form.phone} onChange={set('phone')} placeholder={`${t.phone} — +998 90 123 45 67`} aria-label={t.phone} className={inputClass} /><input value={form.telegram} onChange={set('telegram')} placeholder={t.telegram} aria-label={t.telegram} className={inputClass} /><input required value={form.region} onChange={set('region')} placeholder={t.region} aria-label={t.region} className={inputClass} /></div>
+      <input value={form.address} onChange={set('address')} placeholder={t.address} aria-label={t.address} className={inputClass} /><textarea value={form.note} onChange={set('note')} placeholder={t.note} aria-label={t.note} rows={3} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-red-500" /><input tabIndex={-1} autoComplete="off" value={form.website} onChange={set('website')} className="hidden" aria-hidden="true" />
+      <fieldset><legend className="mb-3 font-bold">{t.payment}</legend><div className="flex flex-wrap gap-2">{payments.map(([value, label]) => <label key={value} className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold ${paymentMethod === value ? 'border-red-600 bg-red-50 text-red-700' : 'border-slate-200'}`}><input type="radio" className="sr-only" checked={paymentMethod === value} onChange={() => setPaymentMethod(value)} />{label}</label>)}</div></fieldset>
+      <label className="flex items-start gap-3 text-sm leading-6 text-slate-600"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-1 h-4 w-4" />{t.consent}</label>{error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}<button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3.5 font-bold text-white disabled:opacity-60">{loading ? <Loader2 className="animate-spin" size={19} /> : <Send size={19} />}{loading ? t.submitting : t.submit}</button><p className="flex items-center justify-center gap-2 text-xs text-slate-500"><ShieldCheck size={15} />{t.confirm}</p>
+    </form></section>
+    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-28 sm:p-7"><h2 className="text-xl font-bold">{t.summary}</h2><div className="mt-5 space-y-5">{cart.map((item) => { const key = item.catalogId || String(item.id); const unit = saleUnitLabel(item.saleUnit || 'PACK', locale); const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage; return <article key={key} className="flex gap-4 border-b border-slate-100 pb-5 last:border-0"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-20 w-20 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><p className="font-mono text-xs text-slate-500">{t.sku}: {item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-semibold leading-5">{getLocalizedText(item.name, locale)}</h3><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-1 font-bold">{money(item.quoteUnitPrice * item.quantity)}</p></div></article>; })}</div><div className="mt-6 border-t border-slate-200 pt-5"><div className="flex justify-between gap-4"><span className="text-sm text-slate-600">{t.estimated}</span><strong>{money(cartTotal)}</strong></div><p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t.confirm}</p></div></aside>
+  </div></div></main>;
+}

@@ -1,45 +1,30 @@
 'use client';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import AdminLogin from '../../../components/admin/AdminLogin';
-import { useAuth } from '../../../context/AuthContext';
 import { useGlobalData } from '../../../context/GlobalContext';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function AdminPage() {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { data: session, status } = useSession();
   const { products, setProducts, categories, setCategories, heroContent, setHeroContent, navigationSettings, setNavigationSettings, blogPosts, setBlogPosts } = useGlobalData();
   const router = useRouter();
   const params = useParams();
   const lang = String(params?.lang || 'uz');
   const homePath = `/${lang}`;
-  const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
-  const [isAdminChecking, setIsAdminChecking] = useState(true);
+  const isAdminAuthorized = Boolean(session?.user?.roles?.some((role) => ['SUPER_ADMIN', 'ADMIN', 'CONTENT_MANAGER', 'SALES_MANAGER', 'WAREHOUSE_VIEWER'].includes(role)));
+  if (status === 'loading') return <div className="min-h-screen pt-24 text-center">Tekshirilmoqda...</div>;
 
-  useEffect(() => {
-    if (!user) {
-      setIsAdminChecking(false);
-      return;
-    }
-    setIsAdminChecking(true);
-    import('../../../lib/admin').then(({ isAdminUser }) => isAdminUser(user.id))
-      .then(allowed => setIsAdminAuthorized(allowed))
-      .catch(() => setIsAdminAuthorized(false))
-      .finally(() => setIsAdminChecking(false));
-  }, [user]);
-
-  if (authLoading || isAdminChecking) return <div className="min-h-screen pt-24 text-center">Tekshirilmoqda...</div>;
-
-  if (!user) return <AdminLogin onBack={() => router.push(homePath)} />;
+  if (!session?.user) return <AdminLogin onBack={() => router.push(homePath)} />;
   
   if (!isAdminAuthorized) {
     return (
       <div className="min-h-screen pt-24 text-center">
         <h2>Sizda admin huquqi yo'q.</h2>
-        <button onClick={() => { signOut(); router.push(homePath); }}>Chiqish</button>
+        <button onClick={() => signOut({ callbackUrl: homePath })}>Chiqish</button>
       </div>
     );
   }
 
-  return <AdminLayout onLogout={async () => { await signOut(); router.push(homePath); }} products={products} setProducts={setProducts} categories={categories} setCategories={setCategories} heroContent={heroContent} setHeroContent={setHeroContent} navigationSettings={navigationSettings} setNavigationSettings={setNavigationSettings} blogPosts={blogPosts} setBlogPosts={setBlogPosts} />;
+  return <AdminLayout onLogout={async () => { await signOut({ callbackUrl: homePath }); }} products={products} setProducts={setProducts} categories={categories} setCategories={setCategories} heroContent={heroContent} setHeroContent={setHeroContent} navigationSettings={navigationSettings} setNavigationSettings={setNavigationSettings} blogPosts={blogPosts} setBlogPosts={setBlogPosts} />;
 }

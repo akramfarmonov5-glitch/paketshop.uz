@@ -10,17 +10,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const l = lang || 'uz';
   const metadataMap: Record<string, any> = {
     uz: {
-      title: 'PaketShop.uz | Qadoqlash va xo\'jalik mahsulotlari',
-      description: 'PaketShop.uz - O\'zbekistondagi qadoqlash, oshxona va xo\'jalik mahsulotlari onlayn do\'koni. Paketlar, konteynerlar, bir martalik idishlar va tozalash anjomlarini buyurtma qiling.',
+      title: 'PaketShop.uz | Qadoqlash va bir martalik idishlar ulgurji',
+      description: 'O‘zbekiston bizneslari uchun qadoqlash, bir martalik idishlar va xo‘jalik sarf materiallari ulgurji katalogi.',
     },
     ru: {
-      title: 'PaketShop.uz | Упаковочные и хозяйственные товары',
-      description: 'PaketShop.uz - Онлайн магазин упаковочных, кухонных и хозяйственных товаров в Узбекистане. Закажите пакеты, контейнеры, одноразовую посуду и инвентарь для уборки.',
+      title: 'PaketShop.uz | Упаковка и одноразовая посуда оптом',
+      description: 'Оптовый каталог упаковки, одноразовой посуды и хозяйственных расходных материалов для бизнеса Узбекистана.',
     },
-    en: {
-      title: 'PaketShop.uz | Packaging & Household Goods',
-      description: 'PaketShop.uz - Online store for packaging, kitchen, and household goods in Uzbekistan. Order bags, containers, disposable tableware, and cleaning supplies.',
-    }
   };
   const metadata = metadataMap[l] || metadataMap['uz'];
 
@@ -33,7 +29,6 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       languages: {
         uz: '/uz',
         ru: '/ru',
-        en: '/en',
         'x-default': '/uz',
       },
     },

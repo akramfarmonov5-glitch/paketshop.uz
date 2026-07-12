@@ -13,11 +13,11 @@ interface GlobalContextType {
   navigationSettings: NavigationSettings;
   blogPosts: BlogPost[];
   isLoading: boolean;
-  setProducts: (p: Product[]) => void;
-  setCategories: (c: Category[]) => void;
-  setHeroContent: (h: HeroContent) => void;
-  setNavigationSettings: (n: NavigationSettings) => void;
-  setBlogPosts: (b: BlogPost[]) => void;
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+  setHeroContent: React.Dispatch<React.SetStateAction<HeroContent>>;
+  setNavigationSettings: React.Dispatch<React.SetStateAction<NavigationSettings>>;
+  setBlogPosts: React.Dispatch<React.SetStateAction<BlogPost[]>>;
 }
 
 const GlobalContext = createContext<GlobalContextType>({} as GlobalContextType);

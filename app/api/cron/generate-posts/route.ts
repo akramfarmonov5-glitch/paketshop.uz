@@ -124,10 +124,10 @@ export async function GET(req: Request) {
       post: data[0] 
     });
 
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Auto-Blog Generation Catch Error:", err);
     return NextResponse.json(
-      { error: "Avtomatik maqola yaratish jarayonida xatolik yuz berdi", details: err.message },
+      { error: "Avtomatik maqola yaratish jarayonida xatolik yuz berdi", details: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }
     );
   }

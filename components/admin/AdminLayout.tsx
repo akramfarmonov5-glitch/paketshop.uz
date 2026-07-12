@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, ShoppingCart, FileText, LogOut, Layers, Image as ImageIcon, Menu, Users, X } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, FileText, LogOut, Layers, Image as ImageIcon, Menu, Users, X, FileUp, Route } from 'lucide-react';
 import AdminDashboard from './AdminDashboard';
-import AdminProducts from './AdminProducts';
-import AdminCategories from './AdminCategories';
+import AdminProductsV2 from './AdminProductsV2';
+import AdminCategoriesV2 from './AdminCategoriesV2';
+import AdminProductImport from './AdminProductImport';
 import AdminOrders from './AdminOrders';
 import AdminBlog from './AdminBlog';
 import AdminHero from './AdminHero';
 import AdminNavigation from './AdminNavigation';
-import AdminLeads from './AdminLeads';
+import AdminLeadsV2 from './AdminLeadsV2';
+import AdminRedirects from './AdminRedirects';
 import { Product, Category, HeroContent, NavigationSettings, BlogPost } from '../../types';
 
 interface AdminLayoutProps {
@@ -27,9 +29,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ 
     onLogout, 
     products, 
-    setProducts, 
     categories, 
-    setCategories,
     heroContent,
     setHeroContent,
     navigationSettings,
@@ -37,15 +37,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     blogPosts,
     setBlogPosts
 }) => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'leads' | 'blog' | 'hero' | 'navigation'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'import' | 'orders' | 'leads' | 'blog' | 'hero' | 'navigation' | 'redirects'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: 'Statistika', icon: LayoutDashboard },
     { id: 'orders', label: 'Buyurtmalar (CRM)', icon: ShoppingCart },
-    { id: 'leads', label: 'Mijozlar (Chat)', icon: Users },
+    { id: 'leads', label: 'Leadlar', icon: Users },
     { id: 'products', label: 'Mahsulotlar', icon: Package },
     { id: 'categories', label: 'Kategoriyalar', icon: Layers },
+    { id: 'import', label: 'Import / eksport', icon: FileUp },
+    { id: 'redirects', label: 'Redirectlar', icon: Route },
     { id: 'blog', label: 'SEO Blog & AI', icon: FileText },
     { id: 'hero', label: 'Banner (Hero)', icon: ImageIcon },
     { id: 'navigation', label: 'Navigatsiya', icon: Menu },
@@ -69,13 +71,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         }
         return <div>Loading...</div>;
       case 'categories':
-        return <AdminCategories categories={categories} setCategories={setCategories} />;
+        return <AdminCategoriesV2 />;
       case 'products':
-        return <AdminProducts products={products} setProducts={setProducts} categories={categories} />;
+        return <AdminProductsV2 />;
+      case 'import':
+        return <AdminProductImport />;
+      case 'redirects':
+        return <AdminRedirects />;
       case 'orders':
         return <AdminOrders />;
       case 'leads':
-        return <AdminLeads />;
+        return <AdminLeadsV2 />;
       case 'blog':
         if (blogPosts && setBlogPosts) {
             return <AdminBlog posts={blogPosts} setPosts={setBlogPosts} />;

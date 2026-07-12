@@ -168,7 +168,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
         `,
       });
 
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         name: {
           uz: data.nameUz || prev.name?.uz || '',
@@ -284,7 +284,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
 
     const formattedPrice = new Intl.NumberFormat('uz-UZ').format(Number(formData.price)) + ' UZS';
 
-    const validImages = formData.images?.filter(url => url.trim() !== '') || [];
+    const validImages = formData.images?.filter((url: string) => url.trim() !== '') || [];
     const mainImage = validImages.length > 0 ? validImages[0] : (formData.image || 'https://via.placeholder.com/400');
 
     // Tayyorlash
@@ -622,7 +622,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {formData.images?.map((url, index) => (
+                  {formData.images?.map((url: string, index: number) => (
                     <div key={index} className="relative">
                       <CloudinaryUpload
                         currentImage={url}
@@ -681,7 +681,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {formData.specs?.map((spec, index) => (
+                  {formData.specs?.map((spec: any, index: number) => (
                     <div key={index} className="flex gap-2">
                       <input
                         type="text"

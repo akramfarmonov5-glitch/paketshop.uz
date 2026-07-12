@@ -5,7 +5,7 @@ import { getCategorySlug } from '../lib/categoryUtils';
 import type { Product, Category, BlogPost } from '../types';
 
 const SITE_URL = 'https://paketshop.uz';
-const LANGS = ['uz', 'ru', 'en'] as const;
+const LANGS = ['uz', 'ru'] as const;
 type Lang = (typeof LANGS)[number];
 
 function buildAlternates(pathBuilder: (lang: Lang) => string) {
@@ -38,6 +38,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
       alternates: { languages: buildAlternates((l) => `/${l}/blog`) },
     });
+  }
+
+  const b2bPages = ['catalog', 'wholesale', 'organizations', 'starter-kits', 'delivery', 'payment', 'about', 'contact', 'faq', 'privacy', 'terms'];
+  for (const lang of ['uz', 'ru'] as const) {
+    for (const page of b2bPages) {
+      entries.push({
+        url: `${SITE_URL}/${lang}/${page}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+        alternates: {
+          languages: {
+            uz: `${SITE_URL}/uz/${page}`,
+            ru: `${SITE_URL}/ru/${page}`,
+            'x-default': `${SITE_URL}/uz/${page}`,
+          },
+        },
+      });
+    }
   }
 
   if (!hasSupabaseCredentials) {
