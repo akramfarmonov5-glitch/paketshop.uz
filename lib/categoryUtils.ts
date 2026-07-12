@@ -9,7 +9,7 @@ export const getCategorySlug = (category: Category, lang = 'uz'): string => {
 };
 
 export const getCategorySlugs = (category: Category): string[] => {
-  return ['uz', 'ru', 'en']
+  return ['uz', 'ru']
     .map(lang => getCategorySlug(category, lang))
     .filter((slug, index, slugs) => slug && slugs.indexOf(slug) === index);
 };
@@ -22,7 +22,6 @@ export const findCategoryByValue = (value: CategoryValue, categories: Category[]
     const names = [
       getLocalizedText(category.name, 'uz'),
       getLocalizedText(category.name, 'ru'),
-      getLocalizedText(category.name, 'en'),
     ];
 
     return categorySlugs.includes(rawValue) || names.includes(rawValue);

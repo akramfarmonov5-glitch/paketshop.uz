@@ -1,4 +1,18 @@
-import B2BBusinessLanding from '@/components/B2BBusinessLanding';
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/organizations', title: { uz: 'Tashkilotlar uchun qadoqlash ta’minoti | PaketShop.uz', ru: 'Упаковка для организаций | PaketShop.uz' }, description: { uz: 'Shartnoma, hisob-faktura, bank to‘lovi va doimiy qadoqlash ta’minoti.', ru: 'Договор, счёт-фактура, безналичная оплата и регулярные поставки упаковки.' } }); }
-export default async function OrganizationsPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru = lang === 'ru'; return <B2BBusinessLanding locale={ru ? 'ru' : 'uz'} type="organization" eyebrow={ru ? 'Для организаций' : 'Tashkilotlar uchun'} title={ru ? 'Поставка упаковки для организаций и сетей' : 'Tashkilot va savdo tarmoqlari uchun qadoqlash ta’minoti'} description={ru ? 'Договор, счёт-фактура, безналичная оплата и регулярные поставки по согласованному графику.' : 'Shartnoma, hisob-faktura, bank orqali to‘lov va kelishilgan jadval bo‘yicha doimiy ta’minot.'} benefits={ru ? ['Договор и счёт-фактура', 'Безналичная оплата', 'Резерв крупного заказа', 'Индивидуальный менеджер'] : ['Shartnoma va hisob-faktura', 'Bank orqali to‘lov', 'Katta buyurtmani rezerv qilish', 'Individual menejer']} />; }
+import React from 'react';
+      
+      export async function generateMetadata() {
+        return { title: 'Tashkilotlar Uchun | PaketShop', description: 'Hisob-faktura, shartnoma, bank orqali to\'lov' };
+      }
+      
+      export default function OrganizationsPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Tashkilotlar Uchun</h1>
+              <p className="text-lg text-slate-600 mb-8">
+                Barcha hujjatlar bilan ishlash: Hisob-faktura, shartnoma va pul ko'chirish yo'li bilan to'lov.
+              </p>
+            </div>
+          </div>
+        );
+      }

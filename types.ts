@@ -1,7 +1,6 @@
 export interface LocalizedString {
   uz: string;
   ru: string;
-  en: string;
 }
 
 export interface Product {
@@ -13,10 +12,9 @@ export interface Product {
   slug?: string | LocalizedString;
   price: number;
   formattedPrice: string;
-  category: string; // This will link to Category.slug or name
+  category: string;
   image: string;
-  images?: string[]; // Qo'shimcha rasmlar (max 4)
-  videoUrl?: string; // YouTube video link
+  images?: string[];
   shortDescription: string | LocalizedString;
   specs: { label: string | LocalizedString; value: string | LocalizedString }[];
   stock?: number;
@@ -41,7 +39,6 @@ export interface Category {
   slug: string | LocalizedString;
   image: string;
   description?: string | LocalizedString;
-  googleProductCategory?: string; // For FB/Google Catalog mapping
 }
 
 export interface HeroContent {
@@ -49,18 +46,18 @@ export interface HeroContent {
   title: string;
   description: string;
   buttonText: string;
-  images: string[]; // Changed from single image to array
+  images: string[];
 }
 
 export interface MenuItem {
   id: number;
   label: string | LocalizedString;
-  href: string; // Masalan: "#" yoki "/category/soatlar"
+  href: string;
 }
 
 export interface SocialLink {
   id: number;
-  platform: 'instagram' | 'telegram' | 'facebook' | 'youtube' | 'twitter';
+  platform: 'instagram' | 'telegram';
   url: string;
 }
 
@@ -79,31 +76,11 @@ export interface CartItem extends Product {
   quoteUnitPrice: number;
 }
 
-export type OrderStatus =
-  | 'Kutilmoqda'
-  | 'To\'landi'
-  | 'Tasdiqlandi'
-  | 'Yetkazilmoqda'
-  | 'Yakunlandi'
-  | 'Bekor qilindi';
-
 export interface OrderItem {
   id?: number;
   name: string | LocalizedString;
   quantity: number;
   price?: number;
-}
-
-export interface Order {
-  id: string;
-  customerName: string;
-  phone: string;
-  total: number;
-  status: OrderStatus;
-  date: string;
-  paymentMethod: 'Click' | 'Payme' | 'Paynet' | 'Naqd';
-  items?: OrderItem[];
-  created_at?: string;
 }
 
 export interface BlogPost {
@@ -115,26 +92,9 @@ export interface BlogPost {
   seo: {
     title: string | LocalizedString;
     description: string | LocalizedString;
-    keywords: string[] | LocalizedString; // LocalizedString can contain stringified arrays if needed
+    keywords: string[] | LocalizedString;
   };
   date: string;
-}
-
-export interface ChatLead {
-  id: string;
-  name: string;
-  phone: string;
-  created_at: string;
-  last_message?: string;
-}
-
-export interface Review {
-  id: string;
-  product_id: number;
-  user_name: string;
-  rating: number; // 1 to 5
-  comment: string;
-  created_at: string;
 }
 
 declare global {

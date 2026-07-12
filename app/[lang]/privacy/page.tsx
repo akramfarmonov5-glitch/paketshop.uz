@@ -1,4 +1,12 @@
-import StaticContentPage from '@/components/StaticContentPage';
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/privacy', title: { uz: 'Maxfiylik siyosati | PaketShop.uz', ru: 'Политика конфиденциальности | PaketShop.uz' }, description: { uz: 'PaketShop.uz mijoz ma’lumotlarini yig‘ish, ishlatish va himoya qilish qoidalari.', ru: 'Правила сбора, использования и защиты данных клиентов PaketShop.uz.' } }); }
-export default async function PrivacyPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru=lang==='ru'; return <StaticContentPage title={ru?'Политика конфиденциальности':'Maxfiylik siyosati'} intro={ru?'Как PaketShop.uz обрабатывает данные клиентов.':'PaketShop.uz mijoz ma’lumotlarini qanday qayta ishlashi haqida.'} sections={ru?[{title:'Какие данные мы собираем',body:'Имя, телефон, адрес доставки, содержимое заявки и UTM-источник.'},{title:'Для чего используются данные',body:'Для обработки заявки, связи с клиентом, доставки и улучшения сервиса.'},{title:'Хранение и защита',body:'Доступ ограничен ролями сотрудников. Секреты и внутренние цены не публикуются.'},{title:'Связь',body:'По вопросам данных: support@paketshop.uz'}]:[{title:'Qanday ma’lumotlar olinadi',body:'Ism, telefon, yetkazish manzili, so‘rov tarkibi va UTM manbasi.'},{title:'Foydalanish maqsadi',body:'So‘rovni qayta ishlash, mijoz bilan bog‘lanish, yetkazish va xizmatni yaxshilash.'},{title:'Saqlash va himoya',body:'Kirish xodim rollari bilan cheklangan. Sirlar va ichki narxlar ommaga chiqarilmaydi.'},{title:'Bog‘lanish',body:'Ma’lumotlar bo‘yicha: support@paketshop.uz'}]} />; }
+import React from 'react';
+      export async function generateMetadata() { return { title: 'Maxfiylik Siyosati' }; }
+      export default function PrivacyPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Maxfiylik Siyosati</h1>
+              <p className="text-slate-700">Saytimizdan foydalanish orqali ma'lumotlaringiz xavfsizligiga kafolat beramiz.</p>
+            </div>
+          </div>
+        );
+      }

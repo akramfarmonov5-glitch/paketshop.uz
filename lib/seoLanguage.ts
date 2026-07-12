@@ -1,16 +1,15 @@
-export type SeoLanguage = 'uz' | 'ru' | 'en';
+export type SeoLanguage = 'uz' | 'ru';
 
-export const SEO_LANGUAGES: SeoLanguage[] = ['uz', 'ru', 'en'];
+export const SEO_LANGUAGES: SeoLanguage[] = ['uz', 'ru'];
 export const DEFAULT_LANGUAGE: SeoLanguage = 'uz';
 
 export const LOCALE_BY_LANG: Record<SeoLanguage, string> = {
   uz: 'uz_UZ',
   ru: 'ru_RU',
-  en: 'en_US',
 };
 
 export const isSeoLanguage = (value: string | undefined): value is SeoLanguage => {
-  return value === 'uz' || value === 'ru' || value === 'en';
+  return value === 'uz' || value === 'ru';
 };
 
 export const stripLanguagePrefix = (path: string): string => {

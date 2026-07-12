@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Users, DollarSign, Package } from 'lucide-react';
-import { Product, Order } from '../../types';
+import { Product } from '../../types';
+
+interface Order {
+  id: string;
+  total: number;
+  date: string;
+  phone: string;
+}
 import { supabase } from '../../lib/supabaseClient';
 
 interface AdminDashboardProps {
@@ -71,10 +78,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
   const salesData = processSalesData();
 
   const categoryData = [
-    { name: 'Soatlar', count: products.filter(p => p.category === 'Soatlar').length },
-    { name: 'Sumkalar', count: products.filter(p => p.category === 'Sumkalar').length },
-    { name: 'Texno', count: products.filter(p => p.category === 'Texnologiya').length },
-    { name: 'Aksessuar', count: products.filter(p => p.category === 'Aksessuarlar').length },
+    { name: 'Karton', count: products.filter(p => p.category === 'Karton').length },
+    { name: 'Plastik', count: products.filter(p => p.category === 'Plastik').length },
+    { name: 'Qogoz', count: products.filter(p => p.category === 'Qogoz').length },
+    { name: 'Eco', count: products.filter(p => p.category === 'Eco').length },
   ];
 
   const formatPrice = (price: number) => {
@@ -93,26 +100,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in bg-slate-50 text-slate-900 min-h-screen p-4 md:p-8">
       <div>
-        <h2 className="text-3xl font-bold text-white mb-2">Boshqaruv Paneli</h2>
-        <p className="text-gray-400">Do'koningizning asosiy ko'rsatkichlari.</p>
+        <h2 className="text-3xl font-bold text-slate-900 mb-2">Boshqaruv Paneli</h2>
+        <p className="text-slate-500 font-medium">Do'koningizning asosiy ko'rsatkichlari.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <div key={idx} className="bg-zinc-900 border border-white/5 p-6 rounded-2xl">
+          <div key={idx} className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-gold-400/10 rounded-xl">
-                <stat.icon className="text-gold-400" size={24} />
+              <div className="p-3 bg-red-50 rounded-xl">
+                <stat.icon className="text-red-600" size={24} />
               </div>
-              <span className="text-xs font-medium text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
                 {stat.change}
               </span>
             </div>
-            <h3 className="text-gray-400 text-sm font-medium">{stat.label}</h3>
-            <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+            <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider">{stat.label}</h3>
+            <p className="text-2xl font-black text-slate-900 mt-1">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -120,44 +127,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Sales Chart */}
-        <div className="bg-zinc-900 border border-white/5 p-6 rounded-2xl">
-          <h3 className="text-lg font-bold text-white mb-6">Haftalik Sotuvlar</h3>
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-6">Haftalik Sotuvlar</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FBBF24" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#FBBF24" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                <XAxis dataKey="name" stroke="#666" tick={{ fill: '#888' }} axisLine={false} />
-                <YAxis stroke="#666" tick={{ fill: '#888' }} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
-                  itemStyle={{ color: '#FBBF24' }}
+                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a', fontWeight: 'bold' }}
+                  itemStyle={{ color: '#dc2626' }}
                 />
-                <Area type="monotone" dataKey="sales" stroke="#FBBF24" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                <Area type="monotone" dataKey="sales" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Categories Chart */}
-        <div className="bg-zinc-900 border border-white/5 p-6 rounded-2xl">
-          <h3 className="text-lg font-bold text-white mb-6">Kategoriyalar Bo'yicha</h3>
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-6">Kategoriyalar Bo'yicha</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                <XAxis dataKey="name" stroke="#666" tick={{ fill: '#888' }} axisLine={false} />
-                <YAxis stroke="#666" tick={{ fill: '#888' }} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
                 <Tooltip 
-                   contentStyle={{ backgroundColor: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
-                   cursor={{ fill: '#333' }}
+                   contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a', fontWeight: 'bold' }}
+                   cursor={{ fill: '#f1f5f9' }}
                 />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#dc2626" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

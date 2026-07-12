@@ -1,3 +1,14 @@
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/faq', title: { uz: 'Ko‘p so‘raladigan savollar | PaketShop.uz', ru: 'Частые вопросы | PaketShop.uz' }, description: { uz: 'Ulgurji narx, minimal miqdor, yetkazish va tashkilotlar bilan ishlash bo‘yicha javoblar.', ru: 'Ответы об оптовых ценах, минимальном количестве, доставке и работе с организациями.' } }); }
-export default async function FaqPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru=lang==='ru'; const items=ru?[['Цены актуальны?','Финальную цену и наличие подтверждает менеджер.'],['Есть доставка в регионы?','Да, через карго или выбранный клиентом транспорт.'],['Можно купить одну штуку?','Минимальное количество зависит от упаковки и товара.'],['Работаете с организациями?','Да, доступны договор, счёт-фактура и безналичная оплата.']]:[['Narxlar amaldami?','Yakuniy narx va qoldiqni menejer tasdiqlaydi.'],['Viloyatlarga yetkazish bormi?','Ha, kargo yoki mijoz tanlagan transport orqali.'],['Bir dona olsa bo‘ladimi?','Minimal miqdor mahsulot qadoqlanishiga bog‘liq.'],['Tashkilotlar bilan ishlaysizmi?','Ha, shartnoma, hisob-faktura va bank to‘lovi mavjud.']]; return <main className="min-h-screen bg-slate-50 pb-24 pt-28 text-slate-950"><div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8"><h1 className="text-4xl font-black">{ru?'Частые вопросы':'Ko‘p so‘raladigan savollar'}</h1><div className="mt-10 space-y-3">{items.map(([question,answer])=><details key={question} className="rounded-2xl border border-slate-200 bg-white p-5"><summary className="cursor-pointer font-bold">{question}</summary><p className="mt-3 leading-7 text-slate-600">{answer}</p></details>)}</div></div></main>; }
+import React from 'react';
+      export async function generateMetadata() { return { title: 'Ko\'p So\'raladigan Savollar (FAQ)' }; }
+      export default function FAQPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Ko'p So'raladigan Savollar</h1>
+              <div className="space-y-4">
+                <details className="p-4 border rounded-xl bg-slate-50"><summary className="font-bold cursor-pointer">Minimum buyurtma qancha?</summary><p className="mt-2 text-slate-600">Biz asosan ulgurji savdo qilamiz. Minimal miqdor har bir mahsulot uchun alohida belgilangan (masalan, 1 korobka).</p></details>
+              </div>
+            </div>
+          </div>
+        );
+      }

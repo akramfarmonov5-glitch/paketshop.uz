@@ -98,15 +98,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-black flex text-white font-sans">
+    <div className="min-h-screen bg-white flex text-slate-900 font-sans">
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-zinc-900 border-b border-white/10 flex items-center justify-between px-4 py-3">
-        <h1 className="text-lg font-bold tracking-wider text-white">
-          Paket<span className="text-gold-400">ADMIN</span>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200 flex items-center justify-between px-4 py-3">
+        <h1 className="text-lg font-bold tracking-wider text-slate-900">
+          Paket<span className="text-red-600">ADMIN</span>
         </h1>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+          className="p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -115,23 +115,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-20"
+          className="md:hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-20"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        w-64 bg-zinc-900 border-r border-white/10 flex flex-col fixed h-full z-20
+        w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20
         transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}>
-        <div className="p-6 border-b border-white/10">
-          <h1 className="text-2xl font-bold tracking-wider text-white">
-            Paket<span className="text-gold-400">ADMIN</span>
+        <div className="p-6 border-b border-slate-200">
+          <h1 className="text-2xl font-bold tracking-wider text-slate-900">
+            Paket<span className="text-red-600">ADMIN</span>
           </h1>
-          <p className="text-xs text-gray-500 mt-1">Management Console</p>
+          <p className="text-xs text-slate-400 mt-1">Management Console</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -141,8 +141,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
               onClick={() => handleTabClick(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                 activeTab === item.id 
-                  ? 'bg-gold-500/10 text-gold-400 border border-gold-500/20' 
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-gold-500/10 text-red-600 border border-gold-500/20' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <item.icon size={20} />
@@ -151,7 +151,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-slate-200">
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"

@@ -78,32 +78,32 @@ export default function AdminRedirects() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white">Redirectlar (301)</h2>
-        <p className="mt-1 text-sm text-gray-400">Eski URL’larni yangi sahifalarga yo‘naltirish. Yo‘lni til prefiksisiz kiritsangiz (masalan <code className="text-gold-400">/eski-sahifa</code>), u /uz va /ru uchun ham ishlaydi.</p>
+        <h2 className="text-2xl font-bold text-slate-900">Redirectlar (301)</h2>
+        <p className="mt-1 text-sm text-slate-500">Eski URL’larni yangi sahifalarga yo‘naltirish. Yo‘lni til prefiksisiz kiritsangiz (masalan <code className="text-red-600">/eski-sahifa</code>), u /uz va /ru uchun ham ishlaydi.</p>
       </div>
 
-      <form onSubmit={handleCreate} className="grid gap-3 rounded-2xl border border-white/10 bg-zinc-900 p-4 md:grid-cols-[2fr_2fr_120px_auto]">
-        <input required value={form.fromPath} onChange={(event) => setForm((previous) => ({ ...previous, fromPath: event.target.value }))} placeholder="Eski yo‘l: /eski-sahifa" className="h-11 rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-gold-400" />
-        <input required value={form.toPath} onChange={(event) => setForm((previous) => ({ ...previous, toPath: event.target.value }))} placeholder="Yangi yo‘l: /catalog" className="h-11 rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-gold-400" />
-        <select value={form.statusCode} onChange={(event) => setForm((previous) => ({ ...previous, statusCode: Number(event.target.value) }))} aria-label="Status kodi" className="h-11 rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white">
+      <form onSubmit={handleCreate} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[2fr_2fr_120px_auto]">
+        <input required value={form.fromPath} onChange={(event) => setForm((previous) => ({ ...previous, fromPath: event.target.value }))} placeholder="Eski yo‘l: /eski-sahifa" className="h-11 rounded-xl border border-slate-200 bg-white/40 px-3 text-sm text-slate-900 outline-none focus:border-red-600" />
+        <input required value={form.toPath} onChange={(event) => setForm((previous) => ({ ...previous, toPath: event.target.value }))} placeholder="Yangi yo‘l: /catalog" className="h-11 rounded-xl border border-slate-200 bg-white/40 px-3 text-sm text-slate-900 outline-none focus:border-red-600" />
+        <select value={form.statusCode} onChange={(event) => setForm((previous) => ({ ...previous, statusCode: Number(event.target.value) }))} aria-label="Status kodi" className="h-11 rounded-xl border border-slate-200 bg-white/40 px-3 text-sm text-slate-900">
           <option value={301}>301</option>
           <option value={302}>302</option>
           <option value={410}>410</option>
         </select>
-        <button disabled={saving} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gold-400 px-4 text-sm font-bold text-black hover:bg-gold-300 disabled:opacity-60">
+        <button disabled={saving} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-black hover:bg-gold-300 disabled:opacity-60">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Qo‘shish
         </button>
       </form>
 
       {error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400">{error}</p>}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-zinc-900">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-gray-400"><Loader2 size={18} className="animate-spin" /> Yuklanmoqda...</div>
+          <div className="flex items-center justify-center gap-2 py-16 text-slate-500"><Loader2 size={18} className="animate-spin" /> Yuklanmoqda...</div>
         ) : rows.length ? (
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-400">
                 <th className="px-4 py-3">Eski yo‘l</th>
                 <th className="px-4 py-3" aria-hidden />
                 <th className="px-4 py-3">Yangi yo‘l</th>
@@ -114,25 +114,25 @@ export default function AdminRedirects() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b border-white/5">
-                  <td className="px-4 py-3 font-mono text-gray-200">{row.fromPath}</td>
-                  <td className="px-4 py-3 text-gray-500"><ArrowRight size={14} /></td>
-                  <td className="px-4 py-3 font-mono text-gray-200">{row.toPath}</td>
-                  <td className="px-4 py-3 text-gray-300">{row.statusCode}</td>
+                <tr key={row.id} className="border-b border-slate-100">
+                  <td className="px-4 py-3 font-mono text-slate-700">{row.fromPath}</td>
+                  <td className="px-4 py-3 text-slate-400"><ArrowRight size={14} /></td>
+                  <td className="px-4 py-3 font-mono text-slate-700">{row.toPath}</td>
+                  <td className="px-4 py-3 text-slate-600">{row.statusCode}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => handleToggle(row)} className={`rounded-full px-3 py-1 text-xs font-bold ${row.active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-gray-500/15 text-gray-400'}`}>
+                    <button onClick={() => handleToggle(row)} className={`rounded-full px-3 py-1 text-xs font-bold ${row.active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-gray-500/15 text-slate-500'}`}>
                       {row.active ? 'Faol' : 'O‘chiq'}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => handleDelete(row)} aria-label={`${row.fromPath} redirectini o‘chirish`} className="rounded-lg p-2 text-gray-500 hover:bg-red-500/10 hover:text-red-400"><Trash2 size={16} /></button>
+                    <button onClick={() => handleDelete(row)} aria-label={`${row.fromPath} redirectini o‘chirish`} className="rounded-lg p-2 text-slate-400 hover:bg-red-500/10 hover:text-red-400"><Trash2 size={16} /></button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <div className="py-16 text-center text-gray-500">Hozircha redirectlar yo‘q</div>
+          <div className="py-16 text-center text-slate-400">Hozircha redirectlar yo‘q</div>
         )}
       </div>
     </div>

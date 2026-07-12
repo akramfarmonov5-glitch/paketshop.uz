@@ -1,4 +1,12 @@
-import StaticContentPage from '@/components/StaticContentPage';
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/about', title: { uz: 'PaketShop.uz haqida', ru: 'О PaketShop.uz' }, description: { uz: 'O‘zbekiston bizneslari uchun qadoqlash va sarf materiallari ulgurji katalogi haqida.', ru: 'Об оптовом каталоге упаковки и расходных материалов для бизнеса Узбекистана.' } }); }
-export default async function AboutPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru=lang==='ru'; return <StaticContentPage title={ru?'О PaketShop.uz':'PaketShop.uz haqida'} intro={ru?'Оптовый каталог упаковки и расходных материалов для бизнеса Узбекистана.':'O‘zbekiston bizneslari uchun qadoqlash va sarf materiallari ulgurji katalogi.'} sections={ru?[{title:'Кому помогаем',body:'Кафе, ресторанам, магазинам, производствам, организациям и реселлерам.'},{title:'Как работаем',body:'Помогаем выбрать товар, подтверждаем остаток и цену, согласуем оплату и доставку.'},{title:'Ассортимент',body:'Упаковка, одноразовая посуда, контейнеры, пакеты, плёнка и хозяйственные материалы.'}]:[{title:'Kimlar bilan ishlaymiz',body:'Kafe, restoran, do‘kon, ishlab chiqarish, tashkilot va qayta sotuvchilar.'},{title:'Qanday ishlaymiz',body:'Mahsulot tanlashga yordam beramiz, qoldiq va narxni tasdiqlaymiz, to‘lov va yetkazishni kelishamiz.'},{title:'Assortiment',body:'Qadoqlash, bir martalik idishlar, konteyner, paket, plyonka va xo‘jalik materiallari.'}]} />; }
+import React from 'react';
+      export async function generateMetadata() { return { title: 'Biz Haqimizda' }; }
+      export default function AboutPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Biz Haqimizda</h1>
+              <p className="text-lg text-slate-700 leading-relaxed">PaketShop.uz - Toshkent shahrida joylashgan qadoqlash materiallari va bir martalik idishlarning yirik ulgurji yetkazib beruvchisi.</p>
+            </div>
+          </div>
+        );
+      }

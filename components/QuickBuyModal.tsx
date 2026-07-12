@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Product } from '../types';
-import { useTheme } from '../context/ThemeContext';
 import * as fpixel from '../lib/fpixel';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
@@ -15,7 +14,6 @@ interface QuickBuyModalProps {
 }
 
 const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product, quantity }) => {
-  const { isDark } = useTheme();
   const { lang } = useLanguage();
 
   const [formData, setFormData] = useState({
@@ -89,25 +87,23 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={!isLoading && !isSuccess ? onClose : undefined}
-          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         />
 
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl ${
-            isDark ? 'bg-dark-900 border border-white/10' : 'bg-white border border-light-border'
-          }`}
+          className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-xl bg-white border border-slate-200"
         >
-          <div className={`p-4 md:p-6 border-b flex justify-between items-center ${isDark ? 'border-white/10' : 'border-light-border'}`}>
-            <h2 className={`font-bold text-lg md:text-xl ${isDark ? 'text-white' : 'text-light-text'}`}>
+          <div className="p-4 md:p-6 border-b flex justify-between items-center border-slate-100">
+            <h2 className="font-bold text-lg md:text-xl text-slate-900">
               Tezkor xarid
             </h2>
             <button
               onClick={onClose}
               disabled={isLoading}
-              className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-light-muted'}`}
+              className="p-2 rounded-full transition-colors hover:bg-slate-100 text-slate-500"
             >
               <X size={20} />
             </button>
@@ -116,43 +112,43 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
           <div className="p-4 md:p-6">
             {!isSuccess ? (
               <>
-                <div className={`flex gap-4 p-4 rounded-xl mb-6 ${isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}>
-                  <div className="w-16 aspect-[4/5] rounded-lg bg-gray-800 shrink-0 overflow-hidden">
+                <div className="flex gap-4 p-4 rounded-xl mb-6 bg-slate-50 border border-slate-100">
+                  <div className="w-16 aspect-[4/5] rounded-lg bg-white shrink-0 overflow-hidden border border-slate-200">
                     <img src={product.image} alt={getLocalizedText(product.name, lang)} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h3 className={`font-medium text-sm line-clamp-1 ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h3>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-light-muted'}`}>Miqdor: {saleQuantity} {saleUnit.toLowerCase()}</p>
-                    <p className="text-gold-400 font-bold mt-1 max-w-full truncate">{formatPrice(total)}</p>
+                    <h3 className="font-bold text-sm line-clamp-2 text-slate-900 leading-tight">{getLocalizedText(product.name, lang)}</h3>
+                    <p className="text-xs mt-1 text-slate-500 font-medium">Miqdor: {saleQuantity} {saleUnit.toLowerCase()}</p>
+                    <p className="text-red-600 font-bold mt-1 max-w-full truncate">{formatPrice(total)}</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-500">{error}</p>}
+                  {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100">{error}</p>}
                   <div className="space-y-1.5">
-                    <label className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Ismingiz</label>
+                    <label className="text-sm font-semibold text-slate-700">Ismingiz</label>
                     <input
                       required
                       name="firstName"
                       type="text"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className={`w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold-400/50 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-200 text-light-text placeholder-gray-400'}`}
+                      className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all bg-white border-slate-200 text-slate-900 placeholder-slate-400 font-medium"
                       placeholder="Ismingizni kiriting"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Telefon raqamingiz</label>
+                    <label className="text-sm font-semibold text-slate-700">Telefon raqamingiz</label>
                     <div className="relative">
-                      <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>+998</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">+998</span>
                       <input
                         required
                         name="phone"
                         type="tel"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className={`w-full border rounded-xl pl-16 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold-400/50 transition-all ${isDark ? 'bg-dark-800 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-200 text-light-text placeholder-gray-400'}`}
+                        className="w-full border rounded-xl pl-16 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-all bg-white border-slate-200 text-slate-900 placeholder-slate-400 font-medium"
                         placeholder="90 123 45 67"
                       />
                     </div>
@@ -161,11 +157,11 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gold-400 text-black font-bold text-base py-3.5 rounded-xl hover:bg-gold-500 transition-all disabled:opacity-70 mt-6 flex justify-center items-center gap-2 relative overflow-hidden group"
+                    className="w-full bg-red-600 text-white font-bold text-base py-3.5 rounded-xl hover:bg-red-700 transition-all disabled:opacity-70 mt-6 flex justify-center items-center gap-2 relative overflow-hidden group shadow-lg shadow-red-600/20"
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>Yuborilmoqda...</span>
                       </div>
                     ) : (
@@ -175,18 +171,18 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
                       </>
                     )}
                   </button>
-                  <p className="text-center text-xs text-gray-500 mt-3 flex justify-center items-center gap-1.5">
-                    <ShieldCheck size={14} /> Operatorlarimiz tez orada aloqaga chiqishadi.
+                  <p className="text-center text-xs text-slate-500 mt-3 flex justify-center items-center gap-1.5 font-medium">
+                    <ShieldCheck size={14} className="text-red-600" /> Operatorlarimiz tez orada aloqaga chiqishadi.
                   </p>
                 </form>
               </>
             ) : (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-8 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle2 size={32} className="text-green-500" />
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 size={32} className="text-emerald-600" />
                 </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-light-text'}`}>Buyurtma yuborildi</h3>
-                <p className={`${isDark ? 'text-gray-400' : 'text-light-muted'} text-sm`}>Siz bilan tez orada bog'lanamiz.</p>
+                <h3 className="text-xl font-bold mb-2 text-slate-900">Buyurtma yuborildi</h3>
+                <p className="text-slate-500 text-sm font-medium">Siz bilan tez orada bog'lanamiz.</p>
               </motion.div>
             )}
           </div>

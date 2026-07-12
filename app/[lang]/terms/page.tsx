@@ -1,4 +1,12 @@
-import StaticContentPage from '@/components/StaticContentPage';
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/terms', title: { uz: 'Foydalanish shartlari | PaketShop.uz', ru: 'Условия использования | PaketShop.uz' }, description: { uz: 'PaketShop.uz katalogi, buyurtma so‘rovi, to‘lov va yetkazishning asosiy shartlari.', ru: 'Основные условия каталога, заявки, оплаты и доставки PaketShop.uz.' } }); }
-export default async function TermsPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru=lang==='ru'; return <StaticContentPage title={ru?'Условия использования':'Foydalanish shartlari'} intro={ru?'Основные условия работы каталога и заявок PaketShop.uz.':'PaketShop.uz katalogi va buyurtma so‘rovlari uchun asosiy shartlar.'} sections={ru?[{title:'Каталог',body:'Цена и наличие на сайте носят информационный характер и подтверждаются менеджером.'},{title:'Заказ',body:'Заявка становится подтверждённым заказом после согласования товара, количества, цены и доставки.'},{title:'Оплата и доставка',body:'Способ оплаты и итоговая стоимость доставки согласуются до отгрузки.'},{title:'Ответственность',body:'Фотографии могут незначительно отличаться от фактической партии товара.'}]:[{title:'Katalog',body:'Saytdagi narx va qoldiq axborot sifatida beriladi va menejer tomonidan tasdiqlanadi.'},{title:'Buyurtma',body:'Mahsulot, miqdor, narx va yetkazish kelishilgandan keyin so‘rov tasdiqlangan buyurtmaga aylanadi.'},{title:'To‘lov va yetkazish',body:'To‘lov usuli va yakuniy yetkazish narxi jo‘natishdan oldin kelishiladi.'},{title:'Javobgarlik',body:'Rasmlar real mahsulot partiyasidan biroz farq qilishi mumkin.'}]} />; }
+import React from 'react';
+      export async function generateMetadata() { return { title: 'Foydalanish Shartlari' }; }
+      export default function TermsPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Foydalanish Shartlari</h1>
+              <p className="text-slate-700">Ushbu shartlar PaketShop.uz xizmatlaridan foydalanish qoidalarini belgilaydi.</p>
+            </div>
+          </div>
+        );
+      }

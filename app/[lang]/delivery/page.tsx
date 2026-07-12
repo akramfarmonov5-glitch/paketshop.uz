@@ -1,4 +1,17 @@
-import { MapPin, PackageCheck, Store, Truck } from 'lucide-react';
-import { localizedPageMetadata } from '@/lib/seo';
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; return localizedPageMetadata({ lang, path: '/delivery', title: { uz: 'Yetkazib berish | PaketShop.uz', ru: 'Доставка | PaketShop.uz' }, description: { uz: 'Toshkent va viloyatlarga ulgurji buyurtmalarni yetkazib berish shartlari.', ru: 'Условия доставки оптовых заказов по Ташкенту и регионам Узбекистана.' } }); }
-export default async function DeliveryPage({ params }: { params: Promise<{ lang: string }> }) { const { lang } = await params; const ru = lang === 'ru'; const items = ru ? [['Самовывоз', 'Заберите заказ из магазина после подтверждения менеджера.'], ['Ташкент', 'Курьер или Yandex за счёт клиента. Обычно 30 000–50 000 сум, итог зависит от адреса и объёма.'], ['Регионы', 'Отправка через карго или выбранного клиентом водителя/транспорт.'], ['Крупный опт', 'Доставим крупную партию до согласованной грузовой машины.']] : [['Do‘kondan olib ketish', 'Menejer tasdiqlagandan keyin buyurtmani do‘kondan olib keting.'], ['Toshkent', 'Kuryer yoki mijoz hisobidan Yandex. Odatda 30 000–50 000 so‘m, yakuniy summa manzil va hajmga bog‘liq.'], ['Viloyatlar', 'Kargo yoki mijoz tanlagan haydovchi/transport orqali jo‘natish.'], ['Katta ulgurji', 'Yirik buyurtmani kelishilgan yuk mashinasigacha yetkazamiz.']]; const icons = [Store,MapPin,PackageCheck,Truck]; return <main className="min-h-screen bg-slate-50 pb-24 pt-28 text-slate-950"><div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8"><h1 className="text-4xl font-black">{ru ? 'Доставка' : 'Yetkazib berish'}</h1><p className="mt-4 max-w-3xl text-lg text-slate-600">{ru ? 'Стоимость и срок подтверждаются менеджером после проверки объёма и адреса.' : 'Narx va muddat hajm hamda manzil tekshirilgandan so‘ng menejer tomonidan tasdiqlanadi.'}</p><div className="mt-10 grid gap-5 md:grid-cols-2">{items.map(([title,desc],index) => { const Icon=icons[index]; return <section key={title} className="rounded-2xl border border-slate-200 bg-white p-6"><Icon className="text-red-600" /><h2 className="mt-4 text-xl font-bold">{title}</h2><p className="mt-2 leading-7 text-slate-600">{desc}</p></section>; })}</div></div></main>; }
+import React from 'react';
+      export async function generateMetadata() { return { title: 'Yetkazib Berish' }; }
+      export default function DeliveryPage() {
+        return (
+          <div className="min-h-screen pt-24 pb-12 bg-white text-slate-800">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h1 className="text-4xl font-bold text-red-600 mb-6">Yetkazib Berish Shartlari</h1>
+              <ul className="space-y-4 list-disc list-inside text-lg text-slate-700">
+                <li>Do'kondan olib ketish (Samovivoz)</li>
+                <li>Toshkent bo'ylab kuryer</li>
+                <li>Viloyatlarga kargo orqali</li>
+              </ul>
+              <p className="mt-6 text-sm text-slate-500">* Yetkazib berish narxini menejer tasdiqlaydi.</p>
+            </div>
+          </div>
+        );
+      }

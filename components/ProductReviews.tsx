@@ -2,17 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, User, MessageCircle, Send, Loader2 } from 'lucide-react';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
-import { Review } from '../types';
-import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+
+interface Review {
+  id: string;
+  product_id: number;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
 
 interface ProductReviewsProps {
   productId: number;
 }
 
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
-  const { isDark } = useTheme();
   const { showToast } = useToast();
   const { t } = useLanguage();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -66,13 +72,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // Table might not exist yet
         console.warn("Could not fetch reviews:", error);
         setReviews(FAKE_REVIEWS);
       } else if (data && data.length > 0) {
         setReviews(data as Review[]);
       } else {
-        // If empty, show some fake ones to keep the design alive initially (optional)
         setReviews([]);
       }
     } catch (e) {
@@ -104,7 +108,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         }
       }
 
-      // Optimistically add to UI
       const mockInsertedReview: Review = {
         ...newReview,
         id: `local-${Date.now()}`,
@@ -134,7 +137,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       <Star 
         key={i} 
         size={14} 
-        className={i < Math.round(count) ? 'text-gold-400' : 'text-gray-400 opacity-30'} 
+        className={i < Math.round(count) ? 'text-amber-500' : 'text-slate-300'} 
         fill={i < Math.round(count) ? 'currentColor' : 'none'}
       />
     ));
@@ -147,24 +150,24 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
 
   if (loading) {
     return (
-      <div className={`py-8 flex justify-center items-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+      <div className="py-8 flex justify-center items-center text-slate-400">
         <Loader2 className="animate-spin" size={24} />
       </div>
     );
   }
 
   return (
-    <div className={`mt-10 px-4 md:px-0`}>
-      <div className="flex items-center justify-between mb-6">
+    <div className="mt-10 px-4 md:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className={`text-xl md:text-2xl font-bold mb-1 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            <MessageCircle size={22} className="text-gold-400" />
+          <h2 className="text-xl md:text-2xl font-bold mb-1 flex items-center gap-2 text-slate-900">
+            <MessageCircle size={22} className="text-red-600" />
             {t('reviews_title')}
           </h2>
           {reviews.length > 0 && (
             <div className="flex items-center gap-2">
               <div className="flex">{renderStars(Number(averageRating))}</div>
-              <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              <span className="text-sm font-medium text-slate-600">
                 {averageRating} ({reviews.length} {t('reviews_count')})
               </span>
             </div>
@@ -173,7 +176,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         
         <button 
           onClick={() => setShowForm(!showForm)}
-          className={`text-sm font-bold px-4 py-2 rounded-lg transition-colors border ${isDark ? 'border-gold-400/30 text-gold-400 hover:bg-gold-400/10' : 'border-black text-black hover:bg-black hover:text-white'}`}
+          className="text-sm font-bold px-4 py-2.5 rounded-xl transition-colors border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm"
         >
           {showForm ? t('cancel') : t('leave_review')}
         </button>
@@ -185,25 +188,25 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
             initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
             animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-            className={`mb-8 p-5 md:p-6 rounded-2xl border ${isDark ? 'bg-dark-800 border-white/10' : 'bg-gray-50 border-gray-200'}`}
+            className="mb-8 p-5 md:p-6 rounded-2xl border bg-slate-50 border-slate-200"
           >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 space-y-1.5">
-                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('your_name')}</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">{t('your_name')}</label>
                   <input
                     required
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
+                    className="w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-colors bg-white border-slate-200 text-slate-900 placeholder-slate-400 font-medium"
                     placeholder={t('enter_name_placeholder')}
                   />
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('rate')}</label>
-                  <div className="flex gap-1 h-[46px] items-center px-4 rounded-xl border bg-transparent">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">{t('rate')}</label>
+                  <div className="flex gap-1 h-[46px] items-center px-4 rounded-xl border bg-white border-slate-200">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         type="button"
@@ -215,7 +218,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                       >
                         <Star 
                           size={24} 
-                          className={`transition-colors ${(hoveredRating || rating) >= star ? 'text-gold-400' : 'text-gray-400 opacity-40'}`} 
+                          className={`transition-colors ${(hoveredRating || rating) >= star ? 'text-amber-500' : 'text-slate-300'}`} 
                           fill={(hoveredRating || rating) >= star ? 'currentColor' : 'none'} 
                         />
                       </button>
@@ -225,13 +228,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('your_comment')}</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">{t('your_comment')}</label>
                 <textarea
                   required
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-gold-400 transition-colors resize-none ${isDark ? 'bg-dark-900 border-white/10 text-white placeholder-gray-600' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'}`}
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600 transition-colors resize-none bg-white border-slate-200 text-slate-900 placeholder-slate-400 font-medium"
                   placeholder={t('comment_placeholder')}
                 />
               </div>
@@ -240,7 +243,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-gold-400 text-black font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 hover:bg-gold-500 transition-transform active:scale-95 disabled:opacity-50"
+                  className="bg-red-600 text-white font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 hover:bg-red-700 transition-transform active:scale-95 disabled:opacity-50 shadow-md shadow-red-600/20"
                 >
                   {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Send size={16} /> {t('submit')}</>}
                 </button>
@@ -252,7 +255,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
 
       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
         {reviews.length === 0 ? (
-          <div className={`text-center py-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          <div className="text-center py-10 text-slate-500 font-medium">
             {t('no_reviews')}
           </div>
         ) : (
@@ -261,25 +264,25 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               key={review.id} 
-              className={`p-4 md:p-5 rounded-2xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-white border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]'}`}
+              className="p-4 md:p-5 rounded-2xl border bg-white border-slate-100 shadow-sm"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 flex border items-center justify-center rounded-full ${isDark ? 'bg-dark-900 border-white/10 text-gray-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
+                  <div className="w-10 h-10 flex border items-center justify-center rounded-full bg-slate-50 border-slate-200 text-slate-400">
                     <User size={18} />
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{review.user_name}</h4>
-                    <span className={`text-[10px] md:text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    <h4 className="text-sm font-bold text-slate-900">{review.user_name}</h4>
+                    <span className="text-[10px] md:text-xs text-slate-500 font-medium">
                       {formatDate(review.created_at)}
                     </span>
                   </div>
                 </div>
-                <div className="flex border rounded-full px-2 py-1 bg-gold-400/10 border-gold-400/20">
+                <div className="flex border rounded-full px-2 py-1 bg-amber-50 border-amber-100">
                   {renderStars(review.rating)}
                 </div>
               </div>
-              <p className={`text-sm md:text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className="text-sm md:text-base leading-relaxed text-slate-600">
                 {review.comment}
               </p>
             </motion.div>

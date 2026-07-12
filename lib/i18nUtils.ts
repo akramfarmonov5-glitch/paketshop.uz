@@ -1,7 +1,6 @@
 export interface LocalizedString {
   uz: string;
   ru: string;
-  en: string;
 }
 
 export const getLocalizedText = (text: string | LocalizedString | any, lang: string): string => {
@@ -9,7 +8,7 @@ export const getLocalizedText = (text: string | LocalizedString | any, lang: str
   if (typeof text === 'string') {
     try {
       const parsed = JSON.parse(text);
-      if (parsed && (parsed.uz !== undefined || parsed.ru !== undefined || parsed.en !== undefined)) {
+      if (parsed && (parsed.uz !== undefined || parsed.ru !== undefined)) {
         return parsed[lang as keyof LocalizedString] || parsed.uz || '';
       }
     } catch {
@@ -23,17 +22,17 @@ export const getLocalizedText = (text: string | LocalizedString | any, lang: str
 };
 
 export const parseLocalizedObject = (text: string | any): LocalizedString => {
-  const defaultLoc: LocalizedString = { uz: '', ru: '', en: '' };
+  const defaultLoc: LocalizedString = { uz: '', ru: '' };
   if (!text) return defaultLoc;
   if (typeof text === 'string') {
     try {
       const parsed = JSON.parse(text);
-      if (parsed && (parsed.uz !== undefined || parsed.ru !== undefined || parsed.en !== undefined)) {
+      if (parsed && (parsed.uz !== undefined || parsed.ru !== undefined)) {
         return { ...defaultLoc, ...parsed };
       }
-      return { ...defaultLoc, uz: text, ru: text, en: text };
+      return { ...defaultLoc, uz: text, ru: text };
     } catch {
-      return { ...defaultLoc, uz: text, ru: text, en: text };
+      return { ...defaultLoc, uz: text, ru: text };
     }
   }
   return { ...defaultLoc, ...text };
