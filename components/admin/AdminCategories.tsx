@@ -21,7 +21,6 @@ type CategoryFormData = {
   slug: LocalizedString;
   image: string;
   description: LocalizedString;
-  description: LocalizedString;
 };
 
 const LANGUAGES: Lang[] = ['uz', 'ru'];
@@ -29,14 +28,12 @@ const LANGUAGES: Lang[] = ['uz', 'ru'];
 const emptyLocalizedString = (): LocalizedString => ({
   uz: '',
   ru: '',
-  ru: '',
 });
 
 const createEmptyFormData = (): CategoryFormData => ({
   name: emptyLocalizedString(),
   slug: emptyLocalizedString(),
   image: '',
-  description: emptyLocalizedString(),
   description: emptyLocalizedString(),
 });
 
@@ -86,7 +83,6 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       slug: parseLocalizedObject(category.slug),
       image: category.image || '',
       description: parseLocalizedObject(category.description),
-      description: parseLocalizedObject(category.description),
     });
     setIsModalOpen(true);
   };
@@ -104,9 +100,11 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     }
   };
 
-  const generateCategoryDetails = async () => {
-    if (!formData.name.uz.trim()) {
-      showToast("Iltimos, avval kategoriya nomini o'zbek tilida yozing.", 'warning');
+  const generateAI = async () => {
+    const topic = getLocalizedText(formData.name, activeLang) || getLocalizedText(formData.name, 'uz');
+
+    if (!topic) {
+      showToast("Iltimos, avval Kategoriya nomini yozing.", 'warning');
       return;
     }
 
@@ -115,34 +113,27 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       const data = await requestGeminiJson<{
         slugUz: string;
         slugRu: string;
-        slugEn: string;
         descriptionUz: string;
         descriptionRu: string;
-        descriptionEn: string;
       }>({
         systemInstruction: 'Act as a multilingual e-commerce content strategist. Always answer in valid JSON.',
         message: `
           Category name:
           Uzbek: "${formData.name.uz}"
           Russian: "${formData.name.ru}"
-          English: "${formData.name.en}"
 
           Generate:
           1. slugUz: a clean kebab-case URL slug based on the Uzbek category name
           2. slugRu: a clean kebab-case latin transliteration URL slug based on the Russian category name
-          3. slugEn: a clean kebab-case URL slug based on the English category name
-          4. descriptionUz: short elegant Uzbek description (max 1 sentence)
-          5. descriptionRu: short elegant Russian description (max 1 sentence)
-          6. descriptionEn: short elegant English description (max 1 sentence)
+          3. descriptionUz: short elegant Uzbek description (max 1 sentence)
+          4. descriptionRu: short elegant Russian description (max 1 sentence)
 
           Return JSON:
           {
             "slugUz": "...",
             "slugRu": "...",
-            "slugEn": "...",
             "descriptionUz": "...",
-            "descriptionRu": "...",
-            "descriptionEn": "..."
+            "descriptionRu": "..."
           }
         `,
       });
@@ -152,12 +143,10 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
         slug: {
           uz: data.slugUz || slugify(prev.name.uz),
           ru: data.slugRu || slugify(prev.name.ru || prev.name.uz),
-          en: data.slugEn || slugify(prev.name.en || prev.name.uz),
         },
         description: {
           uz: data.descriptionUz || prev.description.uz,
           ru: data.descriptionRu || prev.description.ru,
-          en: data.descriptionEn || prev.description.en,
         },
       }));
     } catch (error) {
@@ -181,14 +170,12 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
     const slugs: LocalizedString = {
       uz: formData.slug.uz.trim() || slugify(formData.name.uz),
       ru: formData.slug.ru.trim() || slugify(formData.name.ru || formData.name.uz),
-      en: formData.slug.en.trim() || slugify(formData.name.en || formData.name.uz),
     };
 
     const dataToSave = {
       name: JSON.stringify(formData.name),
       slug: JSON.stringify(slugs),
       image: formData.image.trim() || 'https://via.placeholder.com/400',
-      description: JSON.stringify(formData.description),
       description: JSON.stringify(formData.description),
     };
 
@@ -354,7 +341,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                   />
                   <button
                     type="button"
-                    onClick={generateCategoryDetails}
+                    onClick={generateAI}
                     disabled={isGenerating || !formData.name.uz.trim()}
                     className="px-3 bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 rounded-xl flex items-center justify-center disabled:opacity-50 transition-colors"
                     title="AI yordamida tavsif yaratish"
