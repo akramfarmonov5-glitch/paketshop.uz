@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   const input = parsed.data;
 
   try {
-    const created = await db.$transaction(async (transaction) => {
+    const created = await db.$transaction(async (transaction: any) => {
       const redirectRow = await transaction.redirect.create({ data: input });
       await transaction.auditLog.create({
         data: {

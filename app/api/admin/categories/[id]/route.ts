@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const input = parsed.data;
 
   try {
-    const category = await db.$transaction(async (transaction) => {
+    const category = await db.$transaction(async (transaction: any) => {
       const before = await transaction.category.findUniqueOrThrow({ where: { id }, include: { translations: true } });
       await transaction.category.update({ where: { id }, data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active } });
       for (const locale of ['uz', 'ru'] as const) {
@@ -43,7 +43,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   try {
-    await db.$transaction(async (transaction) => {
+    await db.$transaction(async (transaction: any) => {
       const before = await transaction.category.findUniqueOrThrow({ where: { id } });
       await transaction.category.update({ where: { id }, data: { active: false } });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'CATEGORY_ARCHIVE', entityType: 'Category', entityId: id, before: auditJson(before), after: { active: false }, ip: request.headers.get('x-real-ip') } });

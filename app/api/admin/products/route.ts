@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   const input = parsed.data;
 
   try {
-    const product = await db.$transaction(async (transaction) => {
+    const product = await db.$transaction(async (transaction: any) => {
       const created = await transaction.product.create({ data: productScalarData(input) });
       await transaction.productTranslation.createMany({ data: productTranslations(input, created.id) });
       if (input.variants.length) await transaction.productVariant.createMany({ data: productVariants(input, created.id) });

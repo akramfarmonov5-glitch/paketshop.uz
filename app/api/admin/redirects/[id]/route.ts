@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const existing = await db.redirect.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: 'Topilmadi' }, { status: 404 });
 
-    const updated = await db.$transaction(async (transaction) => {
+    const updated = await db.$transaction(async (transaction: any) => {
       const redirectRow = await transaction.redirect.update({ where: { id }, data: parsed.data });
       await transaction.auditLog.create({
         data: {
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const existing = await db.redirect.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: 'Topilmadi' }, { status: 404 });
 
-    await db.$transaction(async (transaction) => {
+    await db.$transaction(async (transaction: any) => {
       await transaction.redirect.delete({ where: { id } });
       await transaction.auditLog.create({
         data: {

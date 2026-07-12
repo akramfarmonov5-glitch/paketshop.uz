@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const input = parsed.data;
 
   try {
-    const product = await db.$transaction(async (transaction) => {
+    const product = await db.$transaction(async (transaction: any) => {
       const before = await transaction.product.findUniqueOrThrow({ where: { id }, include: { translations: true, variants: true, priceTiers: true } });
       await transaction.product.update({ where: { id }, data: productScalarData(input) });
       await transaction.productTranslation.deleteMany({ where: { productId: id } });
@@ -53,7 +53,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
   try {
-    await db.$transaction(async (transaction) => {
+    await db.$transaction(async (transaction: any) => {
       const before = await transaction.product.findUniqueOrThrow({ where: { id } });
       await transaction.product.update({ where: { id }, data: { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' } });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_ARCHIVE', entityType: 'Product', entityId: id, before: auditJson(before), after: { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' }, ip: request.headers.get('x-real-ip') } });

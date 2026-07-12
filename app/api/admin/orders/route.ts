@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest) {
       if (!manager) return NextResponse.json({ error: 'Manager not found' }, { status: 400 });
     }
 
-    const order = await db.$transaction(async (transaction) => {
+    const order = await db.$transaction(async (transaction: any) => {
       const updated = await transaction.order.update({ where: { id: current.id }, data: { status: parsed.data.status, assignedToId: parsed.data.assignedToId }, include: orderInclude });
       if (parsed.data.status && parsed.data.status !== current.status) await transaction.orderStatusHistory.create({ data: { orderId: current.id, status: parsed.data.status, note: parsed.data.note, actorId: session.user.id } });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'ORDER_UPDATE', entityType: 'Order', entityId: current.id, before: { status: current.status, assignedToId: current.assignedToId } as Prisma.InputJsonObject, after: { status: updated.status, assignedToId: updated.assignedToId } as Prisma.InputJsonObject, ip: request.headers.get('x-real-ip') } });

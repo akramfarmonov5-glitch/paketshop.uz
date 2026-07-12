@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     const type = customerType(input.customerType);
     const source = summarizeAttribution(input.attribution);
 
-    const order = await db.$transaction(async (transaction) => {
+    const order = await db.$transaction(async (transaction: any) => {
       const customer = await transaction.customer.upsert({
         where: { phone },
         create: { type, name: input.customerName, phone, telegram: input.telegram },

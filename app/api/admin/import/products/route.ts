@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const job = await db.importJob.create({ data: { filename: file.name, status: 'IMPORTING', totalRows: rows.length } });
     try {
-      await db.$transaction(async (transaction) => {
+      await db.$transaction(async (transaction: any) => {
         for (const entry of valid) {
           const existing = await transaction.product.findUnique({ where: { sku: entry.data.sku.toUpperCase() } });
           const product = existing

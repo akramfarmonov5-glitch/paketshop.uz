@@ -36,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       if (!manager?.active) return NextResponse.json({ error: 'Menejer topilmadi' }, { status: 400 });
     }
 
-    const updated = await db.$transaction(async (transaction) => {
+    const updated = await db.$transaction(async (transaction: any) => {
       const lead = await transaction.lead.update({
         where: { id },
         data: {

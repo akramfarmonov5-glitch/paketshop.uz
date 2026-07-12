@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const input = parsed.data;
 
   try {
-    const category = await db.$transaction(async (transaction) => {
+    const category = await db.$transaction(async (transaction: any) => {
       const created = await transaction.category.create({
         data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active },
       });
