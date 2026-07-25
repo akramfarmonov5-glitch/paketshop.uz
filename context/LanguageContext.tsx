@@ -208,8 +208,11 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const LanguageProvider: React.FC<{ children: ReactNode; initialLang?: string }> = ({ children, initialLang }) => {
+    // initialLang route paramdan keladi: serverda ham, brauzerda ham bir xil qiymat
+    // bo'lishi shart, aks holda /ru sahifalarida hydration mismatch yuz beradi.
     const [lang, setLangState] = useState<Language>(() => {
+        if (isSeoLanguage(initialLang)) return initialLang;
         const pathLang = (typeof window !== 'undefined' ? window.location.pathname : '/').split('/').filter(Boolean)[0];
         if (isSeoLanguage(pathLang)) return pathLang;
         const saved = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_lang') : null);

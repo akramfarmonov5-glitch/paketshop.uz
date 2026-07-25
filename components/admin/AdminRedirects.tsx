@@ -90,7 +90,7 @@ export default function AdminRedirects() {
           <option value={302}>302</option>
           <option value={410}>410</option>
         </select>
-        <button disabled={saving} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-black hover:bg-gold-300 disabled:opacity-60">
+        <button disabled={saving} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Qo‘shish
         </button>
       </form>

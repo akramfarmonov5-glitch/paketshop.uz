@@ -12,12 +12,12 @@ import ErrorBoundary from '../../components/ErrorBoundary';
 import AttributionTracker from '../../components/AttributionTracker';
 import { SessionProvider } from 'next-auth/react';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, lang }: { children: React.ReactNode; lang?: string }) {
   return (
     <ErrorBoundary>
       <SessionProvider>
         <AttributionTracker />
-        <LanguageProvider>
+        <LanguageProvider initialLang={lang}>
           <ThemeProvider>
             <GlobalProvider>
               <ToastProvider>

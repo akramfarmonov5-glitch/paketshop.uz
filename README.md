@@ -10,7 +10,7 @@ The primary flow is catalog → cart/quote request → manager confirms price an
 - PostgreSQL and Prisma
 - Auth.js RBAC foundation
 - Zod server validation and React Hook Form
-- Vitest; Playwright is added with the catalog E2E phase
+- Vitest for unit tests and Playwright for end-to-end coverage
 - Docker and GitHub Actions
 
 See [architecture](docs/architecture.md), [implementation checklist](docs/implementation-checklist.md), and [backup/restore runbook](docs/backup-and-restore.md).
@@ -41,6 +41,18 @@ Run the complete gate with `npm run verify`, or individually:
 - `npm run test`
 - `npm run build`
 - `npm run db:validate`
+
+### End-to-end tests
+
+`npm run test:e2e` (or `npm run test:e2e:ui`) runs the Playwright suite. It starts the dev server itself, provisions a temporary SUPER_ADMIN plus a test redirect, and removes every record it created afterwards.
+
+The run sets `TELEGRAM_NOTIFICATIONS_DISABLED=true` so test orders never reach the manager Telegram group. A live `DATABASE_URL` and at least one `ACTIVE` product are required.
+
+## Database connections
+
+Supabase's **session pooler** (port 5432) caps a project at 15 clients, so `DATABASE_POOL_MAX` (default 3) bounds each instance's Prisma pool. Without it, parallel dev workers and migration scripts exhaust the pooler and the catalog silently falls back to the legacy adapter.
+
+Use the session pooler for migrations and seeds. For serverless production deploys prefer the **transaction pooler** (port 6543), which is built for many short-lived connections.
 
 ## Security boundary
 

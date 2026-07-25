@@ -2,6 +2,24 @@
 
 ## Unreleased — B2B rebuild
 
+### Import rollback and bulk-import scalability
+
+- Added `rollbackData`/`rolledBackAt` to ImportJob with a deployed migration; every commit now stores a per-row before-snapshot (created flag, or previous scalars, translations, variants and price tiers).
+- Added RBAC-protected import history and rollback endpoints, plus an "Import tarixi" admin panel listing every job with a one-click rollback for reversible commits; rollback deletes products the import created and restores the previous state of the ones it updated.
+- Fixed bulk import failing outright above a few hundred rows: the commit ran roughly five sequential queries per row and hit the 60s transaction timeout (`P2028`). The commit is now set-based — one lookup for existing SKUs, `createMany` for new products and all child rows, and batched media handling.
+- Verified acceptance criterion 4 against the live database: a 1000-product CSV previews in ~2.5s and commits in ~8.8s (previously it timed out at 64s), stores an 87 KB rollback snapshot, and rolls back cleanly to the original 2 products.
+- Verified the restore path: re-importing 50 products with changed prices and names, then rolling that import back, returned every product to its previous price and name without deleting any rows; a repeat rollback is rejected with 409.
+- Added `e2e/import.spec.ts` covering template columns, RBAC on the rollback endpoints, and that a row with an unknown category is reported by dry-run and blocks commit.
+
+### Variant and price-tier admin editor
+
+- Added a variant/price-tier editor to the admin product form: variants carry SKU, colour, size, volume, thickness, pack size, price and availability; tiers carry quantity range, price and unit.
+- Added `lib/admin/productDrafts.ts` translating database rows to form drafts and back, with client-side mirrors of the server rules (unique SKUs, non-overlapping tier ranges) and 19 unit tests.
+- Fixed editing a product that already had variants or price tiers: the form previously echoed raw database rows (`id`, `productId`, `null` fields) into the `.strict()` admin schema, so every such save was rejected with a validation error.
+- Fixed the product form regenerating `slugUz`/`slugRu` from the name on every edit, which silently changed the public URL of any edited product and orphaned inbound links; existing slugs are now preserved and only new products get generated slugs.
+- Fixed the product form dropping `legacySku` on save, which broke the legacy `/product/<slug>-<id>` fallback used for old indexed URLs.
+- Verified the whole chain in the browser: tiers entered in the admin editor persist and render as the "Ulgurji narx darajalari" table on the public product page.
+
 ### Phase 1 foundation
 
 - Added the Prisma/PostgreSQL domain schema, indexes and Prisma 7 adapter.
@@ -28,6 +46,24 @@
 - Added RBAC-protected product CRUD with variants, price tiers and internal pricing fields.
 - Added immutable audit-log records for category/product create, update and archive mutations.
 - Added server validation for packaging quantities, unique variant SKUs, public-price modes and non-overlapping tier ranges.
+
+### Restored B2B landing pages
+
+- Restored the wholesale, organizations and starter-kit landings to use `B2BBusinessLanding`/`LeadRequestForm`; they had been reduced to static markup whose "Yuborish" button was a `type="button"` with no handler, so every submitted wholesale enquiry was silently discarded.
+- Restored uz/ru localization plus canonical/hreflang metadata on all three pages and fixed the non-Promise `params` typing on the wholesale route.
+- Starter kits again list four kit compositions with Telegram deep links carrying the kit name, and now also offer a `product_request` lead form for customers who do not use Telegram.
+- Added `e2e/b2b-landings.spec.ts` (8 tests) asserting each landing renders a real submit-type form with a consent checkbox, so the regression cannot return silently.
+- Verified end-to-end in the browser: a wholesale submission created a `RESELLER` lead with city, monthly volume, attribution and a `CREATED` activity, then the test record was removed.
+
+### Playwright E2E suite and fixes it surfaced
+
+- Added a Playwright setup (config, global setup/teardown, fixtures) with 38 tests covering the TZ §38 journey: search with transliteration and typo tolerance, filters, product packaging/price/Telegram deep links, cart, order request, admin order pipeline, uz/ru locale switching, admin-managed redirects, robots/sitemap and mobile viewport checks.
+- Global setup provisions a temporary SUPER_ADMIN and test redirect; teardown removes every E2E-marked order, lead, redirect and the test user, so runs leave no residue.
+- Added `TELEGRAM_NOTIFICATIONS_DISABLED` so test runs never post to the manager Telegram group.
+- Fixed a 500 on `/robots.txt`: a stale `public/robots.txt` conflicted with the generated `app/robots.ts` (and its Disallow paths lacked the locale prefix, so admin/checkout were never actually blocked).
+- Fixed Supabase session-pooler exhaustion (`EMAXCONNSESSION`, pool_size 15) by bounding the Prisma pool via `DATABASE_POOL_MAX` (default 3) with an idle timeout; unbounded pools made catalog/product pages silently fall back to the legacy adapter under load.
+- Fixed hydration mismatches on every Russian page: `LanguageProvider` inferred the locale from `window.location` and so rendered Uzbek on the server; it now receives the route locale, making server HTML match the client and serving correct Russian markup to crawlers.
+- Fixed a `prefer-const` lint error and WCAG AA contrast on 18 admin buttons (black-on-red 4.35:1 → white-on-red 4.83:1), plus three dead `gold-300` hover classes absent from the Tailwind palette.
 
 ### Prisma lead pipeline (CRM)
 

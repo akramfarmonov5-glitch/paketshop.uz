@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import ExcelJS from 'exceljs';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminProductSchema } from '@/lib/validation/adminCatalog';
 import { PRODUCT_IMPORT_HEADERS, normalizeHeader, normalizeImportRecord, toAdminProductImport, type RawImportRow } from '@/lib/import/productImport';
+import { buildProductSnapshot, type RollbackEntry } from '@/lib/import/importRollback';
 import { auditJson, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
 import { db } from '@/lib/server/db';
 import { getAdminSession } from '@/lib/server/rbac';
@@ -61,29 +63,85 @@ export async function POST(request: NextRequest) {
 
     const job = await db.importJob.create({ data: { filename: file.name, status: 'IMPORTING', totalRows: rows.length } });
     try {
-      await db.$transaction(async (transaction: any) => {
-        for (const entry of valid) {
-          const existing = await transaction.product.findUnique({ where: { sku: entry.data.sku.toUpperCase() } });
-          const product = existing
-            ? await transaction.product.update({ where: { id: existing.id }, data: productScalarData(entry.data) })
-            : await transaction.product.create({ data: productScalarData(entry.data) });
-          if (existing) {
-            await transaction.productTranslation.deleteMany({ where: { productId: product.id } });
-            await transaction.productVariant.deleteMany({ where: { productId: product.id } });
-            await transaction.priceTier.deleteMany({ where: { productId: product.id } });
-          }
-          await transaction.productTranslation.createMany({ data: productTranslations(entry.data, product.id) });
-          if (entry.data.variants.length) await transaction.productVariant.createMany({ data: productVariants(entry.data, product.id) });
-          if (entry.data.priceTiers.length) await transaction.priceTier.createMany({ data: productPriceTiers(entry.data, product.id) });
-          if (entry.imageUrl) {
-            const media = await transaction.media.upsert({ where: { key: `import:${entry.data.sku}:primary` }, update: { url: entry.imageUrl }, create: { key: `import:${entry.data.sku}:primary`, url: entry.imageUrl, mimeType: 'image/remote', sizeBytes: 0 } });
-            await transaction.productMedia.upsert({ where: { productId_mediaId: { productId: product.id, mediaId: media.id } }, update: { primary: true }, create: { productId: product.id, mediaId: media.id, primary: true } });
-          }
+      // Import to'plamli bajariladi: har qator uchun alohida so'rov yuborilsa,
+      // 1000 qatorli fayl masofaviy bazada tranzaksiya timeout'iga urilardi (TZ §39.4).
+      const existingProducts = await db.product.findMany({
+        where: { sku: { in: valid.map((entry) => entry.data.sku.toUpperCase()) } },
+        include: { translations: true, variants: true, priceTiers: true },
+      });
+      const existingBySku = new Map(existingProducts.map((product) => [product.sku, product]));
+
+      const rollbackEntries: RollbackEntry[] = [];
+      const productCreates: Array<Record<string, unknown>> = [];
+      const productUpdates: Array<{ id: string; data: ReturnType<typeof productScalarData> }> = [];
+      const translationRows: Array<Record<string, unknown>> = [];
+      const variantRows: Array<Record<string, unknown>> = [];
+      const tierRows: Array<Record<string, unknown>> = [];
+      const mediaPlans: Array<{ key: string; url: string; productId: string }> = [];
+
+      for (const entry of valid) {
+        const sku = entry.data.sku.toUpperCase();
+        const existing = existingBySku.get(sku);
+        const productId = existing?.id ?? randomUUID();
+
+        if (existing) {
+          productUpdates.push({ id: existing.id, data: productScalarData(entry.data) });
+          // Rollback uchun oldingi holat snapshot'i (TZ §24.3).
+          rollbackEntries.push({ sku, productId, created: false, before: buildProductSnapshot(existing) });
+        } else {
+          productCreates.push({ id: productId, ...productScalarData(entry.data) });
+          rollbackEntries.push({ sku, productId, created: true });
         }
-        await transaction.importJob.update({ where: { id: job.id }, data: { status: 'COMPLETED', successRows: valid.length } });
-        await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_IMPORT', entityType: 'ImportJob', entityId: job.id, after: auditJson({ filename: file.name, rows: valid.length }), ip: request.headers.get('x-real-ip') } });
-      }, { timeout: 60_000 });
-      return NextResponse.json({ success: true, jobId: job.id, importedRows: valid.length });
+
+        translationRows.push(...productTranslations(entry.data, productId));
+        variantRows.push(...productVariants(entry.data, productId));
+        tierRows.push(...productPriceTiers(entry.data, productId));
+        if (entry.imageUrl) mediaPlans.push({ key: `import:${sku}:primary`, url: entry.imageUrl, productId });
+      }
+
+      await db.$transaction(async (transaction: any) => {
+        if (productCreates.length) await transaction.product.createMany({ data: productCreates });
+        for (const update of productUpdates) {
+          await transaction.product.update({ where: { id: update.id }, data: update.data });
+        }
+
+        // Yangilanadigan mahsulotlarning bog'liq yozuvlari bitta so'rovda tozalanadi.
+        const updatedIds = productUpdates.map((update) => update.id);
+        if (updatedIds.length) {
+          await transaction.productTranslation.deleteMany({ where: { productId: { in: updatedIds } } });
+          await transaction.productVariant.deleteMany({ where: { productId: { in: updatedIds } } });
+          await transaction.priceTier.deleteMany({ where: { productId: { in: updatedIds } } });
+        }
+        if (translationRows.length) await transaction.productTranslation.createMany({ data: translationRows });
+        if (variantRows.length) await transaction.productVariant.createMany({ data: variantRows });
+        if (tierRows.length) await transaction.priceTier.createMany({ data: tierRows });
+
+        if (mediaPlans.length) {
+          const existingMedia = await transaction.media.findMany({ where: { key: { in: mediaPlans.map((plan) => plan.key) } } });
+          const mediaIdByKey = new Map<string, string>(existingMedia.map((media: { key: string; id: string }) => [media.key, media.id]));
+          const mediaCreates: Array<Record<string, unknown>> = [];
+
+          for (const plan of mediaPlans) {
+            const mediaId = mediaIdByKey.get(plan.key);
+            if (mediaId) {
+              await transaction.media.update({ where: { id: mediaId }, data: { url: plan.url } });
+            } else {
+              const newId = randomUUID();
+              mediaIdByKey.set(plan.key, newId);
+              mediaCreates.push({ id: newId, key: plan.key, url: plan.url, mimeType: 'image/remote', sizeBytes: 0 });
+            }
+          }
+          if (mediaCreates.length) await transaction.media.createMany({ data: mediaCreates });
+          await transaction.productMedia.createMany({
+            data: mediaPlans.map((plan) => ({ productId: plan.productId, mediaId: mediaIdByKey.get(plan.key)!, primary: true })),
+            skipDuplicates: true,
+          });
+        }
+
+        await transaction.importJob.update({ where: { id: job.id }, data: { status: 'COMPLETED', successRows: valid.length, rollbackData: rollbackEntries } });
+        await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_IMPORT', entityType: 'ImportJob', entityId: job.id, after: auditJson({ filename: file.name, rows: valid.length, created: productCreates.length, updated: productUpdates.length }), ip: request.headers.get('x-real-ip') } });
+      }, { timeout: 120_000, maxWait: 20_000 });
+      return NextResponse.json({ success: true, jobId: job.id, importedRows: valid.length, createdRows: productCreates.length, updatedRows: productUpdates.length });
     } catch (commitError) {
       await db.importJob.update({ where: { id: job.id }, data: { status: 'FAILED', errorRows: rows.length } });
       throw commitError;

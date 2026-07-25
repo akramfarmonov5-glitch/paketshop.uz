@@ -91,7 +91,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onBack }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-600 text-black font-bold py-3 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-60"
+            className="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-60"
           >
             {loading ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Kirish'}
           </button>

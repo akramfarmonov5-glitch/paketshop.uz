@@ -217,7 +217,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
             <div className="fixed bottom-6 right-6 md:right-10 z-30">
                 <button
                     onClick={handleSave}
-                    className={`flex items-center gap-2 px-8 py-4 rounded-full font-bold shadow-2xl transition-all ${isSaved ? 'bg-green-500 text-slate-900' : 'bg-red-600 text-black hover:bg-red-700 hover:scale-105'
+                    className={`flex items-center gap-2 px-8 py-4 rounded-full font-bold shadow-2xl transition-all ${isSaved ? 'bg-green-500 text-slate-900' : 'bg-red-600 text-white hover:bg-red-700 hover:scale-105'
                         }`}
                 >
                     {isSaved ? 'Saqlandi!' : (
