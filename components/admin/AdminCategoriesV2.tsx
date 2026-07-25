@@ -13,6 +13,7 @@ interface AdminCategoryRecord {
   sortOrder: number;
   translations: Array<{ locale: string; name: string }>;
   imageUrl?: string | null;
+  parentId?: string | null;
   _count?: { products: number; children: number };
 }
 
@@ -22,6 +23,7 @@ export default function AdminCategoriesV2() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0, imageUrl: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -39,13 +41,33 @@ export default function AdminCategoriesV2() {
     event.preventDefault(); setSaving(true); setError('');
     const slugUz = slugify(form.nameUz);
     try {
-      const response = await fetch('/api/admin/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parentId: form.parentId || null, slugUz, slugRu: `${slugUz}-ru`, name: { uz: form.nameUz, ru: form.nameRu }, sortOrder: form.sortOrder, active: true, imageUrl: form.imageUrl || null }) });
+      const url = editingId ? `/api/admin/categories/${editingId}` : '/api/admin/categories';
+      const method = editingId ? 'PATCH' : 'POST';
+      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parentId: form.parentId || null, slugUz, slugRu: `${slugUz}-ru`, name: { uz: form.nameUz, ru: form.nameRu }, sortOrder: form.sortOrder, active: true, imageUrl: form.imageUrl || null }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Kategoriya saqlanmadi');
       setForm({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0, imageUrl: '' });
+      setEditingId(null);
       await load();
     } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Xatolik'); }
     finally { setSaving(false); }
+  };
+
+  const handleEdit = (category: AdminCategoryRecord) => {
+    setEditingId(category.id);
+    setForm({
+      nameUz: category.translations.find((t) => t.locale === 'uz')?.name || category.slugUz,
+      nameRu: category.translations.find((t) => t.locale === 'ru')?.name || category.slugRu,
+      parentId: category.parentId || '',
+      sortOrder: category.sortOrder,
+      imageUrl: category.imageUrl || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0, imageUrl: '' });
   };
 
   const archive = async (id: string) => {
@@ -77,7 +99,10 @@ export default function AdminCategoriesV2() {
             <Image src={form.imageUrl} alt="Preview" fill className="object-contain p-1" />
           </div>
         )}
-        <button disabled={saving} className="ml-auto flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 font-bold text-white disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />} Qo‘shish</button>
+        <div className="ml-auto flex items-center gap-2">
+          {editingId && <button type="button" onClick={cancelEdit} className="rounded-xl bg-slate-100 px-4 py-2.5 font-semibold text-slate-600 hover:bg-slate-200">Bekor qilish</button>}
+          <button disabled={saving} className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 font-bold text-white disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />} {editingId ? 'Saqlash' : 'Qo‘shish'}</button>
+        </div>
       </div>
     </form>
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">{loading ? <div className="p-10 text-center"><Loader2 className="mx-auto animate-spin" /></div> : <div className="divide-y divide-slate-100">{categories.map((category) => <div key={category.id} className="flex items-center justify-between gap-4 p-4">
@@ -87,6 +112,10 @@ export default function AdminCategoriesV2() {
         </div>
         <div><p className="font-semibold">{category.translations.find((translation) => translation.locale === 'uz')?.name}</p><p className="text-xs text-slate-400">{category.slugUz} · {category._count?.products || 0} mahsulot · {category._count?.children || 0} subkategoriya</p></div>
       </div>
-      <div className="flex items-center gap-3"><span className={`rounded-full px-2 py-1 text-xs ${category.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-slate-500'}`}>{category.active ? 'Faol' : 'Arxiv'}</span>{category.active && <button onClick={() => void archive(category.id)} className="p-2 text-red-400" aria-label="Arxivlash"><Archive size={17} /></button>}</div></div>)}</div>}</div>
+      <div className="flex items-center gap-3">
+        <span className={`rounded-full px-2 py-1 text-xs ${category.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-slate-500'}`}>{category.active ? 'Faol' : 'Arxiv'}</span>
+        <button onClick={() => handleEdit(category)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg" aria-label="Tahrirlash">Tahrirlash</button>
+        {category.active && <button onClick={() => void archive(category.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg" aria-label="Arxivlash"><Archive size={17} /></button>}
+      </div></div>)}</div>}</div>
   </div>;
 }
