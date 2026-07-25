@@ -40,7 +40,7 @@ export default async function StarterKitsPage({ params }: PageProps) {
   const { lang } = await params;
   const locale = lang === 'ru' ? 'ru' : 'uz';
   const ru = locale === 'ru';
-  const telegramUser = process.env.TELEGRAM_USERNAME || 'paketshopuz';
+  const telegramUser = process.env.TELEGRAM_USERNAME || 'paketshop_uz';
   const kitMessage = (kit: string) => ru
     ? `Здравствуйте. Нужен стартовый набор «${kit}» с сайта PaketShop.uz. Рассчитайте состав и цену.`
     : `Assalomu alaykum. PaketShop.uz saytidagi «${kit}» start to‘plami kerak. Tarkibi va narxini hisoblab yuboring.`;

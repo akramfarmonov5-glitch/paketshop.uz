@@ -73,7 +73,7 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
                 <Instagram size={16} />
               </a>
-              <a href="https://t.me/paketshopuz" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
+              <a href="https://t.me/paketshop_uz" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
                 <Send size={16} />
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">

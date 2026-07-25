@@ -43,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
             <a href="tel:+998996448444" className="flex items-center gap-1 font-medium hover:text-red-700">
               <Phone size={13} />+998 99 644 84 44
             </a>
-            <a href="https://t.me/paketshopuz" target="_blank" rel="noreferrer" className="flex items-center gap-1 font-medium hover:text-red-700">
+            <a href="https://t.me/paketshop_uz" target="_blank" rel="noreferrer" className="flex items-center gap-1 font-medium hover:text-red-700">
               <Send size={13} />Telegram
             </a>
           </div>
