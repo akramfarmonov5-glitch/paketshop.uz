@@ -89,7 +89,7 @@ export default function B2BProductView({ detail }: { detail: PrismaProductDetail
   const t = copy[locale];
   const unit = saleUnitLabel(card.saleUnit, locale);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://paketshop.uz';
-  const telegramUser = process.env.TELEGRAM_USERNAME || 'paketshop_uz';
+  const telegramUser = process.env.TELEGRAM_USERNAME || 'akramjon0011';
   const phone = '+998996448444';
   const pageUrl = `${siteUrl}/${locale}/product/${catalogCardUrlSlug(card, locale)}`;
   const telegramText = buildProductTelegramMessage({
