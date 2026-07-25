@@ -30,6 +30,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'CATEGORY_UPDATE', entityType: 'Category', entityId: id, before: auditJson(before), after: input, ip: request.headers.get('x-real-ip') } });
       return transaction.category.findUniqueOrThrow({ where: { id }, include: { translations: true } });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
     return NextResponse.json({ category });
   } catch (error) {
@@ -48,6 +49,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       await transaction.category.update({ where: { id }, data: { active: false } });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'CATEGORY_ARCHIVE', entityType: 'Category', entityId: id, before: auditJson(before), after: { active: false }, ip: request.headers.get('x-real-ip') } });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
     return NextResponse.json({ success: true });
   } catch (error) {

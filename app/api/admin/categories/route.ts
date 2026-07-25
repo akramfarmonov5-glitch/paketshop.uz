@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'CATEGORY_CREATE', entityType: 'Category', entityId: created.id, after: input, ip: request.headers.get('x-real-ip') } });
       return transaction.category.findUniqueOrThrow({ where: { id: created.id }, include: { translations: true } });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
