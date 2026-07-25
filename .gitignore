@@ -27,12 +27,9 @@ tsconfig.tsbuildinfo
 .vercel
 
 # Local env files (contain secrets ??? must never be committed)
-.env
-.env.local
-.env.*.local
-.env.development.local
-.env.production.local
-.env.test.local
+# Barcha .env variantlari, zaxira nusxalari ham — faqat .env.example kuzatiladi
+.env*
+!.env.example
 
 # Local one-off test/debug scripts in scratch/ (lokal ad-hoc skriptlar)
 scratch/test_*.mjs

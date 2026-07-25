@@ -58,16 +58,36 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const session = await getAdminSession(['SUPER_ADMIN', 'ADMIN']);
   if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { id } = await params;
+  // ?permanent=true — mahsulotni butunlay o'chiradi. Buyurtmalardagi SKU/nom snapshot'lari
+  // saqlanib qoladi (OrderItem.productId onDelete: SetNull).
+  const permanent = request.nextUrl.searchParams.get('permanent') === 'true';
+
   try {
     await db.$transaction(async (transaction: any) => {
       const before = await transaction.product.findUniqueOrThrow({ where: { id } });
-      await transaction.product.update({ where: { id }, data: { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' } });
-      await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_ARCHIVE', entityType: 'Product', entityId: id, before: auditJson(before), after: { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' }, ip: request.headers.get('x-real-ip') } });
+
+      if (permanent) {
+        await transaction.product.delete({ where: { id } });
+      } else {
+        await transaction.product.update({ where: { id }, data: { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' } });
+      }
+
+      await transaction.auditLog.create({
+        data: {
+          actorId: session.user.id,
+          action: permanent ? 'PRODUCT_DELETE' : 'PRODUCT_ARCHIVE',
+          entityType: 'Product',
+          entityId: id,
+          before: auditJson(before),
+          after: permanent ? null : { status: 'ARCHIVED', availabilityStatus: 'DISCONTINUED' },
+          ip: request.headers.get('x-real-ip'),
+        },
+      });
     });
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, permanent });
   } catch (error) {
-    console.error('Admin product archive failed:', error);
-    return NextResponse.json({ error: 'Product could not be archived' }, { status: 404 });
+    console.error('Admin product delete failed:', error);
+    return NextResponse.json({ error: permanent ? 'Mahsulotni o‘chirib bo‘lmadi' : 'Mahsulotni arxivlab bo‘lmadi' }, { status: 404 });
   }
 }
