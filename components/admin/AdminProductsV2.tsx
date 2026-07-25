@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Archive, Edit3, Loader2, Plus, RefreshCw, X } from 'lucide-react';
 import { slugify } from '@/lib/slugify';
 import ProductVariantTierEditor from './ProductVariantTierEditor';
+import ProductMediaEditor, { type MediaDraft } from './ProductMediaEditor';
 import {
   draftToTierPayload,
   draftToVariantPayload,
@@ -17,13 +18,14 @@ import {
 interface CategoryOption { id: string; translations: Array<{ locale: string; name: string }> }
 interface ProductRecord {
   id: string; sku: string; legacySku?: string | null; slugUz: string; slugRu: string; categoryId: string; status: string; availabilityStatus: string; priceMode: string; baseUnit: string; saleUnit: string; unitsPerPack: number; packsPerCarton: number; unitsPerCarton: number; minimumOrderQuantity: number; orderStep: number; publicPrice: string | number | null; originCountry?: string | null; isFeatured: boolean; isNew: boolean; isBestSeller: boolean; isSeasonal: boolean; translations: Array<{ locale: string; name: string; shortDescription?: string | null; description?: string | null }>; variants: Array<Record<string, unknown>>; priceTiers: Array<Record<string, unknown>>;
+  media?: Array<{ sortOrder?: number; primary?: boolean; media: { id: string; url: string; altUz?: string | null } }>;
 }
 
 const initialForm = { sku: '', nameUz: '', nameRu: '', categoryId: '', publicPrice: '', unitsPerPack: 1, packsPerCarton: 1, minimumOrderQuantity: 1, orderStep: 1, saleUnit: 'PACK', availabilityStatus: 'CHECK_AVAILABILITY', priceMode: 'PUBLIC_EXACT', originCountry: '' };
 
 export default function AdminProductsV2() {
   const [products, setProducts] = useState<ProductRecord[]>([]); const [categories, setCategories] = useState<CategoryOption[]>([]); const [form, setForm] = useState(initialForm); const [editing, setEditing] = useState<ProductRecord | null>(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState(''); const [query, setQuery] = useState('');
-  const [variants, setVariants] = useState<VariantDraft[]>([]); const [tiers, setTiers] = useState<TierDraft[]>([]);
+  const [variants, setVariants] = useState<VariantDraft[]>([]); const [tiers, setTiers] = useState<TierDraft[]>([]); const [media, setMedia] = useState<MediaDraft[]>([]);
   const categoryName = useMemo(() => new Map(categories.map((category) => [category.id, category.translations.find((translation) => translation.locale === 'uz')?.name || category.id])), [categories]);
 
   const load = async () => { setLoading(true); setError(''); try { const [productsResponse, categoriesResponse] = await Promise.all([fetch(`/api/admin/products?q=${encodeURIComponent(query)}`), fetch('/api/admin/categories')]); const productsResult = await productsResponse.json(); const categoriesResult = await categoriesResponse.json(); if (!productsResponse.ok || !categoriesResponse.ok) throw new Error(productsResult.error || categoriesResult.error || 'Ma’lumot yuklanmadi'); setProducts(productsResult.products); setCategories(categoriesResult.categories); setForm((current) => ({ ...current, categoryId: current.categoryId || categoriesResult.categories[0]?.id || '' })); } catch (loadError) { setError(loadError instanceof Error ? loadError.message : 'Xatolik'); } finally { setLoading(false); } };
@@ -34,9 +36,13 @@ export default function AdminProductsV2() {
     // strict sxemaga tushmasligi kerak.
     setVariants((product.variants || []).map(variantRowToDraft));
     setTiers((product.priceTiers || []).map(tierRowToDraft));
+    // Rasmlar asosiysi birinchi bo'ladigan tartibda yuklanadi
+    setMedia([...(product.media || [])]
+      .sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .map((entry) => ({ id: entry.media.id, url: entry.media.url, altUz: entry.media.altUz })));
     setError('');
   };
-  const reset = () => { setEditing(null); setForm({ ...initialForm, categoryId: categories[0]?.id || '' }); setVariants([]); setTiers([]); };
+  const reset = () => { setEditing(null); setForm({ ...initialForm, categoryId: categories[0]?.id || '' }); setVariants([]); setTiers([]); setMedia([]); };
 
   const submit = async (event: React.FormEvent) => { event.preventDefault(); setError('');
     const draftError = validateDrafts(form.sku, variants, tiers);
@@ -44,7 +50,7 @@ export default function AdminProductsV2() {
     setSaving(true);
     // Mavjud mahsulotning slug'i va legacySku'si saqlanadi — ular public URL va eski havolalar uchun.
     const { slugUz, slugRu } = resolveProductSlugs(editing, form.nameUz, slugify);
-    const payload = { sku: form.sku, slugUz, slugRu, legacySku: editing?.legacySku ?? null, categoryId: form.categoryId, status: 'ACTIVE', availabilityStatus: form.availabilityStatus, priceMode: form.priceMode, baseUnit: 'PIECE', saleUnit: form.saleUnit, unitsPerPack: form.unitsPerPack, packsPerCarton: form.packsPerCarton, unitsPerCarton: form.unitsPerPack * form.packsPerCarton, minimumOrderQuantity: form.minimumOrderQuantity, orderStep: form.orderStep, publicPrice: form.publicPrice === '' ? null : Number(form.publicPrice), originCountry: form.originCountry || null, name: { uz: form.nameUz, ru: form.nameRu }, shortDescription: editing ? { uz: editing.translations.find((translation) => translation.locale === 'uz')?.shortDescription || '', ru: editing.translations.find((translation) => translation.locale === 'ru')?.shortDescription || '' } : undefined, description: editing ? { uz: editing.translations.find((translation) => translation.locale === 'uz')?.description || '', ru: editing.translations.find((translation) => translation.locale === 'ru')?.description || '' } : undefined, isFeatured: editing?.isFeatured || false, isNew: editing?.isNew || false, isBestSeller: editing?.isBestSeller || false, isSeasonal: editing?.isSeasonal || false, variants: variants.map(draftToVariantPayload), priceTiers: tiers.map(draftToTierPayload) };
+    const payload = { sku: form.sku, slugUz, slugRu, legacySku: editing?.legacySku ?? null, categoryId: form.categoryId, status: 'ACTIVE', availabilityStatus: form.availabilityStatus, priceMode: form.priceMode, baseUnit: 'PIECE', saleUnit: form.saleUnit, unitsPerPack: form.unitsPerPack, packsPerCarton: form.packsPerCarton, unitsPerCarton: form.unitsPerPack * form.packsPerCarton, minimumOrderQuantity: form.minimumOrderQuantity, orderStep: form.orderStep, publicPrice: form.publicPrice === '' ? null : Number(form.publicPrice), originCountry: form.originCountry || null, name: { uz: form.nameUz, ru: form.nameRu }, shortDescription: editing ? { uz: editing.translations.find((translation) => translation.locale === 'uz')?.shortDescription || '', ru: editing.translations.find((translation) => translation.locale === 'ru')?.shortDescription || '' } : undefined, description: editing ? { uz: editing.translations.find((translation) => translation.locale === 'uz')?.description || '', ru: editing.translations.find((translation) => translation.locale === 'ru')?.description || '' } : undefined, isFeatured: editing?.isFeatured || false, isNew: editing?.isNew || false, isBestSeller: editing?.isBestSeller || false, isSeasonal: editing?.isSeasonal || false, variants: variants.map(draftToVariantPayload), priceTiers: tiers.map(draftToTierPayload), mediaIds: media.map((entry) => entry.id) };
     try { const response = await fetch(editing ? `/api/admin/products/${editing.id}` : '/api/admin/products', { method: editing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Mahsulot saqlanmadi'); reset(); await load(); } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Xatolik'); } finally { setSaving(false); } };
   const archive = async (id: string) => { if (!window.confirm('Mahsulotni arxivlashni tasdiqlaysizmi?')) return; const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' }); if (response.ok) await load(); else setError('Mahsulot arxivlanmadi'); };
 
@@ -55,6 +61,9 @@ export default function AdminProductsV2() {
       <input type="number" min="0" value={form.publicPrice} onChange={(e) => setForm({ ...form, publicPrice: e.target.value })} placeholder="1 qadoq narxi" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" /><input type="number" min="1" value={form.unitsPerPack} onChange={(e) => setForm({ ...form, unitsPerPack: Number(e.target.value) })} placeholder="Qadoqdagi dona" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" /><input type="number" min="1" value={form.packsPerCarton} onChange={(e) => setForm({ ...form, packsPerCarton: Number(e.target.value) })} placeholder="Korobkadagi qadoq" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" /><input value={form.originCountry} onChange={(e) => setForm({ ...form, originCountry: e.target.value })} placeholder="Ishlab chiqarilgan mamlakat" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
       <select value={form.saleUnit} onChange={(e) => setForm({ ...form, saleUnit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="PACK">Qadoq</option><option value="CARTON">Korobka</option><option value="PIECE">Dona</option><option value="ROLL">Rulon</option><option value="KILOGRAM">Kilogramm</option></select><select value={form.availabilityStatus} onChange={(e) => setForm({ ...form, availabilityStatus: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="IN_STOCK">Omborda mavjud</option><option value="LOW_STOCK">Kam qoldi</option><option value="CHECK_AVAILABILITY">Qoldiqni aniqlash</option><option value="ON_ORDER">Buyurtma asosida</option><option value="OUT_OF_STOCK">Vaqtincha yo‘q</option></select><select value={form.priceMode} onChange={(e) => setForm({ ...form, priceMode: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="PUBLIC_EXACT">Aniq narx</option><option value="FROM_PRICE">...dan</option><option value="REQUEST_ONLY">Narxni so‘rash</option></select></div>
       <div className="mt-4 border-t border-slate-100 pt-4">
+        <ProductMediaEditor media={media} onChange={setMedia} />
+      </div>
+      <div className="mt-4">
         <ProductVariantTierEditor saleUnit={form.saleUnit} variants={variants} tiers={tiers} onVariantsChange={setVariants} onTiersChange={setTiers} />
       </div>
       <div className="mt-4 flex justify-end">

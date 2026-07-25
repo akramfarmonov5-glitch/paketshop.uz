@@ -73,6 +73,8 @@ export const adminProductSchema = z.object({
   isSeasonal: z.boolean().default(false),
   variants: z.array(variantSchema).max(100).default([]),
   priceTiers: z.array(tierSchema).max(100).default([]),
+  /** Media id'lari tartib bo'yicha; birinchisi asosiy rasm bo'ladi. */
+  mediaIds: z.array(z.string().min(1).max(120)).max(12).optional(),
 }).strict().superRefine((product, context) => {
   if (['PUBLIC_EXACT', 'FROM_PRICE'].includes(product.priceMode) && product.publicPrice == null) {
     context.addIssue({ code: 'custom', path: ['publicPrice'], message: 'Public price is required for this price mode' });

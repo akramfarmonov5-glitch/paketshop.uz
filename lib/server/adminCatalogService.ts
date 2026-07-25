@@ -72,6 +72,20 @@ export function productPriceTiers(input: AdminProductInput, productId: string) {
   }));
 }
 
+/**
+ * Mahsulot rasmlarini berilgan tartibda bog'laydi; ro'yxatdagi birinchisi asosiy bo'ladi.
+ * Ro'yxat berilmasa (undefined) mavjud rasmlarga tegilmaydi.
+ */
+export function productMediaRows(mediaIds: string[] | undefined, productId: string) {
+  if (!mediaIds) return null;
+  return mediaIds.map((mediaId, index) => ({
+    productId,
+    mediaId,
+    sortOrder: index,
+    primary: index === 0,
+  }));
+}
+
 export function auditJson(value: unknown) {
   return JSON.parse(JSON.stringify(value));
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/server/db';
-import { auditJson, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
+import { auditJson, productMediaRows, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
 import { getAdminSession } from '@/lib/server/rbac';
 import { adminProductSchema } from '@/lib/validation/adminCatalog';
 
@@ -37,6 +37,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       await transaction.productTranslation.createMany({ data: productTranslations(input, id) });
       if (input.variants.length) await transaction.productVariant.createMany({ data: productVariants(input, id) });
       if (input.priceTiers.length) await transaction.priceTier.createMany({ data: productPriceTiers(input, id) });
+      // mediaIds berilgan bo'lsa rasmlar tartibi qayta yoziladi; berilmasa tegilmaydi.
+      const mediaRows = productMediaRows(input.mediaIds, id);
+      if (mediaRows) {
+        await transaction.productMedia.deleteMany({ where: { productId: id } });
+        if (mediaRows.length) await transaction.productMedia.createMany({ data: mediaRows, skipDuplicates: true });
+      }
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_UPDATE', entityType: 'Product', entityId: id, before: auditJson(before), after: auditJson(input), ip: request.headers.get('x-real-ip') } });
       return transaction.product.findUniqueOrThrow({ where: { id }, include: { translations: true, variants: true, priceTiers: true } });
     });
