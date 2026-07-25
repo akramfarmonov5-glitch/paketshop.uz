@@ -5,4 +5,4 @@
 - [x] `lib/fetchGlobalData.ts` da keshdagi (Prisma) kategoriyalarga bazadagi rasmni uzatish
 - [x] `lib/server/prismaCatalog.ts` da `getPrismaCategories` ichida `imageUrl` orqali rasmni uzatish
 - [x] `components/admin/AdminCategoriesV2.tsx` da rasm yuklash UI va logikasini qo'shish (Cloudinary orqali)
-- [ ] Github ga o'zgarishlarni commit va push qilish
+- [x] Github ga o'zgarishlarni commit va push qilish

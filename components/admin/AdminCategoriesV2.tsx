@@ -68,9 +68,8 @@ export default function AdminCategoriesV2() {
       <div className="flex items-center gap-4">
         <div className="w-48">
           <CloudinaryUpload
-            onUploadSuccess={(url) => setForm({ ...form, imageUrl: url })}
-            onUploadError={(err) => setError(err.message)}
-            buttonText={form.imageUrl ? 'Rasmni o‘zgartirish' : 'Rasm yuklash'}
+            onUpload={(url) => setForm({ ...form, imageUrl: url })}
+            label={form.imageUrl ? 'Rasmni o‘zgartirish' : 'Rasm yuklash'}
           />
         </div>
         {form.imageUrl && (
