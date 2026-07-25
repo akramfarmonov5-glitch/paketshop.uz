@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/server/db';
-import { auditJson, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
+import { auditJson, productMediaRows, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
 import { getAdminSession } from '@/lib/server/rbac';
 import { adminProductSchema } from '@/lib/validation/adminCatalog';
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const [products, total] = await db.$transaction([
     db.product.findMany({
       where,
-      include: { translations: true, variants: true, priceTiers: true, category: { include: { translations: true } }, brand: true },
+      include: { translations: true, variants: true, priceTiers: true, media: { include: { media: true }, orderBy: [{ primary: 'desc' }, { sortOrder: 'asc' }] }, category: { include: { translations: true } }, brand: true },
       orderBy: { createdAt: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
     }),
     db.product.count({ where }),
@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
       await transaction.productTranslation.createMany({ data: productTranslations(input, created.id) });
       if (input.variants.length) await transaction.productVariant.createMany({ data: productVariants(input, created.id) });
       if (input.priceTiers.length) await transaction.priceTier.createMany({ data: productPriceTiers(input, created.id) });
+      const mediaRows = productMediaRows(input.mediaIds, created.id);
+      if (mediaRows?.length) await transaction.productMedia.createMany({ data: mediaRows, skipDuplicates: true });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_CREATE', entityType: 'Product', entityId: created.id, after: auditJson(input), ip: request.headers.get('x-real-ip') } });
       return transaction.product.findUniqueOrThrow({ where: { id: created.id }, include: { translations: true, variants: true, priceTiers: true } });
     });

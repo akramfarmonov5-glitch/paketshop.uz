@@ -23,7 +23,8 @@ export function slugify(text: string): string {
 export function productSlug(product: { id: number; name: any; slug?: any }, lang = 'uz'): string {
   const localizedSlug = getLocalizedText(product.slug, lang);
   const localizedName = getLocalizedText(product.name, lang);
-  return `${localizedSlug || slugify(localizedName)}-${product.id}`;
+  const baseSlug = localizedSlug || slugify(localizedName);
+  return product.id ? `${baseSlug}-${product.id}` : baseSlug;
 }
 
 /**

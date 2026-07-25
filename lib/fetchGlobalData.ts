@@ -80,7 +80,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
           const primaryMedia = p.media.find((m) => m.primary)?.media || p.media[0]?.media;
           const price = p.publicPrice ? Number(p.publicPrice) : 0;
           return {
-            id: parseInt(p.id, 36) || 0,
+            id: (p.legacySku ? parseInt(p.legacySku.replace('PS-', ''), 10) : 0) || 0,
             catalogId: p.id,
             sku: p.sku,
             legacySku: p.legacySku || undefined,
