@@ -15,7 +15,7 @@ describe('deriveSource', () => {
   });
 
   it('detects Telegram from referrer', () => {
-    expect(deriveSource(params(''), 'https://t.me/paketshopuz')).toBe('telegram');
+    expect(deriveSource(params(''), 'https://t.me/paketshop_uz')).toBe('telegram');
   });
 
   it('detects Instagram from utm_source', () => {

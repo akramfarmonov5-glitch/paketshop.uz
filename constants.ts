@@ -18,7 +18,7 @@ export const DEFAULT_NAVIGATION: NavigationSettings = {
     { id: 4, label: { uz: "Start to'plamlar", ru: "Стартовые наборы" }, href: "/starter-kits" },
   ],
   socialLinks: [
-    { id: 1, platform: 'telegram', url: 'https://t.me/paketshopuz' },
+    { id: 1, platform: 'telegram', url: 'https://t.me/paketshop_uz' },
     { id: 2, platform: 'instagram', url: 'https://instagram.com/paketshopuz' },
   ]
 };

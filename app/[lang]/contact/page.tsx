@@ -7,7 +7,7 @@ import React from 'react';
               <h1 className="text-4xl font-bold text-red-600 mb-6">Kontaktlar</h1>
               <div className="space-y-4 text-lg">
                 <p>Telefon: +998 99 644 84 44</p>
-                <p>Telegram: @paketshopuz</p>
+                <p>Telegram: @paketshop_uz</p>
                 <p>Manzil: Toshkent shahri</p>
               </div>
             </div>
