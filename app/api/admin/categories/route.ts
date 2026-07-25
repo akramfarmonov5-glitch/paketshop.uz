@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   try {
     const category = await db.$transaction(async (transaction: any) => {
       const created = await transaction.category.create({
-        data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active },
+        data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active, imageUrl: input.imageUrl || null },
       });
       await transaction.categoryTranslation.createMany({ data: (['uz', 'ru'] as const).map((locale) => ({ categoryId: created.id, locale, name: input.name[locale], description: input.description?.[locale] || null })) });
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'CATEGORY_CREATE', entityType: 'Category', entityId: created.id, after: input, ip: request.headers.get('x-real-ip') } });

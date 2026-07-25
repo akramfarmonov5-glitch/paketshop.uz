@@ -10,6 +10,7 @@ export const adminCategorySchema = z.object({
   slugUz: z.string().trim().min(2).max(180).regex(/^[a-z0-9-]+$/),
   slugRu: z.string().trim().min(2).max(180).regex(/^[a-z0-9-]+$/),
   name: localizedTextSchema,
+  imageUrl: z.string().url().nullable().optional(),
   description: z.object({ uz: z.string().trim().max(2000), ru: z.string().trim().max(2000) }).strict().optional(),
   sortOrder: z.coerce.number().int().min(0).max(100_000).default(0),
   active: z.boolean().default(true),

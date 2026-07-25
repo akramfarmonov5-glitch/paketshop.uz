@@ -96,7 +96,7 @@ export async function getPrismaCategories(): Promise<Category[]> {
       id: index + 1,
       name: { uz: uz?.name || category.slugUz, ru: ru?.name || uz?.name || category.slugUz },
       slug: category.slugUz,
-      image: '',
+      image: category.imageUrl || '',
       description: { uz: uz?.description || '', ru: ru?.description || '' },
     } as Category;
   });

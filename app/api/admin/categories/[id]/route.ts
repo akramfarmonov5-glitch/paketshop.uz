@@ -19,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const category = await db.$transaction(async (transaction: any) => {
       const before = await transaction.category.findUniqueOrThrow({ where: { id }, include: { translations: true } });
-      await transaction.category.update({ where: { id }, data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active } });
+      await transaction.category.update({ where: { id }, data: { parentId: input.parentId || null, slugUz: input.slugUz, slugRu: input.slugRu, sortOrder: input.sortOrder, active: input.active, imageUrl: input.imageUrl || null } });
       for (const locale of ['uz', 'ru'] as const) {
         await transaction.categoryTranslation.upsert({
           where: { categoryId_locale: { categoryId: id, locale } },

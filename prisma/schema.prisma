@@ -214,6 +214,7 @@ model Category {
   children     Category[]           @relation("CategoryTree")
   slugUz       String               @unique
   slugRu       String               @unique
+  imageUrl     String?
   sortOrder    Int                  @default(0)
   active       Boolean              @default(true)
   translations CategoryTranslation[]

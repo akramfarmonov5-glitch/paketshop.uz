@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Archive, Loader2, Plus, RefreshCw } from 'lucide-react';
 import { slugify } from '@/lib/slugify';
+import CloudinaryUpload from '../CloudinaryUpload';
+import Image from 'next/image';
 
 interface AdminCategoryRecord {
   id: string;
@@ -10,6 +12,7 @@ interface AdminCategoryRecord {
   active: boolean;
   sortOrder: number;
   translations: Array<{ locale: string; name: string }>;
+  imageUrl?: string | null;
   _count?: { products: number; children: number };
 }
 
@@ -18,7 +21,7 @@ export default function AdminCategoriesV2() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0 });
+  const [form, setForm] = useState({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0, imageUrl: '' });
 
   const load = async () => {
     setLoading(true); setError('');
@@ -36,10 +39,10 @@ export default function AdminCategoriesV2() {
     event.preventDefault(); setSaving(true); setError('');
     const slugUz = slugify(form.nameUz);
     try {
-      const response = await fetch('/api/admin/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parentId: form.parentId || null, slugUz, slugRu: `${slugUz}-ru`, name: { uz: form.nameUz, ru: form.nameRu }, sortOrder: form.sortOrder, active: true }) });
+      const response = await fetch('/api/admin/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parentId: form.parentId || null, slugUz, slugRu: `${slugUz}-ru`, name: { uz: form.nameUz, ru: form.nameRu }, sortOrder: form.sortOrder, active: true, imageUrl: form.imageUrl || null }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Kategoriya saqlanmadi');
-      setForm({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0 });
+      setForm({ nameUz: '', nameRu: '', parentId: '', sortOrder: 0, imageUrl: '' });
       await load();
     } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Xatolik'); }
     finally { setSaving(false); }
@@ -54,13 +57,37 @@ export default function AdminCategoriesV2() {
   return <div className="space-y-6">
     <div className="flex items-center justify-between"><div><h2 className="text-2xl font-bold">B2B kategoriyalar</h2><p className="text-sm text-slate-500">Prisma, tarjimalar va ichma-ich daraxt</p></div><button onClick={() => void load()} className="rounded-lg border border-slate-200 p-2 text-slate-600"><RefreshCw size={18} /></button></div>
     {error && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
-    <form onSubmit={submit} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-2 lg:grid-cols-5">
-      <input required value={form.nameUz} onChange={(e) => setForm({ ...form, nameUz: e.target.value })} placeholder="O‘zbekcha nom" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
-      <input required value={form.nameRu} onChange={(e) => setForm({ ...form, nameRu: e.target.value })} placeholder="Русское название" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
-      <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="">Asosiy kategoriya</option>{categories.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.translations.find((translation) => translation.locale === 'uz')?.name}</option>)}</select>
-      <input type="number" min="0" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} placeholder="Tartib" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
-      <button disabled={saving} className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-bold text-white disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />} Qo‘shish</button>
+    <form onSubmit={submit} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <input required value={form.nameUz} onChange={(e) => setForm({ ...form, nameUz: e.target.value })} placeholder="O‘zbekcha nom" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
+        <input required value={form.nameRu} onChange={(e) => setForm({ ...form, nameRu: e.target.value })} placeholder="Русское название" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
+        <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="">Asosiy kategoriya</option>{categories.filter((item) => item.active).map((item) => <option key={item.id} value={item.id}>{item.translations.find((translation) => translation.locale === 'uz')?.name}</option>)}</select>
+        <input type="number" min="0" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} placeholder="Tartib" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5" />
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <div className="w-48">
+          <CloudinaryUpload
+            onUploadSuccess={(url) => setForm({ ...form, imageUrl: url })}
+            onUploadError={(err) => setError(err.message)}
+            buttonText={form.imageUrl ? 'Rasmni o‘zgartirish' : 'Rasm yuklash'}
+          />
+        </div>
+        {form.imageUrl && (
+          <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            <Image src={form.imageUrl} alt="Preview" fill className="object-contain p-1" />
+          </div>
+        )}
+        <button disabled={saving} className="ml-auto flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 font-bold text-white disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />} Qo‘shish</button>
+      </div>
     </form>
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">{loading ? <div className="p-10 text-center"><Loader2 className="mx-auto animate-spin" /></div> : <div className="divide-y divide-slate-100">{categories.map((category) => <div key={category.id} className="flex items-center justify-between gap-4 p-4"><div><p className="font-semibold">{category.translations.find((translation) => translation.locale === 'uz')?.name}</p><p className="text-xs text-slate-400">{category.slugUz} · {category._count?.products || 0} mahsulot · {category._count?.children || 0} subkategoriya</p></div><div className="flex items-center gap-3"><span className={`rounded-full px-2 py-1 text-xs ${category.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-slate-500'}`}>{category.active ? 'Faol' : 'Arxiv'}</span>{category.active && <button onClick={() => void archive(category.id)} className="p-2 text-red-400" aria-label="Arxivlash"><Archive size={17} /></button>}</div></div>)}</div>}</div>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">{loading ? <div className="p-10 text-center"><Loader2 className="mx-auto animate-spin" /></div> : <div className="divide-y divide-slate-100">{categories.map((category) => <div key={category.id} className="flex items-center justify-between gap-4 p-4">
+      <div className="flex items-center gap-4">
+        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          {category.imageUrl ? <Image src={category.imageUrl} alt={category.slugUz} fill sizes="48px" className="object-contain p-1" /> : <div className="text-xs text-slate-400">Yo'q</div>}
+        </div>
+        <div><p className="font-semibold">{category.translations.find((translation) => translation.locale === 'uz')?.name}</p><p className="text-xs text-slate-400">{category.slugUz} · {category._count?.products || 0} mahsulot · {category._count?.children || 0} subkategoriya</p></div>
+      </div>
+      <div className="flex items-center gap-3"><span className={`rounded-full px-2 py-1 text-xs ${category.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-slate-500'}`}>{category.active ? 'Faol' : 'Arxiv'}</span>{category.active && <button onClick={() => void archive(category.id)} className="p-2 text-red-400" aria-label="Arxivlash"><Archive size={17} /></button>}</div></div>)}</div>}</div>
   </div>;
 }

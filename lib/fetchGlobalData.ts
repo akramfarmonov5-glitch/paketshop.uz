@@ -67,7 +67,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
             id: parseInt(c.id, 36) || 0,
             name: { uz: uzTrans?.name || c.slugUz, ru: ruTrans?.name || c.slugRu },
             slug: { uz: c.slugUz, ru: c.slugRu },
-            image: '/logo.png',
+            image: c.imageUrl || '',
             description: { uz: uzTrans?.description || '', ru: ruTrans?.description || '' },
           };
         })

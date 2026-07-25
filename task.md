@@ -1,0 +1,8 @@
+- [x] `prisma/schema.prisma` da `Category` modeliga `imageUrl String?` qo'shish
+- [x] `npx prisma db push` orqali bazani yangilash
+- [x] `lib/validation/adminCatalog.ts` da `adminCategorySchema` ga `imageUrl` qo'shish
+- [x] `app/api/admin/categories/route.ts` va `app/api/admin/categories/[id]/route.ts` ni `imageUrl` ni qabul qilib saqlaydigan qilish
+- [x] `lib/fetchGlobalData.ts` da keshdagi (Prisma) kategoriyalarga bazadagi rasmni uzatish
+- [x] `lib/server/prismaCatalog.ts` da `getPrismaCategories` ichida `imageUrl` orqali rasmni uzatish
+- [x] `components/admin/AdminCategoriesV2.tsx` da rasm yuklash UI va logikasini qo'shish (Cloudinary orqali)
+- [ ] Github ga o'zgarishlarni commit va push qilish
