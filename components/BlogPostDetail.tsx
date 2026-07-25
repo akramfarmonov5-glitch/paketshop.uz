@@ -49,7 +49,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
         {/* Share / Footer of post */}
         <div className="mt-12 pt-8 border-t border-white/10 flex justify-between items-center">
             <p className="text-gray-500 italic">O'qiganingiz uchun rahmat.</p>
-            <button className="flex items-center gap-2 text-gold-400 hover:text-gold-300 transition-colors">
+            <button className="flex items-center gap-2 text-gold-400 hover:text-gold-600 transition-colors">
                 <Share2 size={18} />
                 <span className="font-medium">Ulashish</span>
             </button>

@@ -200,7 +200,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
       setIsSaving(true);
       setSaveError('');
 
-      let { data, error } = await saveWithPayload(dataToSave);
+      const { data, error } = await saveWithPayload(dataToSave);
 
       if (error) throw error;
 
@@ -237,7 +237,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
         </div>
         <button
           onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-black font-bold rounded-xl hover:bg-red-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
         >
           <Plus size={18} />
           Yangi Kategoriya
@@ -316,7 +316,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                       onClick={() => setActiveLang(lang)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors ${
                         activeLang === lang
-                          ? 'bg-red-600 text-black'
+                          ? 'bg-red-600 text-white'
                           : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
@@ -439,7 +439,7 @@ const AdminCategories: React.FC<AdminCategoriesProps> = ({ categories, setCatego
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-black font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-gold-400/20 disabled:opacity-70 disabled:cursor-wait"
+                  className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-gold-400/20 disabled:opacity-70 disabled:cursor-wait"
                 >
                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                   {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}

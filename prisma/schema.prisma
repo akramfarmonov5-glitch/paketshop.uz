@@ -562,15 +562,20 @@ model SearchQuery {
 }
 
 model ImportJob {
-  id          String        @id @default(cuid())
-  filename    String
-  status      ImportStatus  @default(UPLOADED)
-  totalRows   Int           @default(0)
-  successRows Int           @default(0)
-  errorRows   Int           @default(0)
-  errors      ImportError[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  filename     String
+  status       ImportStatus  @default(UPLOADED)
+  totalRows    Int           @default(0)
+  successRows  Int           @default(0)
+  errorRows    Int           @default(0)
+  /// Har bir qator uchun "oldingi holat" snapshot'i — importni qaytarish uchun (TZ §24.3).
+  rollbackData Json?
+  rolledBackAt DateTime?
+  errors       ImportError[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, createdAt])
 }
 
 model ImportError {

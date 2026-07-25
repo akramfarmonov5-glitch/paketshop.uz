@@ -102,7 +102,7 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        <Providers>
+        <Providers lang={lang}>
           <ClientLayout lang={lang}>
             {children}
           </ClientLayout>

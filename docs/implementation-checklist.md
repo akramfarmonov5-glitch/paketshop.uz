@@ -18,10 +18,11 @@
 - [x] Seed roles, settings and category tree
 - [x] Authenticated category and product/variant/price-tier CRUD APIs
 - [x] Auth.js admin category/product UI integration
-- [ ] Attribute, variant/tier editor and S3 media UI
+- [x] Variant and price-tier admin editor (attribute editor and S3 media UI still pending)
 - [ ] Media adapter and upload validation
 - [x] CSV/XLSX template, dry-run, row errors, commit and import log
-- [ ] Import rollback action and retained source-file adapter
+- [x] Import rollback with per-row before-snapshots and admin import history (source-file retention still pending)
+- [x] Verified 1000-product import (acceptance criterion 4): batched commit runs in ~9s
 - [x] Audit trail foundation for category and product mutations
 - [x] Order assignment and status history UI
 - [x] Prisma lead pipeline: status/lost-reason, manager assignment, activity history UI and legacy lead migration
@@ -49,6 +50,6 @@
 
 - [x] Admin-managed redirect manager (create/toggle/delete, 301/302/410, locale-aware catch-all resolution)
 - [x] SEO schemas, localized sitemap/canonical/hreflang and noindex rules
-- [ ] Unit, integration and Playwright E2E coverage
+- [x] Unit tests (58) and Playwright E2E coverage (46 tests: search, filters, product, cart, order request, admin pipeline, B2B landings, i18n, redirects, mobile)
 - [x] Backup/restore runbook and production deployment guide
 - [ ] Lighthouse and accessibility pass

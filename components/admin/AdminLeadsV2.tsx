@@ -157,11 +157,11 @@ export default function AdminLeadsV2() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => setStatusFilter('')} className={`rounded-full px-4 py-1.5 text-sm font-bold ${!statusFilter ? 'bg-red-600 text-black' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+        <button onClick={() => setStatusFilter('')} className={`rounded-full px-4 py-1.5 text-sm font-bold ${!statusFilter ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
           Barchasi ({totalCount})
         </button>
         {Object.entries(STATUS_LABELS).map(([status, label]) => (
-          <button key={status} onClick={() => setStatusFilter(status)} className={`rounded-full px-4 py-1.5 text-sm font-bold ${statusFilter === status ? 'bg-red-600 text-black' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <button key={status} onClick={() => setStatusFilter(status)} className={`rounded-full px-4 py-1.5 text-sm font-bold ${statusFilter === status ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
             {label} ({statusCounts[status] || 0})
           </button>
         ))}
@@ -244,7 +244,7 @@ export default function AdminLeadsV2() {
                             </ul>
                             <div className="mt-3 flex gap-2">
                               <input value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder="Izoh qo‘shish..." className="h-10 flex-1 rounded-xl border border-slate-200 bg-white/40 px-3 text-sm text-slate-900 outline-none focus:border-red-600" />
-                              <button onClick={() => handleAddNote(lead.id)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-red-600 px-4 text-sm font-bold text-black hover:bg-gold-300"><Send size={14} /> Yozish</button>
+                              <button onClick={() => handleAddNote(lead.id)} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700"><Send size={14} /> Yozish</button>
                             </div>
                           </div>
                         </div>

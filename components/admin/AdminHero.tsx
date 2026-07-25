@@ -95,7 +95,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         <button
                             key={l}
                             onClick={() => setActiveLang(l)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${activeLang === l ? 'bg-red-600 text-black' : 'text-slate-500 hover:text-slate-900'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${activeLang === l ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-slate-900'}`}
                         >
                             {l}
                         </button>
@@ -195,7 +195,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
 
                     <button
                         type="submit"
-                        className={`w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${isSaved ? 'bg-green-500 text-slate-900' : 'bg-red-600 text-black hover:bg-red-700'}`}
+                        className={`w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${isSaved ? 'bg-green-500 text-slate-900' : 'bg-red-600 text-white hover:bg-red-700'}`}
                     >
                         {isSaved ? (
                             <>Saqlandi!</>

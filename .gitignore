@@ -39,3 +39,9 @@ scratch/test_*.mjs
 scratch/test_*.js
 scratch/check_*.mjs
 scratch/temp_*.mjs
+
+# Playwright
+e2e/.auth
+test-results
+playwright-report
+

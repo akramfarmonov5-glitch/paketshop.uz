@@ -1,6 +1,9 @@
 import 'server-only';
 
 export async function sendTelegramHtml(message: string): Promise<boolean> {
+  // E2E testlar menejer guruhini sinov xabarlari bilan to'ldirmasligi uchun.
+  if (process.env.TELEGRAM_NOTIFICATIONS_DISABLED === 'true') return false;
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return false;
