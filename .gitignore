@@ -45,3 +45,7 @@ e2e/.auth
 test-results
 playwright-report
 
+
+# Lokal debug skriptlari — maxfiy ma'lumot saqlashi mumkin
+scratch/
+
