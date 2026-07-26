@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { ImagePlus, Loader2, Star, Trash2 } from 'lucide-react';
+import { fetchWithTimeout } from '@/lib/client/fetchWithTimeout';
 
 export interface MediaDraft {
   id: string;
@@ -29,7 +30,7 @@ export default function ProductMediaEditor({ media, onChange }: Props) {
       const form = new FormData();
       form.set('file', file);
       try {
-        const response = await fetch('/api/admin/media', { method: 'POST', body: form });
+        const response = await fetchWithTimeout('/api/admin/media', { method: 'POST', body: form }, 60_000);
         const body = await response.json();
         if (!response.ok) throw new Error(body?.error || 'Rasm yuklanmadi');
         uploaded.push({ id: body.media.id, url: body.media.url, altUz: body.media.altUz });

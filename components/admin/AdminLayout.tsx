@@ -37,6 +37,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'import' | 'orders' | 'leads' | 'blog' | 'hero' | 'navigation' | 'redirects'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [productsVisited, setProductsVisited] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: 'Statistika', icon: LayoutDashboard },
@@ -90,6 +91,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   };
 
   const handleTabClick = (tabId: string) => {
+    if (tabId === 'products') setProductsVisited(true);
     setActiveTab(tabId as any);
     setIsSidebarOpen(false);
   };
@@ -161,7 +163,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto pt-16 md:pt-8">
-        {renderContent()}
+        {productsVisited && (
+          <div className={activeTab === 'products' ? 'block' : 'hidden'}>
+            <AdminProductsV2 />
+          </div>
+        )}
+        {activeTab !== 'products' && renderContent()}
       </main>
     </div>
   );
