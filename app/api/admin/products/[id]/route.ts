@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/server/db';
-import { auditJson, productMediaRows, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
+import { auditJson, preserveUnsubmittedProductFields, productMediaRows, productPriceTiers, productScalarData, productTranslations, productVariants } from '@/lib/server/adminCatalogService';
 import { getAdminSession } from '@/lib/server/rbac';
 import { adminProductSchema } from '@/lib/validation/adminCatalog';
 
@@ -30,20 +30,21 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const product = await db.$transaction(async (transaction: any) => {
       const before = await transaction.product.findUniqueOrThrow({ where: { id }, include: { translations: true, variants: true, priceTiers: true } });
-      await transaction.product.update({ where: { id }, data: productScalarData(input) });
+      const mergedInput = preserveUnsubmittedProductFields(input, before);
+      await transaction.product.update({ where: { id }, data: productScalarData(mergedInput) });
       await transaction.productTranslation.deleteMany({ where: { productId: id } });
       await transaction.productVariant.deleteMany({ where: { productId: id } });
       await transaction.priceTier.deleteMany({ where: { productId: id } });
-      await transaction.productTranslation.createMany({ data: productTranslations(input, id) });
-      if (input.variants.length) await transaction.productVariant.createMany({ data: productVariants(input, id) });
-      if (input.priceTiers.length) await transaction.priceTier.createMany({ data: productPriceTiers(input, id) });
+      await transaction.productTranslation.createMany({ data: productTranslations(mergedInput, id) });
+      if (mergedInput.variants.length) await transaction.productVariant.createMany({ data: productVariants(mergedInput, id) });
+      if (mergedInput.priceTiers.length) await transaction.priceTier.createMany({ data: productPriceTiers(mergedInput, id) });
       // mediaIds berilgan bo'lsa rasmlar tartibi qayta yoziladi; berilmasa tegilmaydi.
       const mediaRows = productMediaRows(input.mediaIds, id);
       if (mediaRows) {
         await transaction.productMedia.deleteMany({ where: { productId: id } });
         if (mediaRows.length) await transaction.productMedia.createMany({ data: mediaRows, skipDuplicates: true });
       }
-      await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_UPDATE', entityType: 'Product', entityId: id, before: auditJson(before), after: auditJson(input), ip: request.headers.get('x-real-ip') } });
+      await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_UPDATE', entityType: 'Product', entityId: id, before: auditJson(before), after: auditJson(mergedInput), ip: request.headers.get('x-real-ip') } });
       return transaction.product.findUniqueOrThrow({ where: { id }, include: { translations: true, variants: true, priceTiers: true } });
     });
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');

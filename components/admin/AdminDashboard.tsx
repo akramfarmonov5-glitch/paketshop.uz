@@ -1,169 +1,113 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, Users, DollarSign, Package } from 'lucide-react';
-import { Product } from '../../types';
 
-interface Order {
-  id: string;
-  total: number;
-  date: string;
-  phone: string;
-}
-import { supabase } from '../../lib/supabaseClient';
-
-interface AdminDashboardProps {
-  products: Product[];
+interface DashboardData {
+  totalSales: number;
+  orderCount: number;
+  customerCount: number;
+  productCount: number;
+  sales: Array<{ date: string; sales: number }>;
+  categories: Array<{ id: string; name: string; count: number }>;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
-  const [orders, setOrders] = useState<Order[]>([]);
+const emptyDashboard: DashboardData = {
+  totalSales: 0,
+  orderCount: 0,
+  customerCount: 0,
+  productCount: 0,
+  sales: [],
+  categories: [],
+};
 
-  async function fetchData() {
-    const { data: ordersData } = await supabase.from('orders').select('*');
-    if (ordersData) {
-      setOrders(ordersData as Order[]);
-    }
-  }
+const AdminDashboard: React.FC = () => {
+  const [dashboard, setDashboard] = useState<DashboardData>(emptyDashboard);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchData();
-
-    const channel = supabase
-      .channel('admin-dashboard-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newOrder = payload.new as Order;
-            setOrders((prev) => {
-              if (prev.some((o) => o.id === newOrder.id)) return prev;
-              return [newOrder, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedOrder = payload.new as Order;
-            setOrders((prev) =>
-              prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id;
-            setOrders((prev) => prev.filter((o) => o.id !== deletedId));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    let active = true;
+    void fetch('/api/admin/dashboard')
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Statistika yuklanmadi');
+        if (active) setDashboard(result);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Statistika yuklanmadi');
+      });
+    return () => { active = false; };
   }, []);
 
-  const totalSales = orders.reduce((acc, order) => acc + Number(order.total || 0), 0);
-
-  const processSalesData = () => {
-      const last7Days = Array.from({length: 7}, (_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          return d.toISOString().split('T')[0];
-      }).reverse();
-
-      return last7Days.map(date => {
-          const dayOrders = orders.filter(o => o.date && o.date.startsWith(date));
-          const dailyTotal = dayOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
-          const displayDate = new Date(date).toLocaleDateString('uz-UZ', { weekday: 'short' });
-          return { name: displayDate, sales: dailyTotal };
-      });
-  };
-
-  const salesData = processSalesData();
-
-  const categoryData = [
-    { name: 'Karton', count: products.filter(p => p.category === 'Karton').length },
-    { name: 'Plastik', count: products.filter(p => p.category === 'Plastik').length },
-    { name: 'Qogoz', count: products.filter(p => p.category === 'Qogoz').length },
-    { name: 'Eco', count: products.filter(p => p.category === 'Eco').length },
-  ];
+  const salesData = useMemo(() => dashboard.sales.map((entry) => ({
+    name: new Date(`${entry.date}T00:00:00Z`).toLocaleDateString('uz-UZ', { weekday: 'short', timeZone: 'UTC' }),
+    sales: entry.sales,
+  })), [dashboard.sales]);
 
   const formatPrice = (price: number) => {
-      if (price >= 1000000) return (price / 1000000).toFixed(1) + 'M UZS';
-      if (price >= 1000) return (price / 1000).toFixed(1) + 'K UZS';
-      return price + ' UZS';
+    if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(1)}M UZS`;
+    if (price >= 1_000) return `${(price / 1_000).toFixed(1)}K UZS`;
+    return `${price} UZS`;
   };
 
-  const uniqueCustomers = new Set(orders.map(o => o.phone)).size;
-
   const stats = [
-    { label: 'Jami Savdo', value: formatPrice(totalSales), icon: DollarSign, change: '100%' },
-    { label: 'Yangi Mijozlar', value: uniqueCustomers, icon: Users, change: '100%' },
-    { label: 'Buyurtmalar', value: orders.length, icon: TrendingUp, change: '100%' },
-    { label: 'Mahsulotlar', value: products.length, icon: Package, change: '100%' },
+    { label: 'Jami Savdo', value: formatPrice(dashboard.totalSales), icon: DollarSign },
+    { label: 'Mijozlar', value: dashboard.customerCount, icon: Users },
+    { label: 'Buyurtmalar', value: dashboard.orderCount, icon: TrendingUp },
+    { label: 'Faol mahsulotlar', value: dashboard.productCount, icon: Package },
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in bg-slate-50 text-slate-900 min-h-screen p-4 md:p-8">
+    <div className="min-h-screen space-y-8 bg-slate-50 p-4 text-slate-900 animate-fade-in md:p-8">
       <div>
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Boshqaruv Paneli</h2>
-        <p className="text-slate-500 font-medium">Do'koningizning asosiy ko'rsatkichlari.</p>
+        <h2 className="mb-2 text-3xl font-bold text-slate-900">Boshqaruv Paneli</h2>
+        <p className="font-medium text-slate-500">Prisma bazasidagi joriy ko‘rsatkichlar.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-red-50 rounded-xl">
-                <stat.icon className="text-red-600" size={24} />
-              </div>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                {stat.change}
-              </span>
+      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 w-fit rounded-xl bg-red-50 p-3">
+              <stat.icon className="text-red-600" size={24} />
             </div>
-            <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider">{stat.label}</h3>
-            <p className="text-2xl font-black text-slate-900 mt-1">{stat.value}</p>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">{stat.label}</h3>
+            <p className="mt-1 text-2xl font-black text-slate-900">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sales Chart */}
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Haftalik Sotuvlar</h3>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 text-lg font-bold text-slate-900">Haftalik savdo</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a', fontWeight: 'bold' }}
-                  itemStyle={{ color: '#dc2626' }}
-                />
+                <XAxis dataKey="name" stroke="#94a3b8" axisLine={false} />
+                <YAxis stroke="#94a3b8" axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: 8 }} />
                 <Area type="monotone" dataKey="sales" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Categories Chart */}
-        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Kategoriyalar Bo'yicha</h3>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 text-lg font-bold text-slate-900">Kategoriyalar bo‘yicha</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
+              <BarChart data={dashboard.categories}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#64748b' }} axisLine={false} />
-                <Tooltip 
-                   contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a', fontWeight: 'bold' }}
-                   cursor={{ fill: '#f1f5f9' }}
-                />
+                <XAxis dataKey="name" stroke="#94a3b8" axisLine={false} />
+                <YAxis stroke="#94a3b8" axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: 8 }} />
                 <Bar dataKey="count" fill="#dc2626" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

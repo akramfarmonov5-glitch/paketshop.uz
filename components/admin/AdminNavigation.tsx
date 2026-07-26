@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavigationSettings, MenuItem, SocialLink, Category } from '../../types';
 import { Plus, Trash2, Menu, Share2, Save, GripVertical, Link as LinkIcon, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import { getLocalizedText } from '../../lib/i18nUtils';
 import { getCategorySlug } from '../../lib/categoryUtils';
@@ -63,12 +62,16 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({ navigationSettings, s
         setIsSaving(true);
 
         try {
-            // Upsert navigation settings to Supabase
-            const { error } = await supabase
-                .from('navigation_settings')
-                .upsert({ id: 'main', ...formData }, { onConflict: 'id' });
-
-            if (error) throw error;
+            const response = await fetch('/api/admin/content/navigation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    menuItems: formData.menuItems,
+                    socialLinks: formData.socialLinks,
+                }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || 'Navigatsiya saqlanmadi');
 
             setNavigationSettings(formData);
             setIsSaved(true);

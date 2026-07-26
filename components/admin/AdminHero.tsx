@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { HeroContent } from '../../types';
 import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2, Globe } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { parseLocalizedObject, LocalizedString } from '../../lib/i18nUtils';
@@ -34,21 +33,20 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
         try {
             // Prepare data for save (stringify objects)
             const savePayload = {
-                id: 2, // Explicitly use integer ID for hero_content
                 badge: JSON.stringify(formData.badge),
                 title: JSON.stringify(formData.title),
                 description: JSON.stringify(formData.description),
-                button_text: JSON.stringify(formData.buttonText),
+                buttonText: JSON.stringify(formData.buttonText),
                 images: formData.images
             };
 
-            // Upsert to Supabase
-            const { error } = await supabase
-                .from('hero_content')
-                .update(savePayload)
-                .eq('id', 2);
-
-            if (error) throw error;
+            const response = await fetch('/api/admin/content/hero', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(savePayload),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || 'Banner saqlanmadi');
 
             setHeroContent(formData);
             setIsSaved(true);

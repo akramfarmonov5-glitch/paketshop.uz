@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fetch from 'node-fetch';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { getAdminSession } from '@/lib/server/rbac';
+import { z } from 'zod';
+
+const roles = ['SUPER_ADMIN', 'ADMIN', 'CONTENT_MANAGER'] as const;
+const requestSchema = z.object({
+  imageUrl: z.string().url().max(2_048),
+}).strict();
 
 export async function POST(req: NextRequest) {
-  const ip = (req as any).ip || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  const session = await getAdminSession([...roles]);
+  if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
   const rateLimit = checkRateLimit(`gemini-image:${ip}`, 5, 60 * 1000);
 
   if (!rateLimit.allowed) {
@@ -24,14 +33,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { imageUrl } = await req.json();
-
-    if (!imageUrl) {
+    const parsed = requestSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "imageUrl manzili talab qilinadi." },
+        { error: "Rasm manzili (URL) noto'g'ri." },
         { status: 400 }
       );
     }
+    const { imageUrl } = parsed.data;
 
     // SSRF Domain Protection
     try {
@@ -45,7 +54,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-    } catch (urlError) {
+    } catch {
       return NextResponse.json(
         { error: "Rasm manzili (URL) noto'g'ri." },
         { status: 400 }
@@ -55,7 +64,7 @@ export async function POST(req: NextRequest) {
     console.log(`[AI Image Analyzer] Rasm tahlil qilinmoqda: ${imageUrl}`);
 
     // 1. Rasmni havola orqali yuklab olib, buffer va base64 formatiga o'tkazish
-    const response = await fetch(imageUrl);
+    const response = await fetch(imageUrl, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) {
       throw new Error(`Rasm yuklab olishda xatolik: ${response.status} ${response.statusText}`);
     }

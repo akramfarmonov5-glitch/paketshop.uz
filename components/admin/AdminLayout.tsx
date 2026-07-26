@@ -28,7 +28,6 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ 
     onLogout, 
-    products, 
     categories, 
     heroContent,
     setHeroContent,
@@ -56,7 +55,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <AdminDashboard products={products} />;
+        return <AdminDashboard />;
       case 'hero':
         return <AdminHero heroContent={heroContent} setHeroContent={setHeroContent} />;
       case 'navigation':
@@ -88,7 +87,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         }
         return <div>Blog posts loading...</div>;
       default:
-        return <AdminDashboard products={products} />;
+        return <AdminDashboard />;
     }
   };
 
