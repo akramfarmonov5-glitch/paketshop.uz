@@ -151,18 +151,31 @@ const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {/* Mobile menu */}
+      {/* z-[60]: menyu navbardan (z-50) ustun bo'lishi kerak, aks holda navbar
+          uning sarlavhasini bosib, birinchi havolani qirqib qo'yadi. */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-black/40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
           <div
-            className="absolute left-0 top-0 h-full w-80 bg-white shadow-2xl"
+            className="absolute left-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lang === 'ru' ? 'Меню' : 'Menyu'}
           >
-            <div className="border-b border-slate-200 px-5 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
               <span className="text-lg font-black text-slate-900">
                 Paket<span className="text-red-600">Shop</span>
               </span>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label={lang === 'ru' ? 'Закрыть меню' : 'Menyuni yopish'}
+                className="grid h-10 w-10 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <X size={22} />
+              </button>
             </div>
-            <div className="px-3 py-4">
+            <div className="flex-1 overflow-y-auto px-3 py-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.id}
@@ -208,10 +221,10 @@ const Navbar: React.FC<NavbarProps> = ({
                 <ChevronRight size={16} className="text-slate-400" />
               </Link>
             </div>
-            <div className="border-t border-slate-100 px-5 py-4">
+            <div className="shrink-0 border-t border-slate-100 px-5 py-4">
               <a
                 href="tel:+998996448444"
-                className="flex items-center gap-2 text-sm font-bold text-slate-800"
+                className="flex h-11 items-center gap-2 text-sm font-bold text-slate-800"
               >
                 <Phone size={16} className="text-red-600" />
                 +998 99 644 84 44
