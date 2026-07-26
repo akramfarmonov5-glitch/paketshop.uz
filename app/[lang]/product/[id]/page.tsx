@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import ProductClient from './ProductClient';
 import B2BProductView from './B2BProductView';
@@ -10,7 +11,7 @@ import { productSlug } from '../../../../lib/slugify';
 import { SITE_NAME, SITE_URL } from '../../../../lib/site';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 
-async function resolvePrismaDetail(id: string, lang: string) {
+const resolvePrismaDetail = cache(async function resolvePrismaDetail(id: string, lang: string) {
   const locale = lang === 'ru' ? 'ru' as const : 'uz' as const;
   try {
     return await getPrismaProductDetail(id, locale);
@@ -18,7 +19,7 @@ async function resolvePrismaDetail(id: string, lang: string) {
     console.error('Prisma product lookup failed, falling back to legacy source:', error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string, lang: string }> }) {
   try {

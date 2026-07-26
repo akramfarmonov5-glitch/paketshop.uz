@@ -11,7 +11,7 @@ const connectionString = normalizeRuntimeDatabaseUrl(configuredConnectionString)
 // Supabase session pooler bir loyiha uchun 15 ta ulanishga ruxsat beradi.
 // Cheklovsiz pool migration/seed skriptlari va boshqa instansiyalarga joy qoldirmaydi
 // va limit tugaganda so'rovlar EMAXCONNSESSION bilan yiqiladi.
-const POOL_MAX = Number(process.env.DATABASE_POOL_MAX) || 1;
+const POOL_MAX = Number(process.env.DATABASE_POOL_MAX) || 5;
 
 export const db = globalForPrisma.prisma || new PrismaClient({
   adapter: new PrismaPg({ connectionString, max: POOL_MAX, idleTimeoutMillis: 10_000 }),

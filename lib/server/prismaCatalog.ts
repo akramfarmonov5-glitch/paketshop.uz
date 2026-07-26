@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { Prisma } from '@prisma/client';
 import {
   approximatePiecePrice,
@@ -82,7 +83,7 @@ function toCard(product: ProductWithCard): CatalogCard {
   });
 }
 
-export async function getPrismaCategories(): Promise<Category[]> {
+export const getPrismaCategories = cache(async function getPrismaCategories(): Promise<Category[]> {
   const categories = await db.category.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
@@ -100,7 +101,7 @@ export async function getPrismaCategories(): Promise<Category[]> {
       description: { uz: uz?.description || '', ru: ru?.description || '' },
     } as Category;
   });
-}
+});
 
 interface SearchFilters {
   categorySlug?: string;
@@ -359,7 +360,7 @@ function pickLocale(
     || translations[0];
 }
 
-export async function getPrismaProductDetail(slugOrId: string, locale: 'uz' | 'ru'): Promise<PrismaProductDetail | null> {
+export const getPrismaProductDetail = cache(async function getPrismaProductDetail(slugOrId: string, locale: 'uz' | 'ru'): Promise<PrismaProductDetail | null> {
   const decoded = decodeURIComponent(slugOrId).trim().slice(0, 200);
   const numericTail = /-(\d+)$/.exec(decoded)?.[1] || (/^\d+$/.test(decoded) ? decoded : null);
 
@@ -422,7 +423,7 @@ export async function getPrismaProductDetail(slugOrId: string, locale: 'uz' | 'r
     })),
     related: related.map(toCard),
   };
-}
+});
 
 export function catalogCardUrlSlug(card: CatalogCard, locale: 'uz' | 'ru'): string {
   const slug = locale === 'ru' ? card.slug.ru || card.slug.uz : card.slug.uz;

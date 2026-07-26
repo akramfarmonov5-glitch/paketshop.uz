@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import {
   MOCK_PRODUCTS,
   MOCK_CATEGORIES,
@@ -28,8 +29,9 @@ export interface GlobalData {
  * Fetch global data for the application.
  * Uses Prisma (via dynamic import to avoid client-side bundling)
  * when DATABASE_URL is set, otherwise falls back to mock data.
+ * Wrapped in React cache to deduplicate requests in the same lifecycle.
  */
-export async function fetchGlobalData(): Promise<GlobalData> {
+export const fetchGlobalData = cache(async function fetchGlobalData(): Promise<GlobalData> {
   const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 
   if (!hasDatabaseUrl) {
@@ -144,4 +146,4 @@ export async function fetchGlobalData(): Promise<GlobalData> {
       blogPosts: [],
     };
   }
-}
+});
