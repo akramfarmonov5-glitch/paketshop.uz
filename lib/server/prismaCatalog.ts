@@ -290,6 +290,7 @@ export interface PrismaProductDetail {
   name: string;
   categoryName: string;
   categorySlug: string;
+  categoryUrlSlug: string;
   images: string[];
   piecePrice: number | null;
   packPrice: number;
@@ -357,6 +358,7 @@ export async function getPrismaProductDetail(slugOrId: string, locale: 'uz' | 'r
     description: translation?.description || '',
     categoryName: categoryTranslation?.name || product.category.slugUz,
     categorySlug: product.category.slugUz,
+    categoryUrlSlug: locale === 'ru' ? product.category.slugRu || product.category.slugUz : product.category.slugUz,
     images: product.media.map((entry) => entry.media.url),
     packPrice: toPriceNumber(product.publicPrice?.toString()),
     piecePrice: approximatePiecePrice(product.publicPrice?.toString(), product.unitsPerPack),

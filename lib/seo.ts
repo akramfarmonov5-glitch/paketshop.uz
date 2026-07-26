@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
+import { SITE_NAME, SITE_URL } from './site';
 
 type Locale = 'uz' | 'ru';
 type LocalizedText = Record<Locale, string>;
-
-const SITE_URL = 'https://paketshop.uz';
 
 export function localizedPageMetadata({
   lang,
@@ -34,8 +33,13 @@ export function localizedPageMetadata({
     openGraph: {
       type: 'website',
       url: `${SITE_URL}${localizedPath}`,
-      siteName: 'PaketShop.uz',
+      siteName: SITE_NAME,
       locale: locale === 'ru' ? 'ru_RU' : 'uz_UZ',
+      title: title[locale],
+      description: description[locale],
+    },
+    twitter: {
+      card: 'summary',
       title: title[locale],
       description: description[locale],
     },

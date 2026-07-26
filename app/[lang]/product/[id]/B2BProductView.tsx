@@ -9,6 +9,7 @@ import {
 import { catalogCardUrlSlug, type PrismaProductDetail } from '@/lib/server/prismaCatalog';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
 import type { Product } from '@/types';
+import { SITE_URL } from '@/lib/site';
 
 const copy = {
   uz: {
@@ -88,7 +89,7 @@ export default function B2BProductView({ detail }: { detail: PrismaProductDetail
   const { card, locale } = detail;
   const t = copy[locale];
   const unit = saleUnitLabel(card.saleUnit, locale);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://paketshop.uz';
+  const siteUrl = SITE_URL;
   const telegramUser = process.env.TELEGRAM_USERNAME || 'akramjon0011';
   const phone = '+998996448444';
   const pageUrl = `${siteUrl}/${locale}/product/${catalogCardUrlSlug(card, locale)}`;

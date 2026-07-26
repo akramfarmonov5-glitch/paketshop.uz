@@ -1,81 +1,137 @@
-import { supabase } from '../../../../lib/supabaseClient';
 import BlogClient from './BlogClient';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
-import { getBlogIdFromSlug } from '../../../../lib/slugify';
-import { fetchGlobalData } from '../../../../lib/fetchGlobalData';
+import { blogSlug, getBlogIdFromSlug } from '../../../../lib/slugify';
+import { getSeoBlogPost } from '../../../../lib/server/blogRepository';
+import { SITE_NAME, SITE_URL } from '../../../../lib/site';
+import { notFound, permanentRedirect } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
-  try {
-    const { slug, lang: paramsLang } = await params;
-    const postId = getBlogIdFromSlug(slug);
-
-    if (!postId) return { title: 'Maqola topilmadi' };
-
-    const { data: post } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('id', postId)
-      .single();
-
-    if (!post) return { title: 'Maqola topilmadi' };
-
-    const lang = paramsLang || 'uz';
-    const seoTitle = getLocalizedText(post.seo_title, lang) || getLocalizedText(post.title, lang);
-    const seoDesc = getLocalizedText(post.seo_description, lang) || getLocalizedText(post.content, lang)?.substring(0, 160);
-    const keywords = Array.isArray(post.seo_keywords)
-      ? post.seo_keywords
-      : typeof post.seo_keywords === 'string'
-        ? post.seo_keywords.split(',').map((k: string) => k.trim())
-        : [];
-
-    return {
-      title: seoTitle,
-      description: seoDesc,
-      keywords: keywords,
-      alternates: {
-        canonical: `https://paketshop.uz/${lang}/blog/${slug}`,
-        languages: {
-          'uz': `https://paketshop.uz/uz/blog/${slug}`,
-          'ru': `https://paketshop.uz/ru/blog/${slug}`,
-          'en': `https://paketshop.uz/en/blog/${slug}`,
-        },
-      },
-      openGraph: {
-        title: seoTitle,
-        description: seoDesc,
-        type: 'article',
-        publishedTime: post.created_at || post.date,
-        images: post.image ? [{ url: post.image }] : [],
-        siteName: 'PaketShop.uz',
-      },
-    };
-  } catch (error) {
-    return { title: 'Blog — PaketShop.uz' };
+function toIsoDate(raw: string): string {
+  const dotMatch = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (dotMatch) {
+    const [, day, month, year] = dotMatch;
+    return `${year}-${month}-${day}`;
   }
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime())
+    ? new Date().toISOString().slice(0, 10)
+    : parsed.toISOString().slice(0, 10);
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; lang: string }>;
+}) {
+  const { slug, lang: requestedLang } = await params;
+  const lang = requestedLang === 'ru' ? 'ru' : 'uz';
   const postId = getBlogIdFromSlug(slug);
+  const resolved = postId ? await getSeoBlogPost(postId).catch(() => null) : null;
 
-  let post = null;
-  if (postId) {
-    try {
-      const { data } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('id', postId)
-        .single();
-      post = data;
-    } catch (error) {
-      console.error("Blog post fetch failed, using fallback:", error);
-    }
+  if (!resolved) {
+    return {
+      title: 'Maqola topilmadi',
+      robots: { index: false, follow: false },
+    };
   }
 
-  if (!post && postId) {
-    const { blogPosts } = await fetchGlobalData();
-    post = blogPosts.find(p => p.id === postId) || null;
+  const post = resolved.canonicalPost;
+  const seoTitle = getLocalizedText(post.seo?.title, lang)
+    || getLocalizedText(post.title, lang);
+  const seoDescription = getLocalizedText(post.seo?.description, lang)
+    || getLocalizedText(post.content, lang).slice(0, 160);
+  const canonicalPath = `/${lang}/blog/${blogSlug(post, lang)}`;
+
+  return {
+    title: seoTitle,
+    description: seoDescription,
+    keywords: Array.isArray(post.seo?.keywords) ? post.seo.keywords : undefined,
+    alternates: {
+      canonical: canonicalPath,
+      languages: {
+        uz: `/uz/blog/${blogSlug(post, 'uz')}`,
+        ru: `/ru/blog/${blogSlug(post, 'ru')}`,
+        'x-default': `/uz/blog/${blogSlug(post, 'uz')}`,
+      },
+    },
+    openGraph: {
+      title: seoTitle,
+      description: seoDescription,
+      type: 'article',
+      url: `${SITE_URL}${canonicalPath}`,
+      publishedTime: toIsoDate(post.date),
+      images: post.image ? [{ url: post.image }] : [],
+      siteName: SITE_NAME,
+    },
+  };
+}
+
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string; lang: string }>;
+}) {
+  const { slug, lang: requestedLang } = await params;
+  const lang = requestedLang === 'ru' ? 'ru' : 'uz';
+  const postId = getBlogIdFromSlug(slug);
+  const resolved = postId ? await getSeoBlogPost(postId).catch(() => null) : null;
+  if (!resolved) notFound();
+
+  const post = resolved.canonicalPost;
+  const canonicalSlug = blogSlug(post, lang);
+  if (slug !== canonicalSlug || resolved.post.id !== post.id) {
+    permanentRedirect(`/${lang}/blog/${canonicalSlug}`);
   }
 
-  return <BlogClient slug={slug} initialPost={post} />;
+  const title = getLocalizedText(post.title, lang);
+  const description = getLocalizedText(post.seo?.description, lang)
+    || getLocalizedText(post.content, lang).slice(0, 160);
+  const canonicalUrl = `${SITE_URL}/${lang}/blog/${canonicalSlug}`;
+  const articleMarkup = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    image: post.image ? [post.image] : [],
+    datePublished: toIsoDate(post.date),
+    dateModified: toIsoDate(post.date),
+    mainEntityOfPage: canonicalUrl,
+    author: { '@type': 'Organization', name: SITE_NAME },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
+    },
+  };
+  const breadcrumbMarkup = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: lang === 'ru' ? 'Главная' : 'Bosh sahifa',
+        item: `${SITE_URL}/${lang}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: lang === 'ru' ? 'Статьи' : 'Maqolalar',
+        item: `${SITE_URL}/${lang}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: title,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleMarkup) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbMarkup) }} />
+      <BlogClient slug={canonicalSlug} initialPost={post} />
+    </>
+  );
 }

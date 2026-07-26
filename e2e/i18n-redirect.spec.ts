@@ -63,7 +63,7 @@ test.describe('Redirect va 404', () => {
 
     expect(body).toContain('Disallow: /uz/admin');
     expect(body).toContain('Disallow: /uz/checkout');
-    expect(body).toContain('Sitemap: https://paketshop.uz/sitemap.xml');
+    expect(body).toContain('Sitemap: https://www.paketshop.uz/sitemap.xml');
   });
 
   test('sitemap uz va ru sahifalarni o‘z ichiga oladi, en yo‘q', async ({ request }) => {

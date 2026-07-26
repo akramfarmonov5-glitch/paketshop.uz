@@ -2,12 +2,13 @@ import { supabase } from '../../../../lib/supabaseClient';
 import ProductClient from './ProductClient';
 import B2BProductView from './B2BProductView';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
-import { getCategoryDisplayName } from '../../../../lib/categoryUtils';
 import { MOCK_PRODUCTS } from '../../../../constants';
 import { fetchGlobalData } from '../../../../lib/fetchGlobalData';
 import { catalogCardUrlSlug, getPrismaProductDetail } from '../../../../lib/server/prismaCatalog';
 import { findActiveRedirect } from '../../../../lib/server/redirects';
-import { permanentRedirect, redirect } from 'next/navigation';
+import { productSlug } from '../../../../lib/slugify';
+import { SITE_NAME, SITE_URL } from '../../../../lib/site';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 
 async function resolvePrismaDetail(id: string, lang: string) {
   const locale = lang === 'ru' ? 'ru' as const : 'uz' as const;
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
           languages: {
             uz: `/uz/product/${catalogCardUrlSlug(detail.card, 'uz')}`,
             ru: `/ru/product/${catalogCardUrlSlug(detail.card, 'ru')}`,
+            'x-default': `/uz/product/${catalogCardUrlSlug(detail.card, 'uz')}`,
           },
         },
         openGraph: {
@@ -64,7 +66,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       product = MOCK_PRODUCTS.find(p => p.id === Number(productId)) as any || null;
     }
 
-    if (!product) return { title: 'Mahsulot topilmadi' };
+    if (!product) {
+      return {
+        title: 'Mahsulot topilmadi',
+        robots: { index: false, follow: false },
+      };
+    }
 
     const activeLang = lang || 'uz';
     const productName = getLocalizedText(product.name, activeLang);
@@ -77,15 +84,27 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return {
       title: title,
       description: productDesc,
+      alternates: {
+        canonical: `/${activeLang}/product/${productSlug(product, activeLang)}`,
+        languages: {
+          uz: `/uz/product/${productSlug(product, 'uz')}`,
+          ru: `/ru/product/${productSlug(product, 'ru')}`,
+          'x-default': `/uz/product/${productSlug(product, 'uz')}`,
+        },
+      },
       openGraph: {
         title: title,
         description: productDesc,
+        url: `${SITE_URL}/${activeLang}/product/${productSlug(product, activeLang)}`,
         images: product.image ? [{ url: product.image }] : [],
         type: 'website'
       }
     };
-  } catch (error) {
-    return { title: 'Mahsulot | PaketShop.uz' };
+  } catch {
+    return {
+      title: 'Mahsulot | PaketShop.uz',
+      robots: { index: false, follow: false },
+    };
   }
 }
 
@@ -94,6 +113,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const detail = await resolvePrismaDetail(id, lang);
   if (detail) {
+    const canonicalSlug = catalogCardUrlSlug(detail.card, detail.locale);
+    if (id !== canonicalSlug) {
+      permanentRedirect(`/${detail.locale}/product/${canonicalSlug}`);
+    }
+
     const schemaMarkup = {
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -101,22 +125,53 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       image: detail.images,
       description: detail.shortDescription || detail.name,
       sku: detail.card.sku,
-      brand: { '@type': 'Brand', name: 'PaketShop.uz' },
+      brand: { '@type': 'Brand', name: SITE_NAME },
       offers: {
         '@type': 'Offer',
-        url: `https://paketshop.uz/${detail.locale}/product/${catalogCardUrlSlug(detail.card, detail.locale)}`,
+        url: `${SITE_URL}/${detail.locale}/product/${canonicalSlug}`,
         priceCurrency: 'UZS',
         price: String(detail.packPrice || 0),
         itemCondition: 'https://schema.org/NewCondition',
         availability: ['IN_STOCK', 'LOW_STOCK'].includes(detail.card.availabilityStatus)
           ? 'https://schema.org/InStock'
           : 'https://schema.org/PreOrder',
-        seller: { '@type': 'Organization', name: 'PaketShop.uz' },
+        seller: { '@type': 'Organization', name: SITE_NAME },
       },
+    };
+    const breadcrumbMarkup = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: detail.locale === 'ru' ? 'Главная' : 'Bosh sahifa',
+          item: `${SITE_URL}/${detail.locale}`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: detail.locale === 'ru' ? 'Каталог' : 'Katalog',
+          item: `${SITE_URL}/${detail.locale}/catalog`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: detail.categoryName,
+          item: `${SITE_URL}/${detail.locale}/category/${detail.categoryUrlSlug}`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 4,
+          name: detail.name,
+          item: `${SITE_URL}/${detail.locale}/product/${canonicalSlug}`,
+        },
+      ],
     };
     return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbMarkup) }} />
         <B2BProductView detail={detail} />
       </>
     );
@@ -141,7 +196,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       if (resolved.statusCode === 302) redirect(resolved.target);
       permanentRedirect(resolved.target);
     }
+    notFound();
   }
+  const canonicalSlug = productSlug(product, activeLang);
+  if (id !== canonicalSlug) {
+    permanentRedirect(`/${activeLang}/product/${canonicalSlug}`);
+  }
+
   const schemaMarkup = product ? {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -156,7 +217,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://paketshop.uz/${activeLang}/product/${id}`,
+      "url": `${SITE_URL}/${activeLang}/product/${canonicalSlug}`,
       "priceCurrency": "UZS",
       "price": String(product.price || 0),
       "priceValidUntil": "2030-12-31",
@@ -166,7 +227,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Organization",
-        "name": "PaketShop.uz"
+        "name": SITE_NAME
       }
     }
   } : null;

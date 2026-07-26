@@ -1,8 +1,9 @@
 import React from 'react';
 import BlogContent from './BlogContent';
-import { fetchGlobalData } from '../../../lib/fetchGlobalData';
+import { localizedPageMetadata } from '../../../lib/seo';
+import { getSeoBlogPosts } from '../../../lib/server/blogRepository';
 
-export const revalidate = 300; // Cache for 5 minutes
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -10,42 +11,18 @@ export async function generateMetadata({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-  const activeLang = lang || 'uz';
-
-  const titles: Record<string, string> = {
-    uz: 'Foydali Maqolalar va Yangiliklar | PaketShop.uz',
-    ru: 'Полезные Статьи и Новости | PaketShop.uz',
-    en: 'Useful Articles and News | PaketShop.uz',
-  };
-
-  const descriptions: Record<string, string> = {
-    uz: "Kraft paketlar, qadoqlash materiallari va qog'oz xaltalar haqida eng so'nggi foydali maqolalar, biznes maslahatlari va soha yangiliklari.",
-    ru: 'Последние полезные статьи, бизнес-советы и новости отрасли о крафт-пакетах, упаковочных материалах и бумажных пакетах.',
-    en: 'The latest useful articles, business tips, and industry news about kraft bags, packaging materials, and paper bags.',
-  };
-
-  const title = titles[activeLang] || titles.uz;
-  const description = descriptions[activeLang] || descriptions.uz;
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: `https://paketshop.uz/${activeLang}/blog`,
-      languages: {
-        uz: 'https://paketshop.uz/uz/blog',
-        ru: 'https://paketshop.uz/ru/blog',
-        en: 'https://paketshop.uz/en/blog',
-      },
+  return localizedPageMetadata({
+    lang,
+    path: '/blog',
+    title: {
+      uz: 'Qadoqlash bo‘yicha foydali maqolalar | PaketShop.uz',
+      ru: 'Полезные статьи об упаковке | PaketShop.uz',
     },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url: `https://paketshop.uz/${activeLang}/blog`,
-      siteName: 'PaketShop.uz',
+    description: {
+      uz: 'Kraft paketlar, oziq-ovqat qadoqlari va bir martalik idishlarni tanlash bo‘yicha amaliy maslahatlar.',
+      ru: 'Практические советы по выбору крафт-пакетов, пищевой упаковки и одноразовой посуды.',
     },
-  };
+  });
 }
 
 export default async function BlogArchivePage({
@@ -54,9 +31,8 @@ export default async function BlogArchivePage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-  const activeLang = lang || 'uz';
-
-  const { blogPosts } = await fetchGlobalData();
+  const activeLang = lang === 'ru' ? 'ru' : 'uz';
+  const blogPosts = await getSeoBlogPosts().catch(() => []);
 
   return <BlogContent blogPosts={blogPosts} lang={activeLang} />;
 }

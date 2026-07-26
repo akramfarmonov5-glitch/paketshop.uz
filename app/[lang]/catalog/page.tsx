@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PackageCheck, Search, Send, SlidersHorizontal } from 'lucide-react';
 import { getLocalizedText } from '@/lib/i18nUtils';
 import { getCatalog } from '@/lib/server/catalogRepository';
+import { SITE_URL } from '@/lib/site';
 import { slugify } from '@/lib/slugify';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
 
@@ -82,7 +83,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps) {
           const name = getLocalizedText(product.name, locale);
           const slugText = getLocalizedText(product.slug, locale) || getLocalizedText(product.slug, 'uz') || slugify(name);
           const url = `/${locale}/product/${product.id ? `${slugText}-${product.id}` : slugText}`;
-          const telegramText = locale === 'ru' ? `Здравствуйте. Нужен товар ${product.sku} — ${name}. Уточните цену и наличие: https://paketshop.uz${url}` : `Assalomu alaykum. ${product.sku} — ${name} mahsuloti kerak. Narxi va qoldig‘ini yuboring: https://paketshop.uz${url}`;
+          const telegramText = locale === 'ru' ? `Здравствуйте. Нужен товар ${product.sku} — ${name}. Уточните цену и наличие: ${SITE_URL}${url}` : `Assalomu alaykum. ${product.sku} — ${name} mahsuloti kerak. Narxi va qoldig‘ini yuboring: ${SITE_URL}${url}`;
           return <article key={product.catalogId || product.sku} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <Link href={url} className="relative block aspect-[4/3] overflow-hidden bg-slate-100"><Image src={product.image} alt={name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-contain p-3" /></Link>
             <div className="p-4"><div className="mb-2 flex items-center justify-between gap-2"><span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-700">{product.sku}</span><span className={`text-xs font-semibold ${product.availabilityStatus === 'IN_STOCK' ? 'text-emerald-700' : 'text-amber-700'}`}>{product.availabilityStatus === 'IN_STOCK' ? (locale === 'ru' ? 'В наличии' : 'Omborda mavjud') : (locale === 'ru' ? 'Уточнить наличие' : 'Qoldiqni aniqlang')}</span></div>
