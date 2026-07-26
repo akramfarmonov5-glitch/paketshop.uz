@@ -138,9 +138,13 @@ export default function AdminProductsV2() {
     if (!window.confirm(message)) return;
 
     setError('');
-    const response = await fetchWithTimeout(`/api/admin/products/${product.id}${isArchived ? '?permanent=true' : ''}`, { method: 'DELETE' }, 30_000);
-    if (response.ok) await load(query);
-    else setError(isArchived ? 'Mahsulotni o‘chirib bo‘lmadi' : 'Mahsulotni arxivlab bo‘lmadi');
+    try {
+      const response = await fetchWithTimeout(`/api/admin/products/${product.id}${isArchived ? '?permanent=true' : ''}`, { method: 'DELETE' }, 30_000);
+      if (response.ok) await load(query);
+      else setError(isArchived ? 'Mahsulotni o‘chirib bo‘lmadi' : 'Mahsulotni arxivlab bo‘lmadi');
+    } catch (archiveError) {
+      setError(archiveError instanceof Error ? archiveError.message : 'So‘rov bajarilmadi');
+    }
   };
 
   const visibleProducts = showArchived ? products : products.filter((product) => product.status !== 'ARCHIVED');
