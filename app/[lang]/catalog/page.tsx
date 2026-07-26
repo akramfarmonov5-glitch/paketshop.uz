@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PackageCheck, Search, Send, SlidersHorizontal } from 'lucide-react';
+import { PackageCheck, Send } from 'lucide-react';
+import CatalogFilterBar from '@/components/CatalogFilterBar';
 import { getLocalizedText } from '@/lib/i18nUtils';
 import { getCatalog } from '@/lib/server/catalogRepository';
 import { SITE_URL } from '@/lib/site';
@@ -13,12 +14,12 @@ const copy = {
   uz: {
     title: 'Ulgurji mahsulotlar katalogi',
     description: 'Qadoqlash, bir martalik idishlar va xo‘jalik sarf materiallarini SKU, qadoq va mavjudlik bo‘yicha toping.',
-    search: 'Mahsulot nomi yoki SKU', category: 'Barcha kategoriyalar', available: 'Faqat mavjud', sort: 'Saralash', newest: 'Eng yangi', cheap: 'Narxi arzon', expensive: 'Narxi qimmat', az: 'Nomi A–Z', apply: 'Ko‘rsatish', found: 'ta mahsulot', pack: 'Qadoqda', carton: 'Korobkada', price: '1 qadoq', request: 'Narxni aniqlang', telegram: 'Telegram orqali so‘rash', empty: 'Mahsulot topilmadi', manager: 'Narx va qoldiqni menejer tasdiqlaydi', previous: 'Oldingi', next: 'Keyingi',
+    search: 'Mahsulot nomi yoki SKU', category: 'Barcha kategoriyalar', available: 'Faqat mavjud', sort: 'Saralash', newest: 'Eng yangi', cheap: 'Narxi arzon', expensive: 'Narxi qimmat', az: 'Nomi A–Z', apply: 'Ko‘rsatish', found: 'ta mahsulot', pack: 'Qadoqda', carton: 'Korobkada', price: '1 qadoq', request: 'Narxni aniqlang', telegram: 'Telegram orqali so‘rash', empty: 'Mahsulot topilmadi', manager: 'Narx va qoldiqni menejer tasdiqlaydi', previous: 'Oldingi', next: 'Keyingi', filters: 'Filtrlar',
   },
   ru: {
     title: 'Каталог оптовых товаров',
     description: 'Найдите упаковку, одноразовую посуду и хозяйственные товары по SKU, упаковке и наличию.',
-    search: 'Название товара или SKU', category: 'Все категории', available: 'Только в наличии', sort: 'Сортировка', newest: 'Сначала новые', cheap: 'Сначала дешевле', expensive: 'Сначала дороже', az: 'Название А–Я', apply: 'Показать', found: 'товаров', pack: 'В упаковке', carton: 'В коробке', price: '1 упаковка', request: 'Уточнить цену', telegram: 'Спросить в Telegram', empty: 'Товары не найдены', manager: 'Цену и наличие подтверждает менеджер', previous: 'Назад', next: 'Далее',
+    search: 'Название товара или SKU', category: 'Все категории', available: 'Только в наличии', sort: 'Сортировка', newest: 'Сначала новые', cheap: 'Сначала дешевле', expensive: 'Сначала дороже', az: 'Название А–Я', apply: 'Показать', found: 'товаров', pack: 'В упаковке', carton: 'В коробке', price: '1 упаковка', request: 'Уточнить цену', telegram: 'Спросить в Telegram', empty: 'Товары не найдены', manager: 'Цену и наличие подтверждает менеджер', previous: 'Назад', next: 'Далее', filters: 'Фильтры',
   },
 };
 
@@ -58,27 +59,31 @@ export default async function CatalogPage({ params, searchParams }: PageProps) {
   const pageHref = (page: number) => { const next = new URLSearchParams(baseQuery); next.set('page', String(page)); return `/${locale}/catalog?${next}`; };
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24 pt-28 text-slate-900">
+    <main className="min-h-screen bg-slate-50 pb-24 pt-20 text-slate-900 sm:pt-28">
+      {/* Mobilda sarlavha ixchamroq — mahsulotlar ekranning yuqorisiga chiqadi */}
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-10 lg:px-8">
           <div className="max-w-3xl">
-            <span className="mb-3 inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-700"><PackageCheck size={16} /> PaketShop B2B</span>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
-            <p className="mt-3 text-base leading-7 text-slate-600">{t.description}</p>
+            <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 sm:mb-3 sm:text-sm"><PackageCheck size={14} /> PaketShop B2B</span>
+            <h1 className="text-xl font-bold tracking-tight sm:text-3xl md:text-4xl">{t.title}</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3 sm:text-base sm:leading-7">{t.description}</p>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <form className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[2fr_1fr_1fr_1fr_auto]" action={`/${locale}/catalog`}>
-          <label className="relative"><Search className="absolute left-3 top-3.5 text-slate-400" size={18} /><input name="q" defaultValue={selected.query} placeholder={t.search} className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100" /></label>
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <CatalogFilterBar
+          action={`/${locale}/catalog`}
+          defaultQuery={selected.query}
+          activeCount={[selected.category, selected.availability, selected.sort !== 'newest' ? selected.sort : ''].filter(Boolean).length}
+          labels={{ search: t.search, apply: t.apply, filters: t.filters }}
+        >
           <select name="category" defaultValue={selected.category} aria-label={t.category} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"><option value="">{t.category}</option>{result.categories.map((category) => <option key={category.id} value={getLocalizedText(category.slug, 'uz')}>{getLocalizedText(category.name, locale)}</option>)}</select>
           <select name="availability" defaultValue={selected.availability} aria-label={t.available} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"><option value="">{t.available}</option><option value="available">{t.available}</option></select>
           <select name="sort" defaultValue={selected.sort} aria-label={t.sort} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"><option value="newest">{t.newest}</option><option value="price_asc">{t.cheap}</option><option value="price_desc">{t.expensive}</option><option value="name_asc">{t.az}</option></select>
-          <button className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700"><SlidersHorizontal size={17} />{t.apply}</button>
-        </form>
+        </CatalogFilterBar>
 
-        <div className="my-6 flex items-center justify-between"><p className="text-sm font-medium text-slate-600"><strong className="text-slate-950">{result.total}</strong> {t.found}</p><p className="hidden text-sm text-slate-500 sm:block">{t.manager}</p></div>
+        <div className="my-3 flex items-center justify-between sm:my-6"><p className="text-sm font-medium text-slate-600"><strong className="text-slate-950">{result.total}</strong> {t.found}</p><p className="hidden text-sm text-slate-500 sm:block">{t.manager}</p></div>
 
         {result.products.length ? <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{result.products.map((product) => {
           const name = getLocalizedText(product.name, locale);
@@ -94,7 +99,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps) {
               <Link href={url}><h2 className="min-h-12 text-base font-semibold leading-6 hover:text-red-700">{name}</h2></Link>
               <dl className="mt-3 space-y-1 text-sm text-slate-600"><div className="flex justify-between"><dt>{t.pack}</dt><dd className="font-medium text-slate-900">{product.itemsPerPackage || 1} {locale === 'ru' ? 'шт.' : 'dona'}</dd></div><div className="flex justify-between"><dt>{t.carton}</dt><dd className="font-medium text-slate-900">{product.unitsPerCarton || product.itemsPerPackage || 1} {locale === 'ru' ? 'шт.' : 'dona'}</dd></div></dl>
               <div className="mt-4 border-t border-slate-100 pt-4"><p className="text-xs text-slate-500">{t.price}</p><p className="text-lg font-bold text-slate-950">{product.priceMode === 'REQUEST_ONLY' ? t.request : product.formattedPrice}</p></div>
-              <div className="mt-4 grid gap-2"><B2BAddToCartButton product={product} locale={locale} className="h-10 text-sm" /><a href={`https://t.me/${process.env.TELEGRAM_USERNAME || 'akramjon0011'}?text=${encodeURIComponent(telegramText)}`} target="_blank" rel="noreferrer" className="flex h-10 items-center justify-center gap-2 rounded-xl border border-red-600 text-sm font-semibold text-red-700 hover:bg-red-50"><Send size={16} />{t.telegram}</a></div>
+              <div className="mt-4 grid gap-2"><B2BAddToCartButton product={product} locale={locale} className="h-11 text-sm" /><a href={`https://t.me/${process.env.TELEGRAM_USERNAME || 'akramjon0011'}?text=${encodeURIComponent(telegramText)}`} target="_blank" rel="noreferrer" className="flex h-11 items-center justify-center gap-2 rounded-xl border border-red-600 text-sm font-semibold text-red-700 hover:bg-red-50"><Send size={16} />{t.telegram}</a></div>
             </div>
           </article>;
         })}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">

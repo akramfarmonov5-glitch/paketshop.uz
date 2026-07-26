@@ -17,6 +17,7 @@ import { getLocalizedText } from "@/lib/i18nUtils";
 import { productSlug } from "@/lib/slugify";
 import type { BlogPost, Category, HeroContent, Product } from "@/types";
 import B2BWishlistButton from "@/components/B2BWishlistButton";
+import CategoryCard from "@/components/CategoryCard";
 
 interface HomeContentProps {
   lang: string;
@@ -192,30 +193,19 @@ export default function HomeContent({
           <h2 className="text-3xl font-bold">{t.categories}</h2>
           <p className="mt-2 text-slate-600">{t.categoriesDesc}</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {shownCategories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/${locale}/category/${getCategorySlug(category, locale)}`}
-              className="group overflow-hidden rounded-2xl border border-slate-200 bg-white"
-            >
-              <div className="relative aspect-[16/9] bg-slate-100">
-                <Image
-                  src={category.image || "/logo.png"}
-                  alt={getLocalizedText(category.name, locale)}
-                  fill
-                  sizes="(max-width: 640px) 100vw, 25vw"
-                  className="object-contain p-4"
-                />
-              </div>
-              <div className="flex items-center justify-between p-4">
-                <h3 className="font-bold group-hover:text-red-700">
-                  {getLocalizedText(category.name, locale)}
-                </h3>
-                <ArrowRight size={17} />
-              </div>
-            </Link>
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {shownCategories.map((category) => {
+            const slug = getCategorySlug(category, locale);
+            return (
+              <CategoryCard
+                key={category.id}
+                href={`/${locale}/category/${slug}`}
+                name={getLocalizedText(category.name, locale)}
+                slug={slug}
+                image={category.image || undefined}
+              />
+            );
+          })}
         </div>
       </section>
 

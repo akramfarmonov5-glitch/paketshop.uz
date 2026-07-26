@@ -90,6 +90,22 @@ export const getPrismaCategories = cache(async function getPrismaCategories(): P
     include: { translations: true },
   });
 
+  // Kategoriyaga rasm belgilanmagan bo'lsa, shu kategoriyadagi mahsulot rasmini ishlatamiz —
+  // logotipni takrorlashdan ko'ra haqiqiy rasm ko'rsatish yaxshiroq.
+  const withoutImage = categories.filter((category) => !category.imageUrl).map((category) => category.id);
+  const fallbackByCategory = new Map<string, string>();
+  if (withoutImage.length) {
+    const media = await db.productMedia.findMany({
+      where: { primary: true, product: { status: 'ACTIVE', categoryId: { in: withoutImage } } },
+      select: { media: { select: { url: true } }, product: { select: { categoryId: true } } },
+    });
+    for (const entry of media) {
+      if (!fallbackByCategory.has(entry.product.categoryId)) {
+        fallbackByCategory.set(entry.product.categoryId, entry.media.url);
+      }
+    }
+  }
+
   return categories.map((category, index) => {
     const uz = category.translations.find((translation) => translation.locale === 'uz');
     const ru = category.translations.find((translation) => translation.locale === 'ru');
@@ -97,7 +113,7 @@ export const getPrismaCategories = cache(async function getPrismaCategories(): P
       id: index + 1,
       name: { uz: uz?.name || category.slugUz, ru: ru?.name || uz?.name || category.slugUz },
       slug: category.slugUz,
-      image: category.imageUrl || '',
+      image: category.imageUrl || fallbackByCategory.get(category.id) || '',
       description: { uz: uz?.description || '', ru: ru?.description || '' },
     } as Category;
   });
