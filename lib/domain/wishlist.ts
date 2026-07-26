@@ -1,12 +1,18 @@
 import type { Product } from '@/types';
+import { parseLocalizedObject } from '@/lib/i18nUtils';
 
 function normalizedNames(product: Product): string[] {
-  const values = typeof product.name === 'string'
-    ? [product.name]
-    : [product.name.uz, product.name.ru];
+  const name = parseLocalizedObject(product.name);
 
-  return values
-    .map((value) => value.trim().toLocaleLowerCase('uz'))
+  return [name.uz, name.ru]
+    .map((value) => value
+      .normalize('NFKC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/[\u2010-\u2015\u2212]/g, '-')
+      .replace(/[ʻʼ’‘`´]/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLocaleLowerCase('uz'))
     .filter(Boolean);
 }
 

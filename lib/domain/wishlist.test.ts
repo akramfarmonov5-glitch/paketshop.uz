@@ -92,4 +92,22 @@ describe('wishlist identity', () => {
 
     expect(dedupeWishlist([currentCopy, savedCopy])).toEqual([currentCopy]);
   });
+
+  it('matches legacy names stored as serialized localized JSON', () => {
+    const currentCopy = product({
+      id: 29,
+      catalogId: 'catalog-29',
+      sku: 'PS-01',
+      name: { uz: "Premium Kraft Qog'oz Stakanlari", ru: 'Крафт стаканы' },
+    });
+    const legacyCopy = product({
+      id: 29,
+      name: JSON.stringify({
+        uz: 'Premium Kraft Qog‘oz Stakanlari',
+        ru: 'Крафт стаканы',
+      }),
+    });
+
+    expect(dedupeWishlist([currentCopy, legacyCopy])).toEqual([currentCopy]);
+  });
 });
