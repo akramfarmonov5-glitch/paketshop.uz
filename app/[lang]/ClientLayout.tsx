@@ -16,13 +16,22 @@ import { useAuth } from '../../context/AuthContext';
 import { useGlobalData } from '../../context/GlobalContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { productSlug } from '../../lib/slugify';
+import type { NavigationSettings } from '../../types';
 
-export default function ClientLayout({ children, lang }: { children: React.ReactNode, lang?: string }) {
+export default function ClientLayout({
+  children,
+  lang,
+  navigationSettings,
+}: {
+  children: React.ReactNode;
+  lang?: string;
+  navigationSettings: NavigationSettings;
+}) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toggleCart } = useCart();
   const { user } = useAuth();
-  const { products, categories, navigationSettings } = useGlobalData();
+  const { products, categories } = useGlobalData();
   const pathname = usePathname() || '/';
   const router = useRouter();
 
@@ -31,8 +40,6 @@ export default function ClientLayout({ children, lang }: { children: React.React
   const isTracking = pathname.includes('/tracking');
   const isBlogPost = pathname.includes('/blog/');
   const isWishlist = pathname.includes('/wishlist');
-  const isProfile = pathname.includes('/profile');
-
   const hideNavAndFooter = isCheckout || isAdmin || isTracking;
   const hideFooter = hideNavAndFooter || isBlogPost || isWishlist;
 
@@ -85,7 +92,7 @@ export default function ClientLayout({ children, lang }: { children: React.React
         />
       )}
 
-      <AIChatAssistant products={products} />
+      {!isAdmin && <AIChatAssistant products={products} />}
 
       <SearchModal
         isOpen={isSearchOpen}
@@ -100,7 +107,7 @@ export default function ClientLayout({ children, lang }: { children: React.React
       )}
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-      <InstallPWA />
+      {!isAdmin && <InstallPWA />}
     </ErrorBoundary>
   );
 }

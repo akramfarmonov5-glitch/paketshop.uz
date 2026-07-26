@@ -45,15 +45,11 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         const [
           productsRes,
           categoriesRes,
-          heroRes,
           blogRes,
-          navRes,
         ] = await Promise.all([
           supabase.from('products').select('*'),
           supabase.from('categories').select('*'),
-          supabase.from('hero_content').select('*').single(),
           supabase.from('blog_posts').select('*').order('date', { ascending: false }),
-          supabase.from('navigation_settings').select('*').single(),
         ]);
 
         if (productsRes.data && productsRes.data.length > 0) {
@@ -75,17 +71,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           setCategories(mappedCategories as Category[]);
         }
 
-        if (heroRes.data) {
-          const heroData = heroRes.data;
-          setHeroContent({
-            badge: heroData.badge || 'Yangi Mavsum',
-            title: heroData.title || 'Premium Collection',
-            description: heroData.description || '',
-            buttonText: heroData.buttonText || heroData.button_text || 'Sotib olish',
-            images: heroData.images || [],
-          });
-        }
-
         if (blogRes.data) {
           const mappedPosts = blogRes.data.map((post) => ({
             ...post,
@@ -98,13 +83,6 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
           setBlogPosts(mappedPosts as BlogPost[]);
         }
 
-        if (navRes.data) {
-          const navData = navRes.data;
-          setNavigationSettings({
-            menuItems: navData.menuItems || navData.menu_items || [],
-            socialLinks: navData.socialLinks || navData.social_links || [],
-          });
-        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

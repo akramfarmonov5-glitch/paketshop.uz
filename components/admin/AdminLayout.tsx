@@ -28,7 +28,6 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ 
     onLogout, 
-    categories, 
     heroContent,
     setHeroContent,
     navigationSettings,
@@ -64,7 +63,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <AdminNavigation 
                     navigationSettings={navigationSettings} 
                     setNavigationSettings={setNavigationSettings} 
-                    categories={categories} 
                 />
             );
         }

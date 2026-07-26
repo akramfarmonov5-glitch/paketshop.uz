@@ -5,17 +5,25 @@ import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DEFAULT_NAVIGATION } from '../constants';
+import { getLocalizedText } from '../lib/i18nUtils';
+import { resolveNavigationHref } from '../lib/siteSettings';
+import type { NavigationSettings } from '../types';
 
 interface NavbarProps {
   onNavigateHome: () => void;
-  navigationSettings?: any;
+  navigationSettings?: NavigationSettings;
   onProfileClick?: () => void;
   onSearchClick?: () => void;
   onWishlistClick?: () => void;
   onTrackingClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  onNavigateHome,
+  navigationSettings = DEFAULT_NAVIGATION,
+  onSearchClick,
+}) => {
   const { cartCount, toggleCart } = useCart();
   const { lang, setLang, t } = useLanguage();
   const router = useRouter();
@@ -26,12 +34,15 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
     { code: 'ru' as const, label: 'RU' },
   ];
 
-  const navLinks = [
-    { path: 'catalog', label: t('nav_catalog') },
-    { path: 'wholesale', label: t('nav_wholesale') },
-    { path: 'organizations', label: t('nav_organizations') },
-    { path: 'starter-kits', label: t('nav_starter_kits') },
-  ];
+  const activeLang = lang === 'ru' ? 'ru' : 'uz';
+  const navLinks = navigationSettings.menuItems.map((item) => ({
+    id: item.id,
+    href: resolveNavigationHref(item.href, activeLang),
+    label: getLocalizedText(item.label, activeLang),
+  }));
+  const telegramUrl = navigationSettings.socialLinks.find(
+    (item) => item.platform === 'telegram',
+  )?.url || 'https://t.me/paketshop_uz';
 
   return (
     <>
@@ -43,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
             <a href="tel:+998996448444" className="flex items-center gap-1 font-medium hover:text-red-700">
               <Phone size={13} />+998 99 644 84 44
             </a>
-            <a href="https://t.me/paketshop_uz" target="_blank" rel="noreferrer" className="flex items-center gap-1 font-medium hover:text-red-700">
+            <a href={telegramUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 font-medium hover:text-red-700">
               <Send size={13} />Telegram
             </a>
           </div>
@@ -73,8 +84,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
           <div className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
               <Link
-                key={link.path}
-                href={`/${lang}/${link.path}`}
+                key={link.id}
+                href={link.href}
                 className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-red-700"
               >
                 {link.label}
@@ -154,8 +165,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onSearchClick }) => {
             <div className="px-3 py-4">
               {navLinks.map((link) => (
                 <Link
-                  key={link.path}
-                  href={`/${lang}/${link.path}`}
+                  key={link.id}
+                  href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center justify-between rounded-xl px-3 py-3 font-semibold text-slate-800 hover:bg-slate-100"
                 >
