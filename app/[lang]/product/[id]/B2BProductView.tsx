@@ -8,6 +8,7 @@ import {
 } from '@/lib/domain/catalogMapping';
 import { catalogCardUrlSlug, type PrismaProductDetail } from '@/lib/server/prismaCatalog';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
+import B2BWishlistButton from '@/components/B2BWishlistButton';
 import type { Product } from '@/types';
 import { SITE_URL } from '@/lib/site';
 
@@ -196,8 +197,9 @@ export default function B2BProductView({ detail }: { detail: PrismaProductDetail
 
               <p className="mt-4 text-xs text-slate-500">{t.manager}</p>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <B2BAddToCartButton product={card as unknown as Product} locale={locale} className="h-12 text-sm" />
+                <B2BWishlistButton product={card as unknown as Product} locale={locale} variant="button" className="h-12 text-sm" />
                 <a href={`https://t.me/${telegramUser}?text=${encodeURIComponent(telegramText)}`} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700">
                   <Send size={17} />{t.telegram}
                 </a>

@@ -16,6 +16,7 @@ import { getCategorySlug } from "@/lib/categoryUtils";
 import { getLocalizedText } from "@/lib/i18nUtils";
 import { productSlug } from "@/lib/slugify";
 import type { BlogPost, Category, HeroContent, Product } from "@/types";
+import B2BWishlistButton from "@/components/B2BWishlistButton";
 
 interface HomeContentProps {
   lang: string;
@@ -235,21 +236,28 @@ export default function HomeContent({
               const url = `/${locale}/product/${productSlug(product, locale)}`;
               return (
                 <article
-                  key={product.id}
+                  key={product.catalogId || product.sku || product.id}
                   className="rounded-2xl border border-slate-200 bg-white p-4"
                 >
-                  <Link
-                    href={url}
-                    className="relative mb-4 block aspect-[4/3] rounded-xl bg-slate-100"
-                  >
-                    <Image
-                      src={product.image}
-                      alt={name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 25vw"
-                      className="object-contain p-3"
+                  <div className="relative mb-4">
+                    <Link
+                      href={url}
+                      className="relative block aspect-[4/3] rounded-xl bg-slate-100"
+                    >
+                      <Image
+                        src={product.image}
+                        alt={name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 25vw"
+                        className="object-contain p-3"
+                      />
+                    </Link>
+                    <B2BWishlistButton
+                      product={product}
+                      locale={locale}
+                      className="absolute right-2 top-2 z-10"
                     />
-                  </Link>
+                  </div>
                   <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs font-bold">
                     {product.sku || `PS-${product.id}`}
                   </span>

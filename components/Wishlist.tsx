@@ -2,10 +2,11 @@ import React from 'react';
 import { ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import ProductCard from './ProductCard';
+import type { Product } from '../types';
 
 interface WishlistProps {
   onBack: () => void;
-  onNavigateToProduct: (id: number) => void;
+  onNavigateToProduct: (product: Product) => void;
 }
 
 const Wishlist: React.FC<WishlistProps> = ({ onBack, onNavigateToProduct }) => {
@@ -51,9 +52,9 @@ const Wishlist: React.FC<WishlistProps> = ({ onBack, onNavigateToProduct }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
             {wishlist.map((product) => (
               <ProductCard 
-                key={product.id} 
+                key={product.catalogId || product.sku || product.id}
                 product={product} 
-                onNavigate={() => onNavigateToProduct(product.id)}
+                onNavigate={() => onNavigateToProduct(product)}
               />
             ))}
           </div>

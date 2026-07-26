@@ -7,6 +7,7 @@ import { getCatalog } from '@/lib/server/catalogRepository';
 import { SITE_URL } from '@/lib/site';
 import { slugify } from '@/lib/slugify';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
+import B2BWishlistButton from '@/components/B2BWishlistButton';
 
 const copy = {
   uz: {
@@ -85,7 +86,10 @@ export default async function CatalogPage({ params, searchParams }: PageProps) {
           const url = `/${locale}/product/${product.id ? `${slugText}-${product.id}` : slugText}`;
           const telegramText = locale === 'ru' ? `Здравствуйте. Нужен товар ${product.sku} — ${name}. Уточните цену и наличие: ${SITE_URL}${url}` : `Assalomu alaykum. ${product.sku} — ${name} mahsuloti kerak. Narxi va qoldig‘ini yuboring: ${SITE_URL}${url}`;
           return <article key={product.catalogId || product.sku} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <Link href={url} className="relative block aspect-[4/3] overflow-hidden bg-slate-100"><Image src={product.image} alt={name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-contain p-3" /></Link>
+            <div className="relative">
+              <Link href={url} className="relative block aspect-[4/3] overflow-hidden bg-slate-100"><Image src={product.image} alt={name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-contain p-3" /></Link>
+              <B2BWishlistButton product={product} locale={locale} className="absolute right-3 top-3 z-10" />
+            </div>
             <div className="p-4"><div className="mb-2 flex items-center justify-between gap-2"><span className="rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-semibold text-slate-700">{product.sku}</span><span className={`text-xs font-semibold ${product.availabilityStatus === 'IN_STOCK' ? 'text-emerald-700' : 'text-amber-700'}`}>{product.availabilityStatus === 'IN_STOCK' ? (locale === 'ru' ? 'В наличии' : 'Omborda mavjud') : (locale === 'ru' ? 'Уточнить наличие' : 'Qoldiqni aniqlang')}</span></div>
               <Link href={url}><h2 className="min-h-12 text-base font-semibold leading-6 hover:text-red-700">{name}</h2></Link>
               <dl className="mt-3 space-y-1 text-sm text-slate-600"><div className="flex justify-between"><dt>{t.pack}</dt><dd className="font-medium text-slate-900">{product.itemsPerPackage || 1} {locale === 'ru' ? 'шт.' : 'dona'}</dd></div><div className="flex justify-between"><dt>{t.carton}</dt><dd className="font-medium text-slate-900">{product.unitsPerCarton || product.itemsPerPackage || 1} {locale === 'ru' ? 'шт.' : 'dona'}</dd></div></dl>

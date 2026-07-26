@@ -7,13 +7,17 @@ import { supabase } from '../lib/supabaseClient';
 interface WishlistContextType {
   wishlist: Product[];
   addToWishlist: (product: Product) => void;
-  removeFromWishlist: (productId: number) => void;
+  removeFromWishlist: (product: Product | number) => void;
   toggleWishlist: (product: Product) => void;
-  isInWishlist: (productId: number) => boolean;
+  isInWishlist: (product: Product | number) => boolean;
   clearWishlist: () => void;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+
+function wishlistKey(product: Product): string {
+  return product.catalogId || product.sku || String(product.id);
+}
 
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [wishlist, setWishlist] = useState<Product[]>([]);
@@ -21,7 +25,20 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Load from local storage or DB
   useEffect(() => {
+    let localWishlist: Product[] = [];
+    const saved = typeof window !== 'undefined'
+      ? localStorage.getItem('paketshop_wishlist')
+      : null;
+    if (saved) {
+      try {
+        localWishlist = JSON.parse(saved) as Product[];
+      } catch (error) {
+        console.error('Failed to parse wishlist', error);
+      }
+    }
+
     if (user) {
+      setWishlist(localWishlist);
       supabase
         .from('wishlists')
         .select('product_id')
@@ -30,19 +47,22 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           if (data && data.length > 0) {
             const ids = data.map(w => w.product_id);
             supabase.from('products').select('*').in('id', ids).then((res) => {
-               if (res.data) setWishlist(res.data as Product[]);
+              if (res.data) {
+                setWishlist((current) => {
+                  const merged = [...current];
+                  for (const product of res.data as Product[]) {
+                    if (!merged.some((item) => wishlistKey(item) === wishlistKey(product))) {
+                      merged.push(product);
+                    }
+                  }
+                  return merged;
+                });
+              }
             });
           }
         });
     } else {
-      const saved = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_wishlist') : null);
-      if (saved) {
-        try {
-          setWishlist(JSON.parse(saved));
-        } catch (e) {
-          console.error("Failed to parse wishlist", e);
-        }
-      }
+      setWishlist(localWishlist);
     }
   }, [user]);
 
@@ -53,35 +73,44 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const addToWishlist = async (product: Product) => {
     setWishlist((prev) => {
-      if (!prev.find(item => item.id === product.id)) {
+      if (!prev.some((item) => wishlistKey(item) === wishlistKey(product))) {
         return [...prev, product];
       }
       return prev;
     });
 
-    if (user) {
+    if (user && product.id > 0) {
       await supabase.from('wishlists').insert([{ user_id: user.id, product_id: product.id }]);
     }
   };
 
-  const removeFromWishlist = async (productId: number) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromWishlist = async (product: Product | number) => {
+    const productId = typeof product === 'number' ? product : product.id;
+    setWishlist((prev) => prev.filter((item) => (
+      typeof product === 'number'
+        ? item.id !== product
+        : wishlistKey(item) !== wishlistKey(product)
+    )));
     
-    if (user) {
+    if (user && productId > 0) {
       await supabase.from('wishlists').delete().match({ user_id: user.id, product_id: productId });
     }
   };
 
   const toggleWishlist = (product: Product) => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+    if (isInWishlist(product)) {
+      removeFromWishlist(product);
     } else {
       addToWishlist(product);
     }
   };
 
-  const isInWishlist = (productId: number) => {
-    return wishlist.some(item => item.id === productId);
+  const isInWishlist = (product: Product | number) => {
+    return wishlist.some((item) => (
+      typeof product === 'number'
+        ? item.id === product
+        : wishlistKey(item) === wishlistKey(product)
+    ));
   };
 
   const clearWishlist = () => setWishlist([]);
