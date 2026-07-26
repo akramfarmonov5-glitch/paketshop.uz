@@ -35,7 +35,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, categorie
 
     // Derive active products based on filter and sorting
     const filteredProducts = products.filter(p => {
-        const pCat = getProductCategoryKey(p.category, categories);
+        const pCat = getProductCategoryKey(p.category, categories, lang);
         const matchesCategory = selectedCategory === 'All' || pCat === selectedCategory;
         const pName = getLocalizedText(p.name, lang).toLowerCase();
         const pDesc = getLocalizedText(p.shortDescription, lang).toLowerCase();

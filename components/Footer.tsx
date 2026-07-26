@@ -1,12 +1,38 @@
 import React from 'react';
-import { Instagram, Facebook, Mail, Lock, Phone, MapPin, Clock, Send } from 'lucide-react';
+import {
+  Instagram,
+  Facebook,
+  Mail,
+  Lock,
+  Phone,
+  MapPin,
+  Clock,
+  Send,
+  Youtube,
+  MessageCircle,
+} from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { DEFAULT_NAVIGATION } from '../constants';
+import type { LucideIcon } from 'lucide-react';
+import type { NavigationSettings, SocialLink } from '../types';
 
 interface FooterProps {
   onAdminClick?: () => void;
+  navigationSettings?: NavigationSettings;
 }
 
-const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
+const SOCIAL_LINK_META: Record<SocialLink['platform'], { label: string; icon: LucideIcon }> = {
+  instagram: { label: 'Instagram', icon: Instagram },
+  telegram: { label: 'Telegram', icon: Send },
+  facebook: { label: 'Facebook', icon: Facebook },
+  youtube: { label: 'YouTube', icon: Youtube },
+  twitter: { label: 'Twitter', icon: MessageCircle },
+};
+
+const Footer: React.FC<FooterProps> = ({
+  onAdminClick,
+  navigationSettings = DEFAULT_NAVIGATION,
+}) => {
   const { t, lang } = useLanguage();
 
   return (
@@ -70,16 +96,29 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
 
             {/* Social Links */}
             <div className="flex gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
-                <Instagram size={16} />
-              </a>
-              <a href="https://t.me/paketshop_uz" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
-                <Send size={16} />
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
-                <Facebook size={16} />
-              </a>
-              <a href="mailto:support@paketshop.uz" className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all">
+              {navigationSettings.socialLinks.map((socialLink) => {
+                const { label, icon: Icon } = SOCIAL_LINK_META[socialLink.platform];
+
+                return (
+                  <a
+                    key={socialLink.id}
+                    href={socialLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
+              <a
+                href="mailto:support@paketshop.uz"
+                aria-label="Email"
+                title="Email"
+                className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white transition-all"
+              >
                 <Mail size={16} />
               </a>
             </div>

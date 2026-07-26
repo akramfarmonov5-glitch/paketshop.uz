@@ -54,7 +54,11 @@ export async function fetchGlobalData(): Promise<GlobalData> {
       }),
       db.product.findMany({
         where: { status: 'ACTIVE' },
-        include: { translations: true, media: { include: { media: true }, orderBy: { sortOrder: 'asc' } } },
+        include: {
+          category: true,
+          translations: true,
+          media: { include: { media: true }, orderBy: { sortOrder: 'asc' } },
+        },
         take: 50,
         orderBy: { createdAt: 'desc' },
       }),
@@ -91,7 +95,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
             slug: { uz: p.slugUz, ru: p.slugRu },
             price,
             formattedPrice: price > 0 ? new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m' : '',
-            category: p.categoryId,
+            category: p.category.slugUz,
             image: primaryMedia?.url || '/logo.png',
             images: p.media.map((m) => m.media.url),
             shortDescription: {

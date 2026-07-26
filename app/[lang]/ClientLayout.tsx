@@ -103,7 +103,10 @@ export default function ClientLayout({
       />
 
       {!hideFooter && (
-        <Footer onAdminClick={navigateToAdmin} />
+        <Footer
+          onAdminClick={navigateToAdmin}
+          navigationSettings={navigationSettings}
+        />
       )}
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
