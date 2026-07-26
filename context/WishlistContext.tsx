@@ -18,10 +18,12 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
   const { user } = useAuth();
 
   // Load from local storage or DB
   useEffect(() => {
+    setHasLoadedWishlist(false);
     let localWishlist: Product[] = [];
     const saved = typeof window !== 'undefined'
       ? localStorage.getItem('paketshop_wishlist')
@@ -36,6 +38,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (user) {
       setWishlist(localWishlist);
+      setHasLoadedWishlist(true);
       supabase
         .from('wishlists')
         .select('product_id')
@@ -60,13 +63,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         });
     } else {
       setWishlist(localWishlist);
+      setHasLoadedWishlist(true);
     }
   }, [user]);
 
   // Save to local storage
   useEffect(() => {
+    if (!hasLoadedWishlist) return;
     localStorage.setItem('paketshop_wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+  }, [hasLoadedWishlist, wishlist]);
 
   const addToWishlist = async (product: Product) => {
     setWishlist((prev) => {
