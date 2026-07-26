@@ -209,27 +209,10 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     setIsRegistered(true);
   };
 
-  const getSystemInstruction = () => {
-    const productContext = products.map(p =>
+  const getCatalogContext = () => {
+    return products.map(p =>
       `- ${getLocalizedText(p.name, 'uz')} (${getLocalizedText(p.category, 'uz')}): ${p.formattedPrice}. ${getLocalizedText(p.shortDescription, 'uz') || ''}`
-    ).join('\n');
-
-    return `
-      Siz PaketShop onlayn do'konining yuqori malakali, xushmuomala va samimiy sotuvchi-konsultantisiz.
-      Mijozingizning ismi: ${formData.name}. Unga hurmat bilan, ismi orqali murojaat qiling.
-      Muloqot tili: O'zbek tili. Mijoz bilan doimo "siz"lab, juda do'stona va iliq ohangda gaplashing.
-      
-      Bizdagi mavjud mahsulotlar va katalog ma'lumotlari:
-      ${productContext}
-
-      Sizning asosiy vazifalaringiz va qoidalaringiz:
-      1. Faqat yuqorida ko'rsatilgan mahsulotlarni tavsiya qiling va ular haqida ma'lumot bering. Do'konda yo'q mahsulotlarni to'qib chiqarmang.
-      2. Javoblaringiz juda qisqa, aniq va lutfan boy bo'lsin (1-2 gapdan oshmasin). Mijoz ko'p matn o'qishni yoqtirmaydi, oddiy va jonli insondek yozing.
-      3. Hech qachon *, **, #, -, [ ], ( ) kabi markdown belgilarini ishlatmang. Faqat toza matn yozing, chunki bu matn ovozli (TTS) o'qiladi!
-      4. Mijoz biror mahsulot narxini yoki xususiyatini so'rasa, narxlarni aniq va to'liq ko'rsatib bering.
-      5. Aqlli sotuvchi (Cross-selling/Up-selling) bo'ling: Masalan, agar mijoz paket so'rasa, unga mos keladigan boshqa bir martalik idishlar yoki konteynerlarni ham muloyimlik bilan taklif qiling.
-      6. Do'stona, tabiiy va hayotiy gaplashing. Har bir javobingiz mijozga yordam berish istagingizni ko'rsatib tursin.
-    `;
+    ).join('\n').slice(0, 12_000);
   };
 
   const handleSend = async (overrideText?: string | React.MouseEvent) => {
@@ -255,7 +238,9 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         body: JSON.stringify({
           message: userMessage,
           history: history,
-          systemInstruction: getSystemInstruction(),
+          catalogContext: getCatalogContext(),
+          customerName: formData.name,
+          language: lang,
           voiceMode: isVoiceMode
         })
       });

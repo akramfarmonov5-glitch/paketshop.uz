@@ -4,6 +4,9 @@ interface RateLimitEntry {
 }
 
 const buckets = new Map<string, RateLimitEntry>();
+const MAX_BUCKETS = 10_000;
+const SWEEP_INTERVAL_MS = 60_000;
+let lastSweepAt = 0;
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -24,6 +27,22 @@ export function checkRateLimit(
   windowMs: number
 ): RateLimitResult {
   const now = Date.now();
+
+  if (now - lastSweepAt >= SWEEP_INTERVAL_MS || buckets.size >= MAX_BUCKETS) {
+    for (const [bucketKey, entry] of buckets) {
+      if (entry.resetAt <= now) buckets.delete(bucketKey);
+    }
+    lastSweepAt = now;
+
+    // Bound memory even during a burst of unique spoofed keys. Map iteration is
+    // insertion ordered, so the oldest live buckets are evicted first.
+    while (buckets.size >= MAX_BUCKETS) {
+      const oldestKey = buckets.keys().next().value;
+      if (oldestKey === undefined) break;
+      buckets.delete(oldestKey);
+    }
+  }
+
   const existing = buckets.get(key);
 
   if (!existing || existing.resetAt <= now) {

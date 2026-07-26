@@ -1,6 +1,45 @@
 import 'server-only';
 import type { AdminProductInput } from '@/lib/validation/adminCatalog';
 
+type ExistingProtectedProductFields = {
+  brandId?: string | null;
+  supplierId?: string | null;
+  purchasePrice?: number | string | { toString(): string } | null;
+  minimumAllowedPrice?: number | string | { toString(): string } | null;
+  resellerPrice?: number | string | { toString(): string } | null;
+  organizationPrice?: number | string | { toString(): string } | null;
+};
+
+function decimalNumber(value: ExistingProtectedProductFields['purchasePrice']) {
+  if (value == null) return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+/**
+ * The compact admin editor does not expose procurement/supplier fields yet.
+ * Preserve those persisted values when a full-form PATCH omits them, while still
+ * allowing an explicit null to clear a field from a future editor.
+ */
+export function preserveUnsubmittedProductFields(
+  input: AdminProductInput,
+  existing: ExistingProtectedProductFields,
+): AdminProductInput {
+  return {
+    ...input,
+    brandId: input.brandId === undefined ? existing.brandId ?? null : input.brandId,
+    supplierId: input.supplierId === undefined ? existing.supplierId ?? null : input.supplierId,
+    purchasePrice: input.purchasePrice === undefined ? decimalNumber(existing.purchasePrice) : input.purchasePrice,
+    minimumAllowedPrice: input.minimumAllowedPrice === undefined
+      ? decimalNumber(existing.minimumAllowedPrice)
+      : input.minimumAllowedPrice,
+    resellerPrice: input.resellerPrice === undefined ? decimalNumber(existing.resellerPrice) : input.resellerPrice,
+    organizationPrice: input.organizationPrice === undefined
+      ? decimalNumber(existing.organizationPrice)
+      : input.organizationPrice,
+  };
+}
+
 export function productScalarData(input: AdminProductInput) {
   return {
     sku: input.sku.toUpperCase(),

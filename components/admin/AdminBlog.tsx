@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BlogPost } from '../../types';
 import { Sparkles, Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Edit, X, Save } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
@@ -60,7 +59,11 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const handleDelete = async (id: number) => {
     if (confirm("Bu maqolani o'chirmoqchimisiz?")) {
       try {
-        await supabase.from('blog_posts').delete().eq('id', id);
+        const response = await fetch(`/api/admin/content/blog?id=${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          throw new Error(result.error || 'Maqola o‘chirilmadi');
+        }
         setPosts(prev => prev.filter(p => p.id !== id));
       } catch (error) {
         console.error('Delete error:', error);
@@ -201,20 +204,6 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       },
     };
 
-    const withLegacySeo = (payload: Record<string, any>) => {
-      const next = { ...payload };
-      delete next.seo;
-      next.seo_title = JSON.stringify(seoTitle);
-      next.seo_description = JSON.stringify(seoDescription);
-      next.seo_keywords = Object.values(seoKeywords).filter(Boolean);
-      return next;
-    };
-
-    const getMissingColumn = (error: any) => {
-      const message = [error?.message, error?.details, error?.hint].filter(Boolean).join(' ');
-      return message.match(/Could not find the '([^']+)' column/)?.[1] || '';
-    };
-
     const normalizeSavedPost = (row: any): BlogPost => ({
       ...row,
       seo: row.seo || {
@@ -227,47 +216,14 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     try {
       setIsSaving(true);
 
-      let payload = modernPayload;
-      let savedRow: any = null;
-
-      for (let attempt = 0; attempt < 4; attempt += 1) {
-        const query = formData.id
-          ? supabase.from('blog_posts').update(payload).eq('id', formData.id).select().single()
-          : supabase.from('blog_posts').insert([payload]).select().single();
-
-        const { data, error } = await query;
-
-        if (!error) {
-          savedRow = data;
-          break;
-        }
-
-        const missingColumn = getMissingColumn(error);
-        if (missingColumn === 'seo') {
-          payload = withLegacySeo(payload);
-          continue;
-        }
-        if (missingColumn === 'slug') {
-          const next = { ...payload };
-          delete next.slug;
-          payload = next;
-          continue;
-        }
-        if (['seo_title', 'seo_description', 'seo_keywords'].includes(missingColumn)) {
-          const next = { ...payload };
-          delete next.seo_title;
-          delete next.seo_description;
-          delete next.seo_keywords;
-          payload = next;
-          continue;
-        }
-
-        throw error;
-      }
-
-      if (!savedRow) {
-        throw new Error('Maqola saqlanmadi. Blog jadvali schema cache yoki ustunlarini tekshiring.');
-      }
+      const response = await fetch('/api/admin/content/blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: formData.id || undefined, ...modernPayload }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Maqola saqlanmadi.');
+      const savedRow = result.post;
 
       const savedPost = normalizeSavedPost(savedRow);
 
