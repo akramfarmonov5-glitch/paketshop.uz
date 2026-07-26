@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ShoppingBag, Search, Menu, X, Phone, Send, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -63,21 +64,35 @@ const Navbar: React.FC<NavbarProps> = ({
 
       {/* Main navbar */}
       <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        {/* Mobilda gap kichikroq — logotip uchun joy ochiladi */}
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-6 lg:px-8">
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
+            className="-ml-1 shrink-0 rounded-lg p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
             aria-label="Menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* Logo */}
-          <Link href={`/${lang}`} onClick={onNavigateHome} className="flex items-center gap-2">
-            <span className="text-xl font-black tracking-tight text-slate-900">
+          {/* Logo: rasm + yozuv. next/image 320px PNG'ni kichik optimallashtirilgan
+              formatga aylantiradi, priority — u ekranning yuqorisida. */}
+          <Link href={`/${lang}`} onClick={onNavigateHome} className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Image
+              src="/logo.png"
+              alt=""
+              width={32}
+              height={32}
+              priority
+              sizes="32px"
+              className="h-7 w-7 sm:h-8 sm:w-8"
+            />
+            {/* Juda tor ekranlarda (≤360px) yozuv yashiriladi — logotip qoladi,
+                aks holda o'ng tomondagi tugmalar ekrandan chiqib ketadi. */}
+            <span className="hidden text-lg font-black tracking-tight text-slate-900 min-[361px]:inline sm:text-xl">
               Paket<span className="text-red-600">Shop</span>
             </span>
+            <span className="sr-only">PaketShop</span>
           </Link>
 
           {/* Desktop navigation */}
@@ -103,7 +118,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {/* Language switcher */}
             <div className="flex rounded-lg border border-slate-200 text-sm font-bold">
               {languages.map((l) => (
@@ -113,7 +128,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     setLang(l.code);
                     router.push(`/${l.code}${window.location.pathname.replace(/^\/(uz|ru)/, '')}`);
                   }}
-                  className={`px-2.5 py-1.5 transition-colors ${
+                  className={`px-2 py-1.5 transition-colors sm:px-2.5 ${
                     lang === l.code
                       ? 'bg-red-600 text-white'
                       : 'text-slate-600 hover:text-red-700'
