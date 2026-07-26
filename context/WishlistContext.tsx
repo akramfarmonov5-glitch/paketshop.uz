@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Product } from '../types';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { dedupeWishlist, isSameWishlistProduct } from '../lib/domain/wishlist';
 
 interface WishlistContextType {
   wishlist: Product[];
@@ -14,10 +15,6 @@ interface WishlistContextType {
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
-
-function wishlistKey(product: Product): string {
-  return product.catalogId || product.sku || String(product.id);
-}
 
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [wishlist, setWishlist] = useState<Product[]>([]);
@@ -31,7 +28,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       : null;
     if (saved) {
       try {
-        localWishlist = JSON.parse(saved) as Product[];
+        localWishlist = dedupeWishlist(JSON.parse(saved) as Product[]);
       } catch (error) {
         console.error('Failed to parse wishlist', error);
       }
@@ -51,11 +48,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
                 setWishlist((current) => {
                   const merged = [...current];
                   for (const product of res.data as Product[]) {
-                    if (!merged.some((item) => wishlistKey(item) === wishlistKey(product))) {
+                    if (!merged.some((item) => isSameWishlistProduct(item, product))) {
                       merged.push(product);
                     }
                   }
-                  return merged;
+                  return dedupeWishlist(merged);
                 });
               }
             });
@@ -73,7 +70,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const addToWishlist = async (product: Product) => {
     setWishlist((prev) => {
-      if (!prev.some((item) => wishlistKey(item) === wishlistKey(product))) {
+      if (!prev.some((item) => isSameWishlistProduct(item, product))) {
         return [...prev, product];
       }
       return prev;
@@ -89,7 +86,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     setWishlist((prev) => prev.filter((item) => (
       typeof product === 'number'
         ? item.id !== product
-        : wishlistKey(item) !== wishlistKey(product)
+        : !isSameWishlistProduct(item, product)
     )));
     
     if (user && productId > 0) {
@@ -109,7 +106,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     return wishlist.some((item) => (
       typeof product === 'number'
         ? item.id === product
-        : wishlistKey(item) === wishlistKey(product)
+        : isSameWishlistProduct(item, product)
     ));
   };
 
