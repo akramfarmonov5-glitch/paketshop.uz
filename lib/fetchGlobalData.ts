@@ -48,7 +48,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
       db.category.findMany({
         where: { active: true },
         include: { translations: true },
-        orderBy: { sortOrder: 'asc' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       }),
       db.product.findMany({
         where: { status: 'ACTIVE' },
