@@ -15,7 +15,6 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useGlobalData } from '../../context/GlobalContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { productSlug } from '../../lib/slugify';
 import type { NavigationSettings } from '../../types';
 
 export default function ClientLayout({
@@ -31,7 +30,7 @@ export default function ClientLayout({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toggleCart } = useCart();
   const { user } = useAuth();
-  const { products, categories } = useGlobalData();
+  const { products } = useGlobalData();
   const pathname = usePathname() || '/';
   const router = useRouter();
 
@@ -44,13 +43,6 @@ export default function ClientLayout({
   const hideFooter = hideNavAndFooter || isBlogPost || isWishlist;
 
   const navigateToHome = () => router.push(`/${lang || 'uz'}`);
-  const navigateToProduct = (id: number) => {
-    const product = products.find(p => p.id === id);
-    if (product) {
-      const activeLang = lang || 'uz';
-      router.push(`/${activeLang}/product/${productSlug(product, activeLang)}`);
-    }
-  };
   const navigateToWishlist = () => router.push(`/${lang || 'uz'}/wishlist`);
   const navigateToTracking = () => router.push(`/${lang || 'uz'}/tracking`);
   const navigateToAdmin = () => router.push(`/${lang || 'uz'}/admin`);
@@ -97,9 +89,6 @@ export default function ClientLayout({
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        products={products}
-        categories={categories}
-        onNavigateToProduct={navigateToProduct}
       />
 
       {!hideFooter && (

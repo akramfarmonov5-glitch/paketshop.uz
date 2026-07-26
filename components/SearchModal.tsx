@@ -1,83 +1,192 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ArrowRight, TrendingUp, XCircle, SearchX } from 'lucide-react';
-import { Product, Category } from '../types';
+'use client';
+
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowRight,
+  Loader2,
+  Search,
+  SearchX,
+  TrendingUp,
+  X,
+  XCircle,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import * as fpixel from '../lib/fpixel';
-import { getLocalizedText } from '../lib/i18nUtils';
-import { getCategoryDisplayName } from '../lib/categoryUtils';
+import { moveSearchSelection } from '../lib/searchSelection';
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  products: Product[];
-  categories: Category[];
-  onNavigateToProduct: (id: number) => void;
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, categories, onNavigateToProduct }) => {
+interface ProductSearchSuggestion {
+  sku: string;
+  name: string;
+  url: string;
+  price: string;
+  image: string;
+}
+
+interface CategorySearchSuggestion {
+  id: string;
+  name: string;
+  url: string;
+  image: string;
+}
+
+interface SearchResponse {
+  suggestions?: ProductSearchSuggestion[];
+  categories?: CategorySearchSuggestion[];
+}
+
+interface SearchTarget {
+  key: string;
+  url: string;
+}
+
+const SEARCH_DEBOUNCE_MS = 250;
+const MIN_QUERY_LENGTH = 2;
+
+const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
+  const [productResults, setProductResults] = useState<ProductSearchSuggestion[]>([]);
+  const [categoryResults, setCategoryResults] = useState<CategorySearchSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDark } = useTheme();
   const { lang, t } = useLanguage();
+  const router = useRouter();
+  const trimmedQuery = query.trim();
 
-  // Auto focus input when modal opens
+  const searchTargets = useMemo<SearchTarget[]>(() => [
+    ...categoryResults.map((category) => ({
+      key: `category-${category.id}`,
+      url: category.url,
+    })),
+    ...productResults.map((product) => ({
+      key: `product-${product.sku}`,
+      url: product.url,
+    })),
+  ], [categoryResults, productResults]);
+
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    } else {
+    if (!isOpen) {
       setQuery('');
+      setProductResults([]);
+      setCategoryResults([]);
+      setActiveIndex(-1);
+      return;
     }
+
+    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 100);
+    return () => window.clearTimeout(focusTimer);
   }, [isOpen]);
 
-  // Handle ESC key
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  // Track search
   useEffect(() => {
-    if (query.trim().length > 2) {
-      const timer = setTimeout(() => {
-        fpixel.trackSearch(query.trim());
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (trimmedQuery.length <= 2) return;
+    const trackingTimer = window.setTimeout(
+      () => fpixel.trackSearch(trimmedQuery),
+      1000,
+    );
+    return () => window.clearTimeout(trackingTimer);
+  }, [trimmedQuery]);
+
+  useEffect(() => {
+    setProductResults([]);
+    setCategoryResults([]);
+    setActiveIndex(-1);
+    setSearchError(false);
+
+    if (!isOpen || trimmedQuery.length < MIN_QUERY_LENGTH) {
+      setIsSearching(false);
+      return;
     }
-  }, [query]);
 
-  const filteredProducts = query.trim()
-    ? products.filter(p => getLocalizedText(p.name, lang).toLowerCase().includes(query.toLowerCase()) || getCategoryDisplayName(p.category, categories, lang).toLowerCase().includes(query.toLowerCase())).slice(0, 5)
-    : [];
+    const controller = new AbortController();
+    setIsSearching(true);
 
-  const filteredCategories = query.trim()
-    ? categories.filter(c => getLocalizedText(c.name, lang).toLowerCase().includes(query.toLowerCase()))
-    : [];
+    const searchTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/search/suggest?q=${encodeURIComponent(trimmedQuery)}&lang=${lang}`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) throw new Error(`Search failed with ${response.status}`);
 
-  // Popular searches suggestions based on actual categories
-  const suggestions = [
-    t('Paketlar (Polietilen va qog\'oz mahsulotlari)')?.split(' ')[0] || 'Paketlar', 
-    t('Stakanlar (Keng assortiment)')?.split(' ')[0] || 'Stakanlar', 
-    t('Oshxona sarflov materiallari')?.split(' ')[0] || 'Oshxona', 
-    t('Tozalash inventarlari (Cleaning)')?.split(' ')[0] || 'Tozalash'
-  ];
+        const payload = await response.json() as SearchResponse;
+        if (controller.signal.aborted) return;
 
-  const handleProductClick = (id: number) => {
-    onNavigateToProduct(id);
+        setProductResults(Array.isArray(payload.suggestions) ? payload.suggestions : []);
+        setCategoryResults(Array.isArray(payload.categories) ? payload.categories : []);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error('Search request failed:', error);
+        setSearchError(true);
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(searchTimer);
+      controller.abort();
+    };
+  }, [isOpen, lang, trimmedQuery]);
+
+  useEffect(() => {
+    setActiveIndex(searchTargets.length > 0 ? 0 : -1);
+  }, [searchTargets]);
+
+  const popularSuggestions = lang === 'ru'
+    ? ['Пакеты', 'Стаканы', 'Контейнеры', 'Салфетки']
+    : ['Paketlar', 'Stakanlar', 'Konteynerlar', 'Salfetkalar'];
+
+  const navigateToResult = (url: string) => {
+    router.push(url);
     onClose();
   };
+
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((current) => moveSearchSelection(
+        current,
+        searchTargets.length,
+        event.key === 'ArrowDown' ? 1 : -1,
+      ));
+      return;
+    }
+
+    if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      const target = searchTargets[activeIndex];
+      if (target) navigateToResult(target.url);
+    }
+  };
+
+  const hasResults = searchTargets.length > 0;
+  const showEmptyState = trimmedQuery.length >= MIN_QUERY_LENGTH
+    && !isSearching
+    && !searchError
+    && !hasResults;
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-4 md:pt-20 px-4">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-4 md:pt-20">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -86,56 +195,104 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
             className="absolute inset-0 bg-black/90 backdrop-blur-md"
           />
 
-          {/* Modal Content */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className={`relative w-full max-w-2xl border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] ${isDark ? 'bg-dark-900 border-white/10' : 'bg-white border-light-border'}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lang === 'ru' ? 'Поиск' : 'Qidiruv'}
+            className={`relative flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border shadow-2xl ${
+              isDark ? 'border-white/10 bg-dark-900' : 'border-light-border bg-white'
+            }`}
           >
-            {/* Header / Input */}
-            <div className={`p-6 border-b flex items-center gap-4 ${isDark ? 'border-white/10' : 'border-light-border'}`}>
-              <div className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${isDark ? 'bg-dark-800 border-white/10 focus-within:border-gold-400 focus-within:ring-1 focus-within:ring-gold-400 text-white' : 'bg-gray-100 border-transparent focus-within:bg-white focus-within:border-gold-400 focus-within:ring-1 focus-within:ring-gold-400 text-light-text'}`}>
+            <div className={`flex items-center gap-4 border-b p-6 ${
+              isDark ? 'border-white/10' : 'border-light-border'
+            }`}
+            >
+              <div className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3 transition-all ${
+                isDark
+                  ? 'border-white/10 bg-dark-800 text-white focus-within:border-gold-400 focus-within:ring-1 focus-within:ring-gold-400'
+                  : 'border-transparent bg-gray-100 text-light-text focus-within:border-gold-400 focus-within:bg-white focus-within:ring-1 focus-within:ring-gold-400'
+              }`}
+              >
                 <Search className={isDark ? 'text-gray-400' : 'text-gray-500'} size={22} />
                 <input
                   ref={inputRef}
-                  type="text"
+                  type="search"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-controls="search-results"
+                  aria-expanded={hasResults}
+                  aria-activedescendant={
+                    activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
+                  }
                   placeholder={t('search_placeholder')}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-lg focus:outline-none w-full placeholder:text-gray-400"
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  className="w-full flex-1 bg-transparent text-lg placeholder:text-gray-400 focus:outline-none"
                 />
-                {query && (
-                  <button 
-                    onClick={() => { setQuery(''); inputRef.current?.focus(); }}
-                    className={`p-1 rounded-full hover:bg-black/10 transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}
+                {isSearching && (
+                  <Loader2
+                    size={18}
+                    aria-label={lang === 'ru' ? 'Поиск' : 'Qidirilmoqda'}
+                    className="animate-spin text-gold-400"
+                  />
+                )}
+                {query && !isSearching && (
+                  <button
+                    type="button"
+                    aria-label={lang === 'ru' ? 'Очистить поиск' : 'Qidiruvni tozalash'}
+                    onClick={() => {
+                      setQuery('');
+                      inputRef.current?.focus();
+                    }}
+                    className={`rounded-full p-1 transition-colors ${
+                      isDark
+                        ? 'text-gray-400 hover:bg-black/10 hover:text-white'
+                        : 'text-gray-500 hover:bg-black/10 hover:text-black'
+                    }`}
                   >
                     <XCircle size={18} />
                   </button>
                 )}
               </div>
-              
+
               <button
+                type="button"
+                aria-label={lang === 'ru' ? 'Закрыть' : 'Yopish'}
                 onClick={onClose}
-                className={`p-3 rounded-xl transition-colors shrink-0 ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-light-muted hover:text-light-text'}`}
+                className={`shrink-0 rounded-xl p-3 transition-colors ${
+                  isDark
+                    ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                    : 'bg-gray-100 text-light-muted hover:bg-gray-200 hover:text-light-text'
+                }`}
               >
                 <X size={24} />
               </button>
             </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-              {!query.trim() && (
+            <div className="custom-scrollbar flex-1 overflow-y-auto p-6">
+              {!trimmedQuery && (
                 <div>
-                  <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>
+                  <h3 className={`mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${
+                    isDark ? 'text-gray-500' : 'text-light-muted'
+                  }`}
+                  >
                     <TrendingUp size={14} /> {t('popular_searches')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {suggestions.map((item, idx) => (
+                    {popularSuggestions.map((item) => (
                       <button
-                        key={idx}
+                        key={item}
+                        type="button"
                         onClick={() => setQuery(item)}
-                        className={`px-4 py-2 border rounded-full text-sm transition-colors ${isDark ? 'bg-white/5 hover:bg-gold-400/10 hover:text-gold-400 border-white/5 text-gray-300' : 'bg-light-card hover:bg-gold-400/10 hover:text-gold-400 border-light-border text-light-text'}`}
+                        className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                          isDark
+                            ? 'border-white/5 bg-white/5 text-gray-300 hover:bg-gold-400/10 hover:text-gold-400'
+                            : 'border-light-border bg-light-card text-light-text hover:bg-gold-400/10 hover:text-gold-400'
+                        }`}
                       >
                         {item}
                       </button>
@@ -144,68 +301,181 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, products, ca
                 </div>
               )}
 
-              {query.trim() && (
-                <div className="space-y-8">
-                  {filteredProducts.length === 0 && filteredCategories.length === 0 && (
-                    <div className="flex flex-col items-center justify-center text-center py-12 px-4">
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                        <SearchX size={32} className={isDark ? 'text-gray-600' : 'text-gray-400'} />
-                      </div>
-                      <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-light-text'}`}>{t('nothing_found')}</h3>
-                      <p className={`text-sm max-w-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>Boshqa so'z bilan qidirib ko'ring yoki toifalardan foydalaning.</p>
-                    </div>
-                  )}
+              {trimmedQuery.length === 1 && (
+                <p className={`py-8 text-center text-sm ${
+                  isDark ? 'text-gray-500' : 'text-light-muted'
+                }`}
+                >
+                  {lang === 'ru'
+                    ? 'Введите минимум 2 символа.'
+                    : 'Kamida 2 ta belgi kiriting.'}
+                </p>
+              )}
 
-                  {/* Categories */}
-                  {filteredCategories.length > 0 && (
-                    <div>
-                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t('categories')}</h3>
-                      <div className="space-y-2">
-                        {filteredCategories.map(cat => (
-                          <div key={cat.id} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'}`}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800">
-                              <img src={cat.image} alt={getLocalizedText(cat.name, lang)} className="w-full h-full object-cover" />
-                            </div>
-                            <span className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(cat.name, lang)}</span>
-                            <ArrowRight size={16} className={`ml-auto group-hover:text-gold-400 ${isDark ? 'text-gray-600' : 'text-light-muted'}`} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              {searchError && (
+                <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                  <SearchX size={32} className="mb-4 text-red-400" />
+                  <p className={isDark ? 'text-gray-400' : 'text-light-muted'}>
+                    {lang === 'ru'
+                      ? 'Поиск временно недоступен. Попробуйте ещё раз.'
+                      : 'Qidiruv vaqtincha ishlamayapti. Qayta urinib ko‘ring.'}
+                  </p>
+                </div>
+              )}
 
-                  {/* Products */}
-                  {filteredProducts.length > 0 && (
-                    <div>
-                      <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{t('products')}</h3>
+              {showEmptyState && (
+                <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+                    isDark ? 'bg-white/5' : 'bg-gray-100'
+                  }`}
+                  >
+                    <SearchX size={32} className={isDark ? 'text-gray-600' : 'text-gray-400'} />
+                  </div>
+                  <h3 className={`mb-2 text-lg font-bold ${
+                    isDark ? 'text-white' : 'text-light-text'
+                  }`}
+                  >
+                    {t('nothing_found')}
+                  </h3>
+                  <p className={`max-w-xs text-sm ${
+                    isDark ? 'text-gray-500' : 'text-light-muted'
+                  }`}
+                  >
+                    {lang === 'ru'
+                      ? 'Попробуйте другое слово или откройте каталог.'
+                      : 'Boshqa so‘z bilan qidiring yoki katalogdan foydalaning.'}
+                  </p>
+                </div>
+              )}
+
+              {hasResults && (
+                <div id="search-results" role="listbox" className="space-y-8">
+                  {categoryResults.length > 0 && (
+                    <section aria-labelledby="search-categories-title">
+                      <h3
+                        id="search-categories-title"
+                        className={`mb-3 text-xs font-bold uppercase tracking-widest ${
+                          isDark ? 'text-gray-500' : 'text-light-muted'
+                        }`}
+                      >
+                        {t('categories')}
+                      </h3>
                       <div className="space-y-2">
-                        {filteredProducts.map(product => (
-                          <div
-                            key={product.id}
-                            onClick={() => handleProductClick(product.id)}
-                            className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer group transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'}`}
+                        {categoryResults.map((category, index) => (
+                          <button
+                            key={category.id}
+                            id={`search-result-${index}`}
+                            type="button"
+                            role="option"
+                            aria-selected={activeIndex === index}
+                            onMouseEnter={() => setActiveIndex(index)}
+                            onClick={() => navigateToResult(category.url)}
+                            className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
+                              activeIndex === index
+                                ? isDark ? 'bg-white/10' : 'bg-light-card'
+                                : isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'
+                            }`}
                           >
-                            <div className={`w-14 aspect-[4/5] rounded-lg overflow-hidden border ${isDark ? 'bg-gray-800 border-white/5' : 'bg-light-card border-light-border'}`}>
-                              <img src={product.image} alt={getLocalizedText(product.name, lang)} className="w-full h-full object-cover" />
+                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-800">
+                              <img
+                                src={category.image || '/logo.png'}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
                             </div>
-                            <div className="flex-1">
-                              <h4 className={`font-medium group-hover:text-gold-400 transition-colors ${isDark ? 'text-white' : 'text-light-text'}`}>{getLocalizedText(product.name, lang)}</h4>
-                              <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-light-muted'}`}>{getCategoryDisplayName(product.category, categories, lang)}</p>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-bold text-gold-400">{product.formattedPrice}</span>
-                            </div>
-                          </div>
+                            <span className={`font-medium transition-colors ${
+                              isDark ? 'text-white' : 'text-light-text'
+                            }`}
+                            >
+                              {category.name}
+                            </span>
+                            <ArrowRight
+                              size={16}
+                              className={`ml-auto ${
+                                activeIndex === index
+                                  ? 'text-gold-400'
+                                  : isDark ? 'text-gray-600' : 'text-light-muted'
+                              }`}
+                            />
+                          </button>
                         ))}
                       </div>
-                    </div>
+                    </section>
+                  )}
+
+                  {productResults.length > 0 && (
+                    <section aria-labelledby="search-products-title">
+                      <h3
+                        id="search-products-title"
+                        className={`mb-3 text-xs font-bold uppercase tracking-widest ${
+                          isDark ? 'text-gray-500' : 'text-light-muted'
+                        }`}
+                      >
+                        {t('products')}
+                      </h3>
+                      <div className="space-y-2">
+                        {productResults.map((product, productIndex) => {
+                          const index = categoryResults.length + productIndex;
+                          return (
+                            <button
+                              key={`${product.sku}-${product.url}`}
+                              id={`search-result-${index}`}
+                              type="button"
+                              role="option"
+                              aria-selected={activeIndex === index}
+                              onMouseEnter={() => setActiveIndex(index)}
+                              onClick={() => navigateToResult(product.url)}
+                              className={`flex w-full items-center gap-4 rounded-xl p-3 text-left transition-colors ${
+                                activeIndex === index
+                                  ? isDark ? 'bg-white/10' : 'bg-light-card'
+                                  : isDark ? 'hover:bg-white/5' : 'hover:bg-light-card'
+                              }`}
+                            >
+                              <div className={`aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-lg border ${
+                                isDark
+                                  ? 'border-white/5 bg-gray-800'
+                                  : 'border-light-border bg-light-card'
+                              }`}
+                              >
+                                <img
+                                  src={product.image || '/logo.png'}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className={`truncate font-medium ${
+                                  isDark ? 'text-white' : 'text-light-text'
+                                }`}
+                                >
+                                  {product.name}
+                                </h4>
+                                <p className={`text-xs ${
+                                  isDark ? 'text-gray-500' : 'text-light-muted'
+                                }`}
+                                >
+                                  {product.sku}
+                                </p>
+                              </div>
+                              <span className="shrink-0 text-right text-sm font-bold text-gold-400">
+                                {product.price}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-white/10 bg-black/20 text-center text-xs text-gray-500">
-              <span className="hidden md:inline">{t('search_help')}</span>
+            <div className="border-t border-white/10 bg-black/20 p-4 text-center text-xs text-gray-500">
+              <span className="hidden md:inline">
+                {lang === 'ru'
+                  ? '↑/↓ — выбор, Enter — открыть, ESC — закрыть'
+                  : '↑/↓ — tanlash, Enter — ochish, ESC — yopish'}
+              </span>
             </div>
           </motion.div>
         </div>

@@ -260,6 +260,14 @@ export interface SearchSuggestion {
   name: string;
   url: string;
   price: string;
+  image: string;
+}
+
+export interface CategorySearchSuggestion {
+  id: string;
+  name: string;
+  url: string;
+  image: string;
 }
 
 export async function suggestProducts(rawQuery: string, locale: 'uz' | 'ru', limit = 8): Promise<SearchSuggestion[]> {
@@ -278,8 +286,52 @@ export async function suggestProducts(rawQuery: string, locale: 'uz' | 'ru', lim
         name: locale === 'ru' ? card.name.ru : card.name.uz,
         url: `/${locale}/product/${catalogCardUrlSlug(card, locale)}`,
         price: card.formattedPrice,
+        image: card.image,
       };
     });
+}
+
+export async function suggestCategories(
+  rawQuery: string,
+  locale: 'uz' | 'ru',
+  limit = 8,
+): Promise<CategorySearchSuggestion[]> {
+  const variants = searchQueryVariants(rawQuery);
+  if (!variants.length) return [];
+
+  const categories = await db.category.findMany({
+    where: {
+      active: true,
+      OR: variants.flatMap<Prisma.CategoryWhereInput>((variant) => [
+        { slugUz: { contains: variant, mode: 'insensitive' } },
+        { slugRu: { contains: variant, mode: 'insensitive' } },
+        {
+          translations: {
+            some: { name: { contains: variant, mode: 'insensitive' } },
+          },
+        },
+      ]),
+    },
+    include: { translations: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    take: Math.min(Math.max(limit, 1), 20),
+  });
+
+  return categories.map((category) => {
+    const translation = category.translations.find((item) => item.locale === locale)
+      || category.translations.find((item) => item.locale === 'uz')
+      || category.translations[0];
+    const slug = locale === 'ru'
+      ? category.slugRu || category.slugUz
+      : category.slugUz;
+
+    return {
+      id: category.id,
+      name: translation?.name || slug,
+      url: `/${locale}/category/${slug}`,
+      image: category.imageUrl || '/logo.png',
+    };
+  });
 }
 
 export interface PrismaProductDetail {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { suggestProducts } from '@/lib/server/prismaCatalog';
+import { suggestCategories, suggestProducts } from '@/lib/server/prismaCatalog';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,15 +18,20 @@ export async function GET(request: NextRequest) {
 
   const query = request.nextUrl.searchParams.get('q')?.trim().slice(0, 100) || '';
   const locale = request.nextUrl.searchParams.get('lang') === 'ru' ? 'ru' : 'uz';
-  if (query.length < 2) return NextResponse.json({ suggestions: [] });
+  if (query.length < 2) {
+    return NextResponse.json({ suggestions: [], categories: [] });
+  }
 
   try {
-    const suggestions = await suggestProducts(query, locale, 8);
-    return NextResponse.json({ suggestions }, {
+    const [suggestions, categories] = await Promise.all([
+      suggestProducts(query, locale, 8),
+      suggestCategories(query, locale, 8),
+    ]);
+    return NextResponse.json({ suggestions, categories }, {
       headers: { 'Cache-Control': 'public, max-age=30, s-maxage=60' },
     });
   } catch (error) {
     console.error('Search suggest failed:', error);
-    return NextResponse.json({ suggestions: [] }, { status: 200 });
+    return NextResponse.json({ suggestions: [], categories: [] }, { status: 200 });
   }
 }
