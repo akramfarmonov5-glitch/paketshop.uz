@@ -42,22 +42,22 @@ export interface Category {
 }
 
 export interface HeroContent {
-  badge: string;
-  title: string;
-  description: string;
-  buttonText: string;
+  badge: string | LocalizedString;
+  title: string | LocalizedString;
+  description: string | LocalizedString;
+  buttonText: string | LocalizedString;
   images: string[];
 }
 
 export interface MenuItem {
-  id: number;
+  id: number | string;
   label: string | LocalizedString;
-  href: string;
+  href: string | LocalizedString;
 }
 
 export interface SocialLink {
-  id: number;
-  platform: 'instagram' | 'telegram';
+  id: number | string;
+  platform: 'instagram' | 'telegram' | 'facebook' | 'youtube' | 'twitter';
   url: string;
 }
 

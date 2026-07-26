@@ -1,11 +1,13 @@
-import { slugify } from './slugify';
-import { getLocalizedText } from './i18nUtils';
 import {
   MOCK_PRODUCTS,
   MOCK_CATEGORIES,
   DEFAULT_HERO_CONTENT,
   DEFAULT_NAVIGATION,
 } from '../constants';
+import {
+  normalizeHeroContent,
+  normalizeNavigationSettings,
+} from './siteSettings';
 import type {
   Product,
   Category,
@@ -44,7 +46,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
     // Dynamic import to avoid bundling server-only code on client
     const { db } = await import('./server/db');
 
-    const [dbCategories, dbProducts, dbHeroSetting] = await Promise.all([
+    const [dbCategories, dbProducts, dbHeroSetting, dbNavigationSetting] = await Promise.all([
       db.category.findMany({
         where: { active: true },
         include: { translations: true },
@@ -57,6 +59,7 @@ export async function fetchGlobalData(): Promise<GlobalData> {
         orderBy: { createdAt: 'desc' },
       }),
       db.siteSetting.findUnique({ where: { key: 'hero_content' } }),
+      db.siteSetting.findUnique({ where: { key: 'navigation_settings' } }),
     ]);
 
     const categories: Category[] = dbCategories.length > 0
@@ -114,20 +117,17 @@ export async function fetchGlobalData(): Promise<GlobalData> {
       : MOCK_PRODUCTS;
 
     const heroContent: HeroContent = dbHeroSetting?.value
-      ? {
-          badge: (dbHeroSetting.value as any).badge || DEFAULT_HERO_CONTENT.badge,
-          title: (dbHeroSetting.value as any).title || DEFAULT_HERO_CONTENT.title,
-          description: (dbHeroSetting.value as any).description || DEFAULT_HERO_CONTENT.description,
-          buttonText: (dbHeroSetting.value as any).buttonText || DEFAULT_HERO_CONTENT.buttonText,
-          images: (dbHeroSetting.value as any).images || DEFAULT_HERO_CONTENT.images,
-        }
+      ? normalizeHeroContent(dbHeroSetting.value)
       : DEFAULT_HERO_CONTENT;
+    const navigationSettings: NavigationSettings = dbNavigationSetting?.value
+      ? normalizeNavigationSettings(dbNavigationSetting.value)
+      : DEFAULT_NAVIGATION;
 
     return {
       products,
       categories,
       heroContent,
-      navigationSettings: DEFAULT_NAVIGATION,
+      navigationSettings,
       blogPosts: [],
     };
   } catch (error) {

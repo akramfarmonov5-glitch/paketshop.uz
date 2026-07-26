@@ -2,6 +2,7 @@ import '../globals.css';
 import { Providers } from './Providers';
 import ClientLayout from './ClientLayout';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { getNavigationSettingsSetting } from '@/lib/server/siteSettings';
 
 const logoUrl = `${SITE_URL}/logo.png`;
 
@@ -78,6 +79,7 @@ export default async function RootLayout({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  const navigationSettings = await getNavigationSettingsSetting();
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -103,7 +105,7 @@ export default async function RootLayout({
       </head>
       <body>
         <Providers lang={lang}>
-          <ClientLayout lang={lang}>
+          <ClientLayout lang={lang} navigationSettings={navigationSettings}>
             {children}
           </ClientLayout>
         </Providers>

@@ -1,43 +1,81 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { HeroContent } from '../../types';
 import { Save, Image as ImageIcon, Type, MousePointerClick, PlusCircle, MinusCircle, Loader2, Globe } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { parseLocalizedObject, LocalizedString } from '../../lib/i18nUtils';
 
+interface HeroFormData {
+    badge: LocalizedString;
+    title: LocalizedString;
+    description: LocalizedString;
+    buttonText: LocalizedString;
+    images: string[];
+}
+
 interface AdminHeroProps {
     heroContent: HeroContent;
     setHeroContent: React.Dispatch<React.SetStateAction<HeroContent>>;
 }
 
+const normalizeImages = (images: unknown): string[] => Array.isArray(images)
+    ? images.filter((image): image is string => typeof image === 'string')
+    : [];
+
+const toFormData = (heroContent: HeroContent): HeroFormData => ({
+    badge: parseLocalizedObject(heroContent.badge),
+    title: parseLocalizedObject(heroContent.title),
+    description: parseLocalizedObject(heroContent.description),
+    buttonText: parseLocalizedObject(heroContent.buttonText),
+    images: normalizeImages(heroContent.images),
+});
+
 const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) => {
     const { showToast } = useToast();
-    const normalizeImages = (images: unknown) => Array.isArray(images) ? images : [];
-    // Ensure text fields are fully localized objects
-    const [formData, setFormData] = useState<any>({
-        ...heroContent,
-        badge: parseLocalizedObject(heroContent.badge),
-        title: parseLocalizedObject(heroContent.title),
-        description: parseLocalizedObject(heroContent.description),
-        buttonText: parseLocalizedObject(heroContent.buttonText),
-        images: normalizeImages(heroContent.images)
-    });
-    const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('uz');
+    const [formData, setFormData] = useState<HeroFormData>(() => toFormData(heroContent));
+    const [activeLang, setActiveLang] = useState<'uz' | 'ru'>('uz');
     const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let isActive = true;
+        const loadHero = async () => {
+            try {
+                const response = await fetch('/api/admin/content/hero', {
+                    signal: controller.signal,
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Banner yuklanmadi');
+                if (!isActive) return;
+                const loadedHero = result.heroContent as HeroContent;
+                setFormData(toFormData(loadedHero));
+                setHeroContent(loadedHero);
+            } catch (error) {
+                if (error instanceof DOMException && error.name === 'AbortError') return;
+                console.error('Banner load error:', error);
+                if (isActive) showToast('Banner ma’lumotlarini yuklab bo‘lmadi', 'error');
+            } finally {
+                if (isActive) setIsLoading(false);
+            }
+        };
+        void loadHero();
+        return () => {
+            isActive = false;
+            controller.abort();
+        };
+    }, [setHeroContent, showToast]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
 
         try {
-            // Prepare data for save (stringify objects)
             const savePayload = {
-                badge: JSON.stringify(formData.badge),
-                title: JSON.stringify(formData.title),
-                description: JSON.stringify(formData.description),
-                buttonText: JSON.stringify(formData.buttonText),
-                images: formData.images
+                ...formData,
+                images: formData.images.filter(Boolean),
             };
 
             const response = await fetch('/api/admin/content/hero', {
@@ -48,12 +86,15 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
             const result = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(result.error || 'Banner saqlanmadi');
 
-            setHeroContent(formData);
+            const savedHero = (result.heroContent || savePayload) as HeroContent;
+            setFormData(toFormData(savedHero));
+            setHeroContent(savedHero);
             setIsSaved(true);
+            showToast('Banner saqlandi', 'success');
             setTimeout(() => setIsSaved(false), 2000);
         } catch (error) {
             console.error('Save error:', error);
-            showToast('Saqlashda xatolik: ' + (error as any).message, 'error');
+            showToast('Saqlashda xatolik: ' + (error instanceof Error ? error.message : 'Noma’lum xatolik'), 'error');
         } finally {
             setIsSaving(false);
         }
@@ -61,20 +102,20 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
 
     const addImage = () => {
         if (normalizeImages(formData.images).length < 5) {
-            setFormData((prev: any) => ({ ...prev, images: [...normalizeImages(prev.images), ''] }));
+            setFormData((prev) => ({ ...prev, images: [...prev.images, ''] }));
         }
     };
 
     const removeImage = (index: number) => {
         const newImages = [...normalizeImages(formData.images)];
         newImages.splice(index, 1);
-        setFormData((prev: any) => ({ ...prev, images: newImages }));
+        setFormData((prev) => ({ ...prev, images: newImages }));
     };
 
     const updateImage = (index: number, value: string) => {
         const newImages = [...normalizeImages(formData.images)];
         newImages[index] = value;
-        setFormData((prev: any) => ({ ...prev, images: newImages }));
+        setFormData((prev) => ({ ...prev, images: newImages }));
     };
 
     // Safe access to first image for preview
@@ -89,7 +130,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                     <p className="text-slate-500">Veb-saytning bosh sahifasidagi asosiy bannerni o'zgartirish.</p>
                 </div>
                 <div className="flex bg-white p-1 rounded-xl border border-slate-200">
-                    {(['uz', 'ru', 'en'] as const).map(l => (
+                    {(['uz', 'ru'] as const).map(l => (
                         <button
                             key={l}
                             onClick={() => setActiveLang(l)}
@@ -104,6 +145,12 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Form */}
                 <form onSubmit={handleSave} className="space-y-6 bg-white border border-slate-200 p-6 rounded-2xl">
+                    {isLoading && (
+                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
+                            <Loader2 size={16} className="animate-spin" />
+                            Banner ma’lumotlari yuklanmoqda...
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-sm">
                         <Globe size={18} />
                         <span>Siz hozir <b>{activeLang.toUpperCase()}</b> tili uchun ma'lumot kiritmoqdasiz.</span>
@@ -115,7 +162,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.badge[activeLang]}
+                            value={formData.badge[activeLang] || ''}
                             onChange={(e) => setFormData({ ...formData, badge: { ...formData.badge, [activeLang]: e.target.value } })}
                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-red-600 focus:outline-none"
                             placeholder="Masalan: Yangi Xizmat"
@@ -128,7 +175,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.title[activeLang]}
+                            value={formData.title[activeLang] || ''}
                             onChange={(e) => setFormData({ ...formData, title: { ...formData.title, [activeLang]: e.target.value } })}
                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-red-600 focus:outline-none"
                             placeholder="Masalan: Sizning ishonchli hamkoringiz"
@@ -139,7 +186,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                     <div className="space-y-2">
                         <label className="text-sm text-slate-500">Tavsif (Description)</label>
                         <textarea
-                            value={formData.description[activeLang]}
+                            value={formData.description[activeLang] || ''}
                             onChange={(e) => setFormData({ ...formData, description: { ...formData.description, [activeLang]: e.target.value } })}
                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-red-600 focus:outline-none min-h-[100px] resize-y"
                             placeholder="Masalan: Biz sizning biznesingiz uchun tez va ishonchli yetkazib berish xizmatlarini taqdim etamiz..."
@@ -152,7 +199,7 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                         </label>
                         <input
                             type="text"
-                            value={formData.buttonText[activeLang]}
+                            value={formData.buttonText[activeLang] || ''}
                             onChange={(e) => setFormData({ ...formData, buttonText: { ...formData.buttonText, [activeLang]: e.target.value } })}
                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:border-red-600 focus:outline-none"
                             placeholder="Masalan: Hozir buyurtma berish"
@@ -193,9 +240,12 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
 
                     <button
                         type="submit"
+                        disabled={isSaving || isLoading}
                         className={`w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${isSaved ? 'bg-green-500 text-slate-900' : 'bg-red-600 text-white hover:bg-red-700'}`}
                     >
-                        {isSaved ? (
+                        {isSaving ? (
+                            <><Loader2 size={18} className="animate-spin" /> Saqlanmoqda...</>
+                        ) : isSaved ? (
                             <>Saqlandi!</>
                         ) : (
                             <>
@@ -210,9 +260,11 @@ const AdminHero: React.FC<AdminHeroProps> = ({ heroContent, setHeroContent }) =>
                     <h3 className="text-lg font-bold text-slate-900">Jonli Ko'rinish (Birinchi rasm)</h3>
                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden relative aspect-[4/5]">
                         {previewImage ? (
-                            <img
+                            <Image
                                 src={previewImage}
                                 alt="Preview"
+                                fill
+                                sizes="(max-width: 1024px) 100vw, 50vw"
                                 className="w-full h-full object-cover opacity-60"
                             />
                         ) : (

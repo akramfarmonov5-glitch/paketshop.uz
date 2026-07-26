@@ -1,13 +1,23 @@
 import { Product, Category, HeroContent, NavigationSettings } from './types';
 
 export const DEFAULT_HERO_CONTENT: HeroContent = {
-  badge: "Ulgurji katalog",
-  title: "Bir martalik idishlar va qadoqlash mahsulotlari ulgurji savdosi",
-  description: "Kafe, savdo nuqtalari, tashkilotlar va qayta sotuvchilar uchun ombordagi va buyurtma asosidagi mahsulotlar.",
-  buttonText: "Katalogni ko'rish",
-  images: [
-    "/logo.png",
-  ]
+  badge: {
+    uz: 'PaketShop.uz ulgurji katalogi',
+    ru: 'Оптовый каталог PaketShop.uz',
+  },
+  title: {
+    uz: 'Bir martalik idishlar va qadoqlash mahsulotlari ulgurji savdosi',
+    ru: 'Оптовая продажа одноразовой посуды и упаковочных материалов',
+  },
+  description: {
+    uz: 'Kafe, savdo nuqtalari, tashkilotlar va qayta sotuvchilar uchun ombordagi va buyurtma asosidagi mahsulotlar.',
+    ru: 'Товары со склада и под заказ для кафе, торговых точек, организаций и реселлеров.',
+  },
+  buttonText: {
+    uz: "Katalogni ko‘rish",
+    ru: 'Открыть каталог',
+  },
+  images: [],
 };
 
 export const DEFAULT_NAVIGATION: NavigationSettings = {

@@ -12,7 +12,7 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ content }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
 
   // Fallback if content is missing
   const displayContent = content || {
@@ -126,7 +126,7 @@ const Hero: React.FC<HeroProps> = ({ content }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                alt={displayContent.title}
+                alt={getLocalizedText(displayContent.title, lang)}
                 className="absolute inset-0 w-full h-full object-cover bg-slate-100"
                 fetchPriority="high"
                 onError={(e) => {
