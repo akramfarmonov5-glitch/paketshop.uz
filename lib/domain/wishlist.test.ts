@@ -75,4 +75,21 @@ describe('wishlist identity', () => {
 
     expect(dedupeWishlist([prismaProduct, legacyProduct])).toEqual([prismaProduct]);
   });
+
+  it('matches a re-imported catalog product by stable SKU and name', () => {
+    const savedCopy = product({
+      id: 2,
+      catalogId: 'old-catalog-id',
+      sku: 'PS-02',
+      name: 'Sous idishi',
+    });
+    const currentCopy = product({
+      id: 2,
+      catalogId: 'new-catalog-id',
+      sku: 'PS-02',
+      name: { uz: 'Sous idishi', ru: 'Соусник' },
+    });
+
+    expect(dedupeWishlist([currentCopy, savedCopy])).toEqual([currentCopy]);
+  });
 });

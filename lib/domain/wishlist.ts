@@ -11,7 +11,12 @@ function normalizedNames(product: Product): string[] {
 }
 
 export function isSameWishlistProduct(first: Product, second: Product): boolean {
-  if (first.catalogId && second.catalogId) return first.catalogId === second.catalogId;
+  // A catalog record may be re-imported and receive a new database id. Matching
+  // ids are definitive, but different ids must still fall through to the stable
+  // SKU/name checks so an old saved copy does not appear beside the current one.
+  if (first.catalogId && second.catalogId && first.catalogId === second.catalogId) {
+    return true;
+  }
 
   const firstNames = normalizedNames(first);
   const secondNames = new Set(normalizedNames(second));
