@@ -85,7 +85,7 @@ function toCard(product: ProductWithCard): CatalogCard {
 export async function getPrismaCategories(): Promise<Category[]> {
   const categories = await db.category.findMany({
     where: { active: true },
-    orderBy: [{ sortOrder: 'asc' }, { slugUz: 'asc' }],
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     include: { translations: true },
   });
 
