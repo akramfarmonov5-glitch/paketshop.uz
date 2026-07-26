@@ -1,9 +1,9 @@
 import '../globals.css';
 import { Providers } from './Providers';
 import ClientLayout from './ClientLayout';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 
-const siteUrl = 'https://paketshop.uz';
-const logoUrl = `${siteUrl}/logo.png`;
+const logoUrl = `${SITE_URL}/logo.png`;
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -21,9 +21,9 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const metadata = metadataMap[l] || metadataMap['uz'];
 
   return {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(SITE_URL),
     ...metadata,
-    applicationName: 'PaketShop.uz',
+    applicationName: SITE_NAME,
     alternates: {
       canonical: `/${l}`,
       languages: {
@@ -48,8 +48,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     manifest: '/manifest.webmanifest',
     openGraph: {
       type: 'website',
-      url: `${siteUrl}/${l}`,
-      siteName: 'PaketShop.uz',
+      url: `${SITE_URL}/${l}`,
+      siteName: SITE_NAME,
       title: metadata.title,
       description: metadata.description,
       images: [
@@ -81,8 +81,8 @@ export default async function RootLayout({
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'PaketShop.uz',
-    url: siteUrl,
+    name: SITE_NAME,
+    url: SITE_URL,
     logo: logoUrl,
   };
 

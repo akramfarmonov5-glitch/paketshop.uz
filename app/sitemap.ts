@@ -1,12 +1,23 @@
 import type { MetadataRoute } from 'next';
-import { supabase, hasSupabaseCredentials } from '../lib/supabaseClient';
-import { productSlug, blogSlug } from '../lib/slugify';
-import { getCategorySlug } from '../lib/categoryUtils';
-import type { Product, Category, BlogPost } from '../types';
+import { legacyIdFromSku } from '@/lib/domain/catalogMapping';
+import { blogSlug } from '@/lib/slugify';
+import { SITE_URL } from '@/lib/site';
 
-const SITE_URL = 'https://paketshop.uz';
 const LANGS = ['uz', 'ru'] as const;
 type Lang = (typeof LANGS)[number];
+
+interface SitemapProduct {
+  slugUz: string;
+  slugRu: string;
+  legacySku: string | null;
+  updatedAt: Date;
+}
+
+interface SitemapCategory {
+  slugUz: string;
+  slugRu: string;
+  updatedAt: Date;
+}
 
 function buildAlternates(pathBuilder: (lang: Lang) => string) {
   const languages: Record<string, string> = {};
@@ -15,6 +26,16 @@ function buildAlternates(pathBuilder: (lang: Lang) => string) {
   }
   languages['x-default'] = `${SITE_URL}${pathBuilder('uz')}`;
   return languages;
+}
+
+function productPathSlug(product: SitemapProduct, lang: Lang): string {
+  const slug = lang === 'ru' ? product.slugRu || product.slugUz : product.slugUz;
+  const legacyId = legacyIdFromSku(product.legacySku);
+  return legacyId ? `${slug}-${legacyId}` : slug;
+}
+
+function categoryPathSlug(category: SitemapCategory, lang: Lang): string {
+  return lang === 'ru' ? category.slugRu || category.slugUz : category.slugUz;
 }
 
 export const revalidate = 3600;
@@ -28,109 +49,128 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/${lang}`,
       lastModified: now,
       changeFrequency: 'daily',
-      priority: 1.0,
-      alternates: { languages: buildAlternates((l) => `/${l}`) },
+      priority: 1,
+      alternates: { languages: buildAlternates((locale) => `/${locale}`) },
     });
     entries.push({
       url: `${SITE_URL}/${lang}/blog`,
       lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: { languages: buildAlternates((l) => `/${l}/blog`) },
+      changeFrequency: 'weekly',
+      priority: 0.7,
+      alternates: { languages: buildAlternates((locale) => `/${locale}/blog`) },
     });
   }
 
-  const b2bPages = ['catalog', 'wholesale', 'organizations', 'starter-kits', 'delivery', 'payment', 'about', 'contact', 'faq', 'privacy', 'terms'];
-  for (const lang of ['uz', 'ru'] as const) {
-    for (const page of b2bPages) {
+  const publicPages = [
+    'catalog',
+    'wholesale',
+    'organizations',
+    'starter-kits',
+    'delivery',
+    'payment',
+    'about',
+    'contact',
+    'faq',
+    'privacy',
+    'terms',
+  ];
+
+  for (const lang of LANGS) {
+    for (const page of publicPages) {
       entries.push({
         url: `${SITE_URL}/${lang}/${page}`,
         lastModified: now,
         changeFrequency: 'weekly',
-        priority: 0.8,
+        priority: page === 'catalog' ? 0.9 : 0.7,
         alternates: {
-          languages: {
-            uz: `${SITE_URL}/uz/${page}`,
-            ru: `${SITE_URL}/ru/${page}`,
-            'x-default': `${SITE_URL}/uz/${page}`,
-          },
+          languages: buildAlternates((locale) => `/${locale}/${page}`),
         },
       });
     }
   }
 
-  if (!hasSupabaseCredentials) {
-    return entries;
-  }
-
   try {
-    const [productsRes, categoriesRes, blogRes] = await Promise.all([
-      supabase.from('products').select('id, name, slug').limit(5000),
-      supabase.from('categories').select('id, name, slug').limit(500),
-      supabase.from('blog_posts').select('id, title, slug, date').limit(5000),
+    const [{ db }, { getSeoBlogPosts }] = await Promise.all([
+      import('@/lib/server/db'),
+      import('@/lib/server/blogRepository'),
+    ]);
+    const [products, categories, blogPosts] = await Promise.all([
+      db.product.findMany({
+        where: { status: 'ACTIVE' },
+        select: { slugUz: true, slugRu: true, legacySku: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 5000,
+      }),
+      db.category.findMany({
+        where: { active: true },
+        select: { slugUz: true, slugRu: true, updatedAt: true },
+        orderBy: { sortOrder: 'asc' },
+        take: 500,
+      }),
+      getSeoBlogPosts(),
     ]);
 
-    if (productsRes.data) {
-      for (const product of productsRes.data as Product[]) {
-        for (const lang of LANGS) {
-          entries.push({
-            url: `${SITE_URL}/${lang}/product/${productSlug(product, lang)}`,
-            lastModified: now,
-            changeFrequency: 'weekly',
-            priority: 0.7,
-            alternates: {
-              languages: buildAlternates((l) => `/${l}/product/${productSlug(product, l)}`),
-            },
-          });
-        }
+    for (const product of products) {
+      for (const lang of LANGS) {
+        entries.push({
+          url: `${SITE_URL}/${lang}/product/${productPathSlug(product, lang)}`,
+          lastModified: product.updatedAt,
+          changeFrequency: 'weekly',
+          priority: 0.8,
+          alternates: {
+            languages: buildAlternates(
+              (locale) => `/${locale}/product/${productPathSlug(product, locale)}`,
+            ),
+          },
+        });
       }
     }
 
-    if (categoriesRes.data) {
-      for (const category of categoriesRes.data as Category[]) {
-        for (const lang of LANGS) {
-          entries.push({
-            url: `${SITE_URL}/${lang}/category/${getCategorySlug(category, lang)}`,
-            lastModified: now,
-            changeFrequency: 'weekly',
-            priority: 0.6,
-            alternates: {
-              languages: buildAlternates((l) => `/${l}/category/${getCategorySlug(category, l)}`),
-            },
-          });
-        }
+    for (const category of categories) {
+      for (const lang of LANGS) {
+        entries.push({
+          url: `${SITE_URL}/${lang}/category/${categoryPathSlug(category, lang)}`,
+          lastModified: category.updatedAt,
+          changeFrequency: 'weekly',
+          priority: 0.8,
+          alternates: {
+            languages: buildAlternates(
+              (locale) => `/${locale}/category/${categoryPathSlug(category, locale)}`,
+            ),
+          },
+        });
       }
     }
 
-    if (blogRes.data) {
-      for (const post of blogRes.data as BlogPost[]) {
-        const postLastMod = post.date ? parseBlogDate(post.date) : now;
-        for (const lang of LANGS) {
-          entries.push({
-            url: `${SITE_URL}/${lang}/blog/${blogSlug(post, lang)}`,
-            lastModified: postLastMod,
-            changeFrequency: 'monthly',
-            priority: 0.5,
-            alternates: {
-              languages: buildAlternates((l) => `/${l}/blog/${blogSlug(post, l)}`),
-            },
-          });
-        }
+    for (const post of blogPosts) {
+      const postLastModified = parseBlogDate(post.date, now);
+      for (const lang of LANGS) {
+        entries.push({
+          url: `${SITE_URL}/${lang}/blog/${blogSlug(post, lang)}`,
+          lastModified: postLastModified,
+          changeFrequency: 'monthly',
+          priority: 0.5,
+          alternates: {
+            languages: buildAlternates(
+              (locale) => `/${locale}/blog/${blogSlug(post, locale)}`,
+            ),
+          },
+        });
       }
     }
-  } catch (err) {
-    console.error('Sitemap generation error:', err);
+  } catch (error) {
+    console.error('Sitemap generation error:', error);
   }
 
   return entries;
 }
 
-function parseBlogDate(raw: string): Date {
+function parseBlogDate(raw: string, fallback: Date): Date {
   const dotMatch = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
   if (dotMatch) {
     const [, dd, mm, yyyy] = dotMatch;
     return new Date(`${yyyy}-${mm}-${dd}`);
   }
   const parsed = new Date(raw);
-  return isNaN(parsed.getTime()) ? new Date() : parsed;
+  return Number.isNaN(parsed.getTime()) ? fallback : parsed;
 }

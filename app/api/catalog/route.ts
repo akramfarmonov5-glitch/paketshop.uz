@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { supabase, hasSupabaseCredentials } from '../../../lib/supabaseClient';
 import { getLocalizedText } from '../../../lib/i18nUtils';
 import { productSlug } from '../../../lib/slugify';
+import { SITE_URL } from '../../../lib/site';
 
-const BASE_URL = 'https://paketshop.uz';
+const BASE_URL = SITE_URL;
 
 export const revalidate = 3600;
 

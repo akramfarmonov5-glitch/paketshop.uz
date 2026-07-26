@@ -3,6 +3,7 @@ import { Product, BlogPost, Category } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
 import { LOCALE_BY_LANG, SEO_LANGUAGES, stripLanguagePrefix, withLanguagePrefix } from '../lib/seoLanguage';
+import { SITE_URL } from '../lib/site';
 
 interface SEOProps {
   title?: string;
@@ -16,11 +17,11 @@ interface SEOProps {
   category?: Category;
   productCategoryName?: string;
   breadcrumbs?: { name: string; url: string }[];
-  alternatePaths?: Partial<Record<'uz' | 'ru' | 'en', string>>;
+  alternatePaths?: Partial<Record<'uz' | 'ru', string>>;
   noindex?: boolean;
 }
 
-const BASE_URL = 'https://paketshop.uz';
+const BASE_URL = SITE_URL;
 
 /**
  * SEOHead — Dinamik meta taglar va structured data boshqarish
@@ -46,7 +47,7 @@ const SEOHead: React.FC<SEOProps> = ({
     // === Title ===
     const fullTitle = title
       ? (title.includes('PaketShop.uz') ? title : `${title} | PaketShop.uz`)
-      : "PaketShop.uz | Online Do'kon - O'zbekistondagi Sifatli Mahsulotlar";
+      : 'PaketShop.uz | Qadoqlash va bir martalik idishlar ulgurji';
     document.title = fullTitle;
 
     // === Meta Tags ===
@@ -61,7 +62,7 @@ const SEOHead: React.FC<SEOProps> = ({
       el.setAttribute('content', content);
     };
 
-    const desc = description || "PaketShop.uz - O'zbekistondagi ishonchli onlayn do'kon. Soatlar, sumkalar, parfyumeriya va boshqa sifatli mahsulotlar.";
+    const desc = description || 'O‘zbekiston bizneslari uchun qadoqlash, paketlar va bir martalik idishlar ulgurji katalogi.';
     setMeta('description', desc);
 
     if (keywords && keywords.length > 0) {
@@ -102,7 +103,7 @@ const SEOHead: React.FC<SEOProps> = ({
     document.head.appendChild(xDefaultEl);
 
     // === Open Graph ===
-    setMeta('og:title', title || "PaketShop.uz | Sifatli Mahsulotlar Onlayn Do'koni", true);
+    setMeta('og:title', title || 'PaketShop.uz | Ulgurji qadoqlash katalogi', true);
     setMeta('og:description', desc, true);
     setMeta('og:url', canonical || `${BASE_URL}/`, true);
     setMeta('og:type', ogType === 'product' ? 'product' : ogType === 'article' ? 'article' : 'website', true);
@@ -255,7 +256,7 @@ const SEOHead: React.FC<SEOProps> = ({
         "telephone": "+998-90-123-45-67",
         "contactType": "customer service",
         "areaServed": "UZ",
-        "availableLanguage": ["Uzbek", "Russian", "English"]
+        "availableLanguage": ["Uzbek", "Russian"]
       },
       "sameAs": [
         "https://instagram.com/paketshop.uz",

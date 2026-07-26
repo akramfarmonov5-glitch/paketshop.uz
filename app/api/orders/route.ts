@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://paketshop.uz';
+    const siteUrl = 'https://www.paketshop.uz';
     const message = buildTelegramOrderMessage({ orderNumber: number, customerName: input.customerName, phone, customerType: customerTypeLabels[input.customerType], telegram: input.telegram, region: input.region, address: input.address, paymentMethod: paymentLabels[input.paymentMethod] || input.paymentMethod, note: input.note, source, items: items.map((item) => ({ sku: item.sku, name: input.locale === 'ru' ? item.nameRu : item.nameUz, quantity: item.quantity, saleUnit: item.saleUnit.toLowerCase(), url: `${siteUrl}/${input.locale}/product/${item.slug}` })) });
     try { await sendTelegramHtml(message); } catch (notificationError) { console.error('Order created but Telegram notification failed:', notificationError); }
 
