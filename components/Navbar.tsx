@@ -77,19 +77,17 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Logo: rasm + yozuv. next/image 320px PNG'ni kichik optimallashtirilgan
               formatga aylantiradi, priority — u ekranning yuqorisida. */}
-          <Link href={`/${lang}`} onClick={onNavigateHome} className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Link href={`/${lang}`} onClick={onNavigateHome} className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Image
               src="/logo.png"
-              alt=""
+              alt="PaketShop"
               width={32}
               height={32}
               priority
               sizes="32px"
               className="h-7 w-7 sm:h-8 sm:w-8"
             />
-            {/* Juda tor ekranlarda (≤360px) yozuv yashiriladi — logotip qoladi,
-                aks holda o'ng tomondagi tugmalar ekrandan chiqib ketadi. */}
-            <span className="hidden text-lg font-black tracking-tight text-slate-900 min-[361px]:inline sm:text-xl">
+            <span className="text-base font-black tracking-tight text-slate-900 sm:text-xl">
               Paket<span className="text-red-600">Shop</span>
             </span>
             <span className="sr-only">PaketShop</span>
