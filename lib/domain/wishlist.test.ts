@@ -48,6 +48,22 @@ describe('wishlist identity', () => {
     expect(isSameWishlistProduct(currentProduct, staleLegacyProduct)).toBe(false);
   });
 
+  it('does not trust a stale matching SKU when product names disagree', () => {
+    const currentProduct = product({
+      id: 2,
+      catalogId: 'catalog-2',
+      sku: 'PS-02',
+      name: 'Sous idishi',
+    });
+    const staleLegacyProduct = product({
+      id: 2,
+      sku: 'PS-02',
+      name: 'Premium stakan',
+    });
+
+    expect(isSameWishlistProduct(currentProduct, staleLegacyProduct)).toBe(false);
+  });
+
   it('removes duplicate local and database copies', () => {
     const prismaProduct = product({
       id: 1,

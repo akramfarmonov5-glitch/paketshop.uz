@@ -12,11 +12,20 @@ function normalizedNames(product: Product): string[] {
 
 export function isSameWishlistProduct(first: Product, second: Product): boolean {
   if (first.catalogId && second.catalogId) return first.catalogId === second.catalogId;
-  if (first.sku && second.sku) return first.sku === second.sku;
-  if (first.legacySku && second.legacySku) return first.legacySku === second.legacySku;
 
+  const firstNames = normalizedNames(first);
   const secondNames = new Set(normalizedNames(second));
-  return normalizedNames(first).some((name) => secondNames.has(name));
+  const namesMatch = firstNames.some((name) => secondNames.has(name));
+  const bothHaveNames = firstNames.length > 0 && secondNames.size > 0;
+
+  if (first.sku && second.sku) {
+    return first.sku === second.sku && (!bothHaveNames || namesMatch);
+  }
+  if (first.legacySku && second.legacySku) {
+    return first.legacySku === second.legacySku && (!bothHaveNames || namesMatch);
+  }
+
+  return namesMatch;
 }
 
 export function dedupeWishlist(products: Product[]): Product[] {
