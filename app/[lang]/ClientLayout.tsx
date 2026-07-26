@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import CartSidebar from '../../components/CartSidebar';
@@ -33,6 +33,10 @@ export default function ClientLayout({
   const { products } = useGlobalData();
   const pathname = usePathname() || '/';
   const router = useRouter();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   const isCheckout = pathname.includes('/checkout');
   const isAdmin = pathname.includes('/admin');
