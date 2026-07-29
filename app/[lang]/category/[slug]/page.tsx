@@ -4,10 +4,25 @@ import { findCategoryByValue, getCategorySlug } from '../../../../lib/categoryUt
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { findActiveRedirect } from '../../../../lib/server/redirects';
 import { getActiveCategoryProductCount } from '../../../../lib/server/prismaCatalog';
-import { SITE_NAME, SITE_URL } from '../../../../lib/site';
+import { db } from '../../../../lib/server/db';
+import { localizedOgImageUrl, SITE_NAME, SITE_URL } from '../../../../lib/site';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 
 export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const categories = await db.category.findMany({
+    where: { active: true, products: { some: { status: 'ACTIVE' } } },
+    select: { slugUz: true, slugRu: true },
+    orderBy: { sortOrder: 'asc' },
+    take: 500,
+  });
+
+  return categories.flatMap((category) => [
+    { lang: 'uz', slug: category.slugUz },
+    { lang: 'ru', slug: category.slugRu || category.slugUz },
+  ]);
+}
 
 export async function generateMetadata({
   params,
@@ -32,7 +47,13 @@ export async function generateMetadata({
     const productCount = await getActiveCategoryProductCount(slug).catch(() => null);
     const description =
       getLocalizedText(category.description, activeLang) ||
-      `${name} - PaketShop.uz da sifatli mahsulotlar`;
+      (activeLang === 'ru'
+        ? `${name} оптом для кафе, магазинов и организаций. Уточните цены, наличие и доставку по Узбекистану в PaketShop.uz.`
+        : `${name} mahsulotlari kafe, savdo va tashkilotlar uchun ulgurji. PaketShop.uz orqali narx, qoldiq va yetkazib berishni aniqlang.`);
+    const canonicalPath = `/${activeLang}/category/${getCategorySlug(category, activeLang)}`;
+    const image = category.image && !category.image.endsWith('/logo.png')
+      ? category.image
+      : localizedOgImageUrl(activeLang);
 
     const alternates: Record<string, string> = {};
     for (const altLang of ['uz', 'ru']) {
@@ -44,14 +65,22 @@ export async function generateMetadata({
       title: `${name} | PaketShop.uz`,
       description,
       alternates: {
-        canonical: `/${activeLang}/category/${getCategorySlug(category, activeLang)}`,
+        canonical: canonicalPath,
         languages: alternates,
       },
       openGraph: {
         title: `${name} | PaketShop.uz`,
         description,
-        url: `${SITE_URL}/${activeLang}/category/${getCategorySlug(category, activeLang)}`,
-        images: category.image ? [{ url: category.image, alt: name }] : undefined,
+        url: `${SITE_URL}${canonicalPath}`,
+        siteName: SITE_NAME,
+        locale: activeLang === 'ru' ? 'ru_RU' : 'uz_UZ',
+        images: [{ url: image, alt: name }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${name} | PaketShop.uz`,
+        description,
+        images: [image],
       },
       ...(productCount === 0 ? { robots: { index: false, follow: true } } : {}),
     };
@@ -88,7 +117,9 @@ export default async function CategoryPage({
 
   const name = getLocalizedText(category.name, activeLang);
   const description = getLocalizedText(category.description, activeLang)
-    || `${name} — ${SITE_NAME} ulgurji katalogi`;
+    || (activeLang === 'ru'
+      ? `${name} оптом для кафе, магазинов и организаций. Уточните цены, наличие и доставку по Узбекистану в ${SITE_NAME}.`
+      : `${name} mahsulotlari kafe, savdo va tashkilotlar uchun ulgurji. ${SITE_NAME} orqali narx, qoldiq va yetkazib berishni aniqlang.`);
   const collectionMarkup = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',

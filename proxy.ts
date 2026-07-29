@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server';
 
 const locales = ['uz', 'ru'] as const;
 const defaultLocale = 'uz';
+const canonicalHostname = 'www.paketshop.uz';
+
+const legacyRemovedProductFallbacks: Record<string, string> = {
+  '/uz/product/zip-paket-27': '/uz/catalog',
+  '/ru/product/70x90-20-1': '/ru/catalog',
+  '/en/product/zip-paket-27': '/uz/catalog',
+};
 
 const legacyCategoryAliases: Record<string, { uz: string; ru: string }> = {
   paketlar: { uz: 'polietilen-paketlar', ru: 'polietilen-paketlar-ru' },
@@ -32,6 +39,19 @@ function permanentRedirect(request: NextRequest, pathname: string) {
 
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  if (request.nextUrl.hostname === 'paketshop.uz') {
+    const url = request.nextUrl.clone();
+    url.protocol = 'https:';
+    url.hostname = canonicalHostname;
+    return NextResponse.redirect(url, 308);
+  }
+
+  const normalizedPathname = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  const legacyProductTarget = legacyRemovedProductFallbacks[normalizedPathname];
+  if (legacyProductTarget) {
+    return permanentRedirect(request, legacyProductTarget);
+  }
 
   if (pathname === '/index.php') {
     return permanentRedirect(request, `/${defaultLocale}`);

@@ -10,6 +10,15 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/:lang(uz|ru)/catalog',
+        headers: [
+          {
+            key: 'Vercel-CDN-Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

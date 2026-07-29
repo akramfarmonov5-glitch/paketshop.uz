@@ -1,9 +1,19 @@
 import BlogClient from './BlogClient';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { blogSlug, getBlogIdFromSlug } from '../../../../lib/slugify';
-import { getSeoBlogPost } from '../../../../lib/server/blogRepository';
-import { SITE_NAME, SITE_URL } from '../../../../lib/site';
+import { getSeoBlogPost, getSeoBlogPosts } from '../../../../lib/server/blogRepository';
+import { localizedOgImageUrl, SITE_NAME, SITE_URL } from '../../../../lib/site';
 import { notFound, permanentRedirect } from 'next/navigation';
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const posts = await getSeoBlogPosts().catch(() => []);
+  return posts.flatMap((post) => [
+    { lang: 'uz', slug: blogSlug(post, 'uz') },
+    { lang: 'ru', slug: blogSlug(post, 'ru') },
+  ]);
+}
 
 function toIsoDate(raw: string): string {
   const dotMatch = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
@@ -40,6 +50,9 @@ export async function generateMetadata({
   const seoDescription = getLocalizedText(post.seo?.description, lang)
     || getLocalizedText(post.content, lang).slice(0, 160);
   const canonicalPath = `/${lang}/blog/${blogSlug(post, lang)}`;
+  const image = post.image && !post.image.endsWith('/logo.png')
+    ? post.image
+    : localizedOgImageUrl(lang);
 
   return {
     title: seoTitle,
@@ -59,8 +72,15 @@ export async function generateMetadata({
       type: 'article',
       url: `${SITE_URL}${canonicalPath}`,
       publishedTime: toIsoDate(post.date),
-      images: post.image ? [{ url: post.image }] : [],
+      images: [{ url: image, alt: seoTitle }],
       siteName: SITE_NAME,
+      locale: lang === 'ru' ? 'ru_RU' : 'uz_UZ',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description: seoDescription,
+      images: [image],
     },
   };
 }

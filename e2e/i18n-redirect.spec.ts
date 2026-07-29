@@ -39,6 +39,16 @@ test.describe('Til va lokalizatsiya', () => {
 });
 
 test.describe('Redirect va 404', () => {
+  test('Google indeksidagi olib tashlangan mahsulotlar tegishli katalogga yo‘naltiriladi', async ({ request }) => {
+    const uzResponse = await request.get('/uz/product/zip-paket-27', { maxRedirects: 0 });
+    const ruResponse = await request.get('/ru/product/70x90-20-1', { maxRedirects: 0 });
+
+    expect(uzResponse.status()).toBe(308);
+    expect(uzResponse.headers()['location']).toContain('/uz/catalog');
+    expect(ruResponse.status()).toBe(308);
+    expect(ruResponse.headers()['location']).toContain('/ru/catalog');
+  });
+
   test('admin yaratgan eski URL doimiy redirect bilan ishlaydi', async ({ request }) => {
     const response = await request.get(`/uz${E2E_REDIRECT_FROM}`, { maxRedirects: 0 });
 

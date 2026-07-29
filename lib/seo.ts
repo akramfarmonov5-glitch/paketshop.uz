@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, SITE_URL } from './site';
+import { localizedOgImageUrl, SITE_NAME, SITE_URL } from './site';
 
 type Locale = 'uz' | 'ru';
 type LocalizedText = Record<Locale, string>;
@@ -37,11 +37,20 @@ export function localizedPageMetadata({
       locale: locale === 'ru' ? 'ru_RU' : 'uz_UZ',
       title: title[locale],
       description: description[locale],
+      images: [
+        {
+          url: localizedOgImageUrl(locale),
+          width: 1200,
+          height: 630,
+          alt: `${SITE_NAME} — ${title[locale]}`,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: title[locale],
       description: description[locale],
+      images: [localizedOgImageUrl(locale)],
     },
   };
 }

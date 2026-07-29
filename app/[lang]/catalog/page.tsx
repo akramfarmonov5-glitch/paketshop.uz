@@ -9,6 +9,7 @@ import { SITE_URL } from '@/lib/site';
 import { slugify } from '@/lib/slugify';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
 import B2BWishlistButton from '@/components/B2BWishlistButton';
+import { localizedPageMetadata } from '@/lib/seo';
 
 const copy = {
   uz: {
@@ -30,12 +31,18 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang } = await params;
-  const locale = lang === 'ru' ? 'ru' : 'uz';
-  return {
-    title: `${copy[locale].title} | PaketShop.uz`,
-    description: copy[locale].description,
-    alternates: { canonical: `/${locale}/catalog`, languages: { uz: '/uz/catalog', ru: '/ru/catalog' } },
-  };
+  return localizedPageMetadata({
+    lang,
+    path: '/catalog',
+    title: {
+      uz: `${copy.uz.title} | PaketShop.uz`,
+      ru: `${copy.ru.title} | PaketShop.uz`,
+    },
+    description: {
+      uz: copy.uz.description,
+      ru: copy.ru.description,
+    },
+  });
 }
 
 function value(value: string | string[] | undefined): string {

@@ -5,8 +5,29 @@ import {
   catalogCardUrlSlug,
   getPrismaProductDetail,
 } from '../../../../lib/server/prismaCatalog';
+import { legacyIdFromSku } from '../../../../lib/domain/catalogMapping';
 import { findActiveRedirect } from '../../../../lib/server/redirects';
-import { SITE_NAME, SITE_URL } from '../../../../lib/site';
+import { db } from '../../../../lib/server/db';
+import { localizedOgImageUrl, SITE_NAME, SITE_URL } from '../../../../lib/site';
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const products = await db.product.findMany({
+    where: { status: 'ACTIVE' },
+    select: { slugUz: true, slugRu: true, legacySku: true },
+    orderBy: { updatedAt: 'desc' },
+    take: 5000,
+  });
+
+  return products.flatMap((product) => {
+    const legacyId = legacyIdFromSku(product.legacySku);
+    return (['uz', 'ru'] as const).map((lang) => {
+      const slug = lang === 'ru' ? product.slugRu || product.slugUz : product.slugUz;
+      return { lang, id: legacyId ? `${slug}-${legacyId}` : slug };
+    });
+  });
+}
 
 const resolveProductDetail = cache(async function resolveProductDetail(id: string, lang: string) {
   const locale = lang === 'ru' ? 'ru' as const : 'uz' as const;
@@ -35,12 +56,15 @@ export async function generateMetadata({
   const { locale } = detail;
   const title = `${detail.name} | PaketShop.uz`;
   const description = (detail.shortDescription || detail.description || detail.name).slice(0, 160);
+  const canonicalPath = `/${locale}/product/${catalogCardUrlSlug(detail.card, locale)}`;
+  const image = detail.images.find((candidate) => candidate && !candidate.endsWith('/logo.png'))
+    || localizedOgImageUrl(locale);
 
   return {
     title,
     description,
     alternates: {
-      canonical: `/${locale}/product/${catalogCardUrlSlug(detail.card, locale)}`,
+      canonical: canonicalPath,
       languages: {
         uz: `/uz/product/${catalogCardUrlSlug(detail.card, 'uz')}`,
         ru: `/ru/product/${catalogCardUrlSlug(detail.card, 'ru')}`,
@@ -50,8 +74,17 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: detail.images[0] ? [{ url: detail.images[0] }] : [],
+      url: `${SITE_URL}${canonicalPath}`,
+      siteName: SITE_NAME,
+      locale: locale === 'ru' ? 'ru_RU' : 'uz_UZ',
+      images: [{ url: image, alt: detail.name }],
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
     },
   };
 }

@@ -1,10 +1,15 @@
 import '../globals.css';
 import { Providers } from './Providers';
 import ClientLayout from './ClientLayout';
-import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { localizedOgImageUrl, SITE_NAME, SITE_URL } from '@/lib/site';
 import { getNavigationSettingsSetting } from '@/lib/server/siteSettings';
 
 const logoUrl = `${SITE_URL}/logo.png`;
+const supportedLocales = ['uz', 'ru'] as const;
+
+export function generateStaticParams() {
+  return supportedLocales.map((lang) => ({ lang }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -20,6 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     },
   };
   const metadata = metadataMap[l] || metadataMap['uz'];
+  const ogImageUrl = localizedOgImageUrl(l);
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -55,18 +61,18 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       description: metadata.description,
       images: [
         {
-          url: logoUrl,
-          width: 320,
-          height: 320,
-          alt: 'PaketShop.uz logo',
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${SITE_NAME} ulgurji katalogi`,
         },
       ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: metadata.title,
       description: metadata.description,
-      images: [logoUrl],
+      images: [ogImageUrl],
     },
   };
 }
