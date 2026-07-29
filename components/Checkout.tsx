@@ -7,7 +7,7 @@ import { cartProductKey, useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
 import { getSubmissionAttribution } from '../lib/attribution';
-import { saleUnitLabel } from '../lib/domain/catalogMapping';
+import { isPriceOnRequest, saleUnitLabel } from '../lib/domain/catalogMapping';
 
 interface CheckoutProps { onBack: () => void }
 type CustomerType = 'entrepreneur' | 'organization' | 'reseller' | 'individual';
@@ -22,6 +22,11 @@ const copy = {
   },
 } as const;
 
+const priceCopy = {
+  uz: { request: 'Narx menejer tomonidan aniqlanadi', requestShort: 'narxi so‘rov orqali' },
+  ru: { request: 'Цену определит менеджер', requestShort: 'цена по запросу' },
+} as const;
+
 const inputClass = 'h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-slate-950 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100';
 
 export default function Checkout({ onBack }: CheckoutProps) {
@@ -29,6 +34,7 @@ export default function Checkout({ onBack }: CheckoutProps) {
   const { lang } = useLanguage();
   const locale = lang === 'ru' ? 'ru' : 'uz';
   const t = copy[locale];
+  const priceT = priceCopy[locale];
   const startedAt = useMemo(() => Date.now(), []);
   const [customerType, setCustomerType] = useState<CustomerType>('entrepreneur');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -40,6 +46,10 @@ export default function Checkout({ onBack }: CheckoutProps) {
 
   const set = (field: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm((previous) => ({ ...previous, [field]: event.target.value }));
   const money = (value: number) => `${new Intl.NumberFormat('uz-UZ').format(value)} UZS`;
+  const hasRequestPriceItems = cart.some((item) => isPriceOnRequest(item.priceMode));
+  const displayedTotal = hasRequestPriceItems
+    ? (cartTotal > 0 ? `${money(cartTotal)} + ${priceT.requestShort}` : priceT.request)
+    : money(cartTotal);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setError('');
@@ -87,6 +97,6 @@ export default function Checkout({ onBack }: CheckoutProps) {
       <fieldset><legend className="mb-3 font-bold">{t.payment}</legend><div className="flex flex-wrap gap-2">{payments.map(([value, label]) => <label key={value} className={`cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold ${paymentMethod === value ? 'border-red-600 bg-red-50 text-red-700' : 'border-slate-200'}`}><input type="radio" className="sr-only" checked={paymentMethod === value} onChange={() => setPaymentMethod(value)} />{label}</label>)}</div></fieldset>
       <label className="flex items-start gap-3 text-sm leading-6 text-slate-600"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-1 h-4 w-4" />{t.consent}</label>{error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}<button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3.5 font-bold text-white disabled:opacity-60">{loading ? <Loader2 className="animate-spin" size={19} /> : <Send size={19} />}{loading ? t.submitting : t.submit}</button><p className="flex items-center justify-center gap-2 text-xs text-slate-500"><ShieldCheck size={15} />{t.confirm}</p>
     </form></section>
-    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-28 sm:p-7"><h2 className="text-xl font-bold">{t.summary}</h2><div className="mt-5 space-y-5">{cart.map((item) => { const key = cartProductKey(item); const unit = saleUnitLabel(item.saleUnit || 'PACK', locale); const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage; return <article key={key} className="flex gap-4 border-b border-slate-100 pb-5 last:border-0"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-20 w-20 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><p className="font-mono text-xs text-slate-500">{t.sku}: {item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-semibold leading-5">{getLocalizedText(item.name, locale)}</h3><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-1 font-bold">{money(item.quoteUnitPrice * item.quantity)}</p></div></article>; })}</div><div className="mt-6 border-t border-slate-200 pt-5"><div className="flex justify-between gap-4"><span className="text-sm text-slate-600">{t.estimated}</span><strong>{money(cartTotal)}</strong></div><p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t.confirm}</p></div></aside>
+    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-28 sm:p-7"><h2 className="text-xl font-bold">{t.summary}</h2><div className="mt-5 space-y-5">{cart.map((item) => { const key = cartProductKey(item); const unit = saleUnitLabel(item.saleUnit || 'PACK', locale); const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage; const requestPrice = isPriceOnRequest(item.priceMode); return <article key={key} className="flex gap-4 border-b border-slate-100 pb-5 last:border-0"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-20 w-20 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><p className="font-mono text-xs text-slate-500">{t.sku}: {item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-semibold leading-5">{getLocalizedText(item.name, locale)}</h3><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-1 font-bold">{requestPrice ? priceT.request : money(item.quoteUnitPrice * item.quantity)}</p></div></article>; })}</div><div className="mt-6 border-t border-slate-200 pt-5"><div className="flex justify-between gap-4"><span className="text-sm text-slate-600">{t.estimated}</span><strong className="text-right">{displayedTotal}</strong></div><p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t.confirm}</p></div></aside>
   </div></div></main>;
 }

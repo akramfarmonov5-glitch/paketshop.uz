@@ -4,6 +4,21 @@ export interface PriceTierInput {
   price: number;
 }
 
+export function calculateOrderTotals(items: Array<{ lineTotal: number | null }>): {
+  subtotal: number | null;
+  total: number | null;
+  hasRequestOnlyItems: boolean;
+} {
+  const hasRequestOnlyItems = items.some((item) => item.lineTotal == null);
+  const knownSubtotal = items.reduce((sum, item) => sum + (item.lineTotal ?? 0), 0);
+
+  return {
+    subtotal: hasRequestOnlyItems ? null : knownSubtotal,
+    total: hasRequestOnlyItems ? null : knownSubtotal,
+    hasRequestOnlyItems,
+  };
+}
+
 export function normalizeUzbekPhone(value: unknown): string | null {
   let digits = String(value ?? '').replace(/\D/g, '');
 

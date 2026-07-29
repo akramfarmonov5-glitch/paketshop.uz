@@ -48,6 +48,10 @@ export function toPriceNumber(value: number | string | null | undefined): number
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+export function isPriceOnRequest(priceMode?: string | null): boolean {
+  return priceMode === 'REQUEST_ONLY' || priceMode === 'LOGIN_REQUIRED';
+}
+
 export function formatUzsPrice(value: number, locale: 'uz' | 'ru' = 'uz'): string {
   const amount = new Intl.NumberFormat('uz-UZ').format(Math.round(value)).replace(/[\u00A0\u202F]/g, ' ');
   return locale === 'ru' ? `${amount} сум` : `${amount} so'm`;
@@ -55,7 +59,7 @@ export function formatUzsPrice(value: number, locale: 'uz' | 'ru' = 'uz'): strin
 
 export function formatCardPrice(input: { publicPrice?: number | string | null; priceMode: string }): string {
   const price = toPriceNumber(input.publicPrice);
-  if (input.priceMode === 'REQUEST_ONLY' || input.priceMode === 'LOGIN_REQUIRED' || !price) return '';
+  if (isPriceOnRequest(input.priceMode) || !price) return '';
   const formatted = formatUzsPrice(price);
   return input.priceMode === 'FROM_PRICE' ? `${formatted}dan` : formatted;
 }

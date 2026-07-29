@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildTelegramLeadMessage,
   buildTelegramOrderMessage,
+  calculateOrderTotals,
   calculateUnitsPerCarton,
   escapeTelegramHtml,
   isValidOrderQuantity,
@@ -36,6 +37,19 @@ describe('commerce domain rules', () => {
     expect(selectTierPrice(1000, 1, tiers)).toBe(1000);
     expect(selectTierPrice(1000, 7, tiers)).toBe(900);
     expect(selectTierPrice(1000, 50, tiers)).toBe(800);
+  });
+
+  it('keeps the order total unknown when any item requires a price request', () => {
+    expect(calculateOrderTotals([{ lineTotal: 25000 }, { lineTotal: 15000 }])).toEqual({
+      subtotal: 40000,
+      total: 40000,
+      hasRequestOnlyItems: false,
+    });
+    expect(calculateOrderTotals([{ lineTotal: 25000 }, { lineTotal: null }])).toEqual({
+      subtotal: null,
+      total: null,
+      hasRequestOnlyItems: true,
+    });
   });
 
   it('escapes customer input in Telegram HTML messages', () => {

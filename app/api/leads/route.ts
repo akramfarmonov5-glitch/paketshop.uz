@@ -103,7 +103,9 @@ export async function POST(request: NextRequest) {
       details,
     });
     try {
-      await sendTelegramHtml(message);
+      const sent = await sendTelegramHtml(message);
+      if (sent) console.info(`Telegram lead notification sent: ${lead.id}`);
+      else console.warn(`Telegram lead notification skipped: ${lead.id}`);
     } catch (notificationError) {
       console.error('Lead created but notification failed:', notificationError);
     }

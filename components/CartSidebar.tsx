@@ -6,7 +6,7 @@ import { ArrowRight, Minus, Package, Plus, ShoppingCart, Trash2, X } from 'lucid
 import { cartProductKey, useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
-import { saleUnitLabel } from '../lib/domain/catalogMapping';
+import { isPriceOnRequest, saleUnitLabel } from '../lib/domain/catalogMapping';
 
 interface CartSidebarProps { onCheckout: () => void }
 
@@ -15,12 +15,22 @@ const copy = {
   ru: { title: 'Список заказа', products: 'товаров', empty: 'Список пока пуст', catalog: 'Перейти в каталог', piece: 'шт.', estimated: 'Примерная сумма', note: 'Итоговую цену и наличие подтверждает менеджер.', checkout: 'Оформить запрос заказа', remove: 'Удалить товар' },
 } as const;
 
+const priceCopy = {
+  uz: { request: 'Narx menejer tomonidan aniqlanadi', requestShort: 'narxi so‘rov orqali' },
+  ru: { request: 'Цену определит менеджер', requestShort: 'цена по запросу' },
+} as const;
+
 export default function CartSidebar({ onCheckout }: CartSidebarProps) {
   const { cart, isCartOpen, closeCart, removeFromCart, updateQuantity, cartTotal } = useCart();
   const { lang } = useLanguage();
   const locale = lang === 'ru' ? 'ru' : 'uz';
   const t = copy[locale];
+  const priceT = priceCopy[locale];
   const money = (value: number) => `${new Intl.NumberFormat('uz-UZ').format(value)} UZS`;
+  const hasRequestPriceItems = cart.some((item) => isPriceOnRequest(item.priceMode));
+  const displayedTotal = hasRequestPriceItems
+    ? (cartTotal > 0 ? `${money(cartTotal)} + ${priceT.requestShort}` : priceT.request)
+    : money(cartTotal);
 
   useEffect(() => { if (cart.length === 0 && isCartOpen) closeCart(); }, [cart.length, isCartOpen, closeCart]);
 
@@ -39,13 +49,14 @@ export default function CartSidebar({ onCheckout }: CartSidebarProps) {
               const step = Math.max(1, item.orderStep || 1);
               const unit = saleUnitLabel(item.saleUnit || 'PACK', locale);
               const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage;
+              const requestPrice = isPriceOnRequest(item.priceMode);
               return <article key={key} className="rounded-2xl border border-slate-200 p-4">
-                <div className="flex gap-4"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-24 w-24 shrink-0 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div><p className="font-mono text-xs font-semibold text-slate-500">{item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-bold leading-5">{getLocalizedText(item.name, locale)}</h3></div><button onClick={() => removeFromCart(key)} className="p-1 text-slate-400 hover:text-red-600" aria-label={t.remove}><Trash2 size={17} /></button></div><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-2 font-black">{money(item.quoteUnitPrice * item.quantity)}</p></div></div>
+                <div className="flex gap-4"><img src={item.image} alt={getLocalizedText(item.name, locale)} className="h-24 w-24 shrink-0 rounded-xl bg-slate-100 object-contain" /><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div><p className="font-mono text-xs font-semibold text-slate-500">{item.sku || `PS-${item.id}`}</p><h3 className="mt-1 font-bold leading-5">{getLocalizedText(item.name, locale)}</h3></div><button onClick={() => removeFromCart(key)} className="p-1 text-slate-400 hover:text-red-600" aria-label={t.remove}><Trash2 size={17} /></button></div><p className="mt-2 text-sm text-slate-600">{item.quantity} {unit}{baseUnits ? ` · ${item.quantity * baseUnits} ${t.piece}` : ''}</p><p className="mt-2 font-black">{requestPrice ? priceT.request : money(item.quoteUnitPrice * item.quantity)}</p></div></div>
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-xs text-slate-500">{item.quoteUnitPrice > 0 ? `${money(item.quoteUnitPrice)} / ${unit}` : t.note}</span><div className="flex items-center gap-1 rounded-xl border border-slate-200 p-1"><button onClick={() => updateQuantity(key, item.quantity - step)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-slate-100" aria-label="Minus"><Minus size={15} /></button><span className="min-w-16 text-center text-sm font-bold">{item.quantity} {unit}</span><button onClick={() => updateQuantity(key, item.quantity + step)} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-slate-100" aria-label="Plus"><Plus size={15} /></button></div></div>
               </article>;
             })}
           </div>
-          {cart.length > 0 && <footer className="border-t border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between"><span className="text-sm text-slate-600">{t.estimated}</span><strong className="text-xl">{money(cartTotal)}</strong></div><p className="mt-2 text-xs leading-5 text-amber-800">{t.note}</p><button onClick={() => { closeCart(); onCheckout(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3.5 font-bold text-white hover:bg-red-700">{t.checkout}<ArrowRight size={19} /></button></footer>}
+          {cart.length > 0 && <footer className="border-t border-slate-200 bg-slate-50 p-5"><div className="flex items-center justify-between gap-4"><span className="text-sm text-slate-600">{t.estimated}</span><strong className="text-right text-xl">{displayedTotal}</strong></div><p className="mt-2 text-xs leading-5 text-amber-800">{t.note}</p><button onClick={() => { closeCart(); onCheckout(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3.5 font-bold text-white hover:bg-red-700">{t.checkout}<ArrowRight size={19} /></button></footer>}
         </motion.aside>
       </>}
     </AnimatePresence>

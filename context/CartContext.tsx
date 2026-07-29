@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Product, CartItem } from '../types';
 import { trackAddToCart } from '../lib/fpixel';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { isPriceOnRequest } from '../lib/domain/catalogMapping';
 
 interface CartContextType {
   cart: CartItem[];
@@ -27,6 +28,7 @@ export const cartProductKey = (
 };
 
 function quoteUnitPrice(product: Product): number {
+  if (isPriceOnRequest(product.priceMode)) return 0;
   const packSize = Math.max(1, product.itemsPerPackage || 1);
   const legacyPackMultiplier = !product.catalogId && (product.saleUnit || 'PACK') === 'PACK' ? packSize : 1;
   return Math.max(0, Number(product.price || 0) * legacyPackMultiplier);
@@ -43,7 +45,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const parsed = JSON.parse(savedCart) as Array<CartItem & { quoteUnitPrice?: number }>;
         setCart(parsed.map((item) => {
-          if (Number.isFinite(item.quoteUnitPrice)) return item as CartItem;
+          if (Number.isFinite(item.quoteUnitPrice)) {
+            return { ...item, quoteUnitPrice: quoteUnitPrice(item) } as CartItem;
+          }
           const packSize = Math.max(1, item.itemsPerPackage || 1);
           return {
             ...item,

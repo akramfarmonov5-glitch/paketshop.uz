@@ -4,6 +4,7 @@ import {
   buildProductTelegramMessage,
   formatCardPrice,
   formatUzsPrice,
+  isPriceOnRequest,
   legacyIdFromSku,
   mapCatalogCard,
 } from '@/lib/domain/catalogMapping';
@@ -25,6 +26,9 @@ describe('catalog mapping', () => {
     expect(formatCardPrice({ publicPrice: 55000, priceMode: 'FROM_PRICE' })).toBe("55 000 so'mdan");
     expect(formatCardPrice({ publicPrice: 55000, priceMode: 'REQUEST_ONLY' })).toBe('');
     expect(formatCardPrice({ publicPrice: null, priceMode: 'PUBLIC_EXACT' })).toBe('');
+    expect(isPriceOnRequest('REQUEST_ONLY')).toBe(true);
+    expect(isPriceOnRequest('LOGIN_REQUIRED')).toBe(true);
+    expect(isPriceOnRequest('PUBLIC_EXACT')).toBe(false);
   });
 
   it('derives an approximate piece price from the pack total', () => {

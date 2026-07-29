@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { CustomerType, OrderStatus, Prisma, SaleUnit } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { buildTelegramOrderMessage, isValidOrderQuantity, normalizeUzbekPhone, selectTierPrice, summarizeAttribution } from '@/lib/domain/commerce';
+import { buildTelegramOrderMessage, calculateOrderTotals, isValidOrderQuantity, normalizeUzbekPhone, selectTierPrice, summarizeAttribution } from '@/lib/domain/commerce';
 import { getLocalizedText } from '@/lib/i18nUtils';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { db } from '@/lib/server/db';
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     const prismaResolution = await resolvePrismaItems(input.items, input.customerType);
     const items = [...prismaResolution.resolved, ...await resolveLegacyItems(prismaResolution.missing)];
     if (items.length !== input.items.length) throw new Error('PRODUCT_NOT_FOUND');
-    const subtotal = items.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
+    const totals = calculateOrderTotals(items);
     const number = orderNumber();
     const type = customerType(input.customerType);
     const source = summarizeAttribution(input.attribution);
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         data: {
           number, customerId: customer.id, customerType: type, customerName: input.customerName, phone, telegram: input.telegram,
           region: input.region, address: input.address, deliveryMethod: input.deliveryMethod, preferredPaymentMethod: input.paymentMethod,
-          note: input.note, status: OrderStatus.NEW, subtotal, total: subtotal, source,
+          note: input.note, status: OrderStatus.NEW, subtotal: totals.subtotal, total: totals.total, source,
           firstTouch: input.attribution?.first as Prisma.InputJsonValue | undefined,
           lastTouch: (input.attribution?.last || input.attribution) as Prisma.InputJsonValue | undefined,
           items: { create: items.map((item) => ({ productId: item.productId, variantId: item.variantId, skuSnapshot: item.sku, nameSnapshotUz: item.nameUz, nameSnapshotRu: item.nameRu, quantity: item.quantity, saleUnit: item.saleUnit, unitPrice: item.unitPrice, lineTotal: item.lineTotal })) },
@@ -140,9 +140,15 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = 'https://www.paketshop.uz';
     const message = buildTelegramOrderMessage({ orderNumber: number, customerName: input.customerName, phone, customerType: customerTypeLabels[input.customerType], telegram: input.telegram, region: input.region, address: input.address, paymentMethod: paymentLabels[input.paymentMethod] || input.paymentMethod, note: input.note, source, items: items.map((item) => ({ sku: item.sku, name: input.locale === 'ru' ? item.nameRu : item.nameUz, quantity: item.quantity, saleUnit: item.saleUnit.toLowerCase(), url: `${siteUrl}/${input.locale}/product/${item.slug}` })) });
-    try { await sendTelegramHtml(message); } catch (notificationError) { console.error('Order created but Telegram notification failed:', notificationError); }
+    try {
+      const sent = await sendTelegramHtml(message);
+      if (sent) console.info(`Telegram order notification sent: ${number}`);
+      else console.warn(`Telegram order notification skipped: ${number}`);
+    } catch (notificationError) {
+      console.error('Order created but Telegram notification failed:', notificationError);
+    }
 
-    return NextResponse.json({ success: true, orderNumber: order.number, subtotal, discount: 0, deliveryAmount: null, total: subtotal, requiresManagerConfirmation: true, hasRequestOnlyItems: items.some((item) => item.unitPrice == null) }, { status: 201 });
+    return NextResponse.json({ success: true, orderNumber: order.number, ...totals, discount: 0, deliveryAmount: null, requiresManagerConfirmation: true }, { status: 201 });
   } catch (error) {
     console.error('Order request failed:', error);
     const response = apiError(error);
