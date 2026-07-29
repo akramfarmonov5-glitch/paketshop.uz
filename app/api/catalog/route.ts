@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabase, hasSupabaseCredentials } from '../../../lib/supabaseClient';
-import { getLocalizedText } from '../../../lib/i18nUtils';
-import { productSlug } from '../../../lib/slugify';
-import { SITE_URL } from '../../../lib/site';
+import { legacyIdFromSku } from '@/lib/domain/catalogMapping';
+import { db } from '@/lib/server/db';
+import { SITE_URL } from '@/lib/site';
 
 const BASE_URL = SITE_URL;
 
@@ -22,35 +21,58 @@ function cdata(text: string): string {
 }
 
 export async function GET() {
-  if (!hasSupabaseCredentials) {
-    return NextResponse.json(
-      { error: 'Supabase credentials missing' },
-      { status: 500 }
-    );
-  }
-
   try {
-    const { data: products, error } = await supabase.from('products').select('*');
-    if (error) throw error;
+    const products = await db.product.findMany({
+      where: {
+        status: 'ACTIVE',
+        publicPrice: { gt: 0 },
+        priceMode: { in: ['PUBLIC_EXACT', 'FROM_PRICE'] },
+        media: { some: {} },
+      },
+      select: {
+        sku: true,
+        legacySku: true,
+        slugUz: true,
+        publicPrice: true,
+        availabilityStatus: true,
+        translations: {
+          where: { locale: 'uz' },
+          select: { name: true, shortDescription: true, description: true },
+          take: 1,
+        },
+        media: {
+          select: { media: { select: { url: true } } },
+          orderBy: [{ primary: 'desc' }, { sortOrder: 'asc' }],
+          take: 1,
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 5000,
+    });
 
-    const xmlItems = (products || []).map((product) => {
-      const name = getLocalizedText(product.name, 'uz') || 'Mahsulot';
-      const description = getLocalizedText(product.shortDescription || product.description || product.name, 'uz') || name;
-      const slug = productSlug({ id: product.id, name: product.name, slug: product.slug }, 'uz');
-      const inStock = product.stock === undefined || product.stock === null || Number(product.stock) > 0;
-      const googleCategory = product.googleProductCategory || 'Home & Garden > Household Supplies';
+    const xmlItems = products.map((product) => {
+      const translation = product.translations[0];
+      const name = translation?.name || product.sku;
+      const description =
+        translation?.shortDescription
+        || translation?.description
+        || name;
+      const legacyId = legacyIdFromSku(product.legacySku);
+      const slug = legacyId ? `${product.slugUz}-${legacyId}` : product.slugUz;
+      const inStock = ['IN_STOCK', 'LOW_STOCK'].includes(product.availabilityStatus);
+      const googleCategory = 'Home & Garden > Household Supplies';
 
       return `
     <item>
-      <g:id>${product.id}</g:id>
+      <g:id>${escapeXml(product.sku)}</g:id>
       <g:title>${cdata(name)}</g:title>
       <g:description>${cdata(description)}</g:description>
       <g:link>${BASE_URL}/uz/product/${escapeXml(slug)}</g:link>
-      <g:image_link>${escapeXml(product.image || '')}</g:image_link>
+      <g:image_link>${escapeXml(product.media[0].media.url)}</g:image_link>
       <g:brand>PaketShop</g:brand>
       <g:condition>new</g:condition>
-      <g:availability>${inStock ? 'in stock' : 'out of stock'}</g:availability>
-      <g:price>${Number(product.price || 0)} UZS</g:price>
+      <g:availability>${inStock ? 'in_stock' : 'out_of_stock'}</g:availability>
+      <g:price>${Number(product.publicPrice)} UZS</g:price>
       <g:google_product_category>${escapeXml(googleCategory)}</g:google_product_category>
     </item>`;
     }).join('');
@@ -71,8 +93,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
     });
-  } catch (err: any) {
-    console.error('Catalog Feed Error:', err);
+  } catch (error) {
+    console.error('Catalog Feed Error:', error);
     return NextResponse.json(
       { error: 'Failed to generate feed' },
       { status: 500 }

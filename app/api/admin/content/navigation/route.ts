@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { normalizeNavigationSettings } from '@/lib/siteSettings';
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         },
       });
     });
+    revalidateTag('site-settings', { expire: 0 });
     revalidatePath('/uz', 'layout');
     revalidatePath('/ru', 'layout');
     return NextResponse.json({ success: true, navigationSettings });

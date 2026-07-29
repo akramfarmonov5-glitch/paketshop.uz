@@ -102,7 +102,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         take: 5000,
       }),
       db.category.findMany({
-        where: { active: true },
+        where: { active: true, products: { some: { status: 'ACTIVE' } } },
         select: { slugUz: true, slugRu: true, updatedAt: true },
         orderBy: { sortOrder: 'asc' },
         take: 500,

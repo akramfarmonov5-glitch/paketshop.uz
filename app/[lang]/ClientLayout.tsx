@@ -1,21 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import CartSidebar from '../../components/CartSidebar';
 import MobileNav from '../../components/MobileNav';
-import SearchModal from '../../components/SearchModal';
-import AuthModal from '../../components/AuthModal';
-import AIChatAssistant from '../../components/AIChatAssistant';
-import InstallPWA from '../../components/InstallPWA';
 import MetaPixel from '../../components/MetaPixel';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { useGlobalData } from '../../context/GlobalContext';
 import { usePathname, useRouter } from 'next/navigation';
 import type { NavigationSettings } from '../../types';
+
+const SearchModal = dynamic(() => import('../../components/SearchModal'), { ssr: false });
+const AuthModal = dynamic(() => import('../../components/AuthModal'), { ssr: false });
+const AIChatAssistant = dynamic(() => import('../../components/AIChatAssistant'), { ssr: false });
+const InstallPWA = dynamic(() => import('../../components/InstallPWA'), { ssr: false });
 
 export default function ClientLayout({
   children,
@@ -30,7 +31,6 @@ export default function ClientLayout({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toggleCart } = useCart();
   const { user } = useAuth();
-  const { products } = useGlobalData();
   const pathname = usePathname() || '/';
   const router = useRouter();
 
@@ -88,7 +88,7 @@ export default function ClientLayout({
         />
       )}
 
-      {!isAdmin && <AIChatAssistant products={products} />}
+      {!isAdmin && <AIChatAssistant />}
 
       <SearchModal
         isOpen={isSearchOpen}

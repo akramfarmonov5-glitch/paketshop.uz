@@ -18,8 +18,8 @@
 - [x] Seed roles, settings and category tree
 - [x] Authenticated category and product/variant/price-tier CRUD APIs
 - [x] Auth.js admin category/product UI integration
-- [x] Variant and price-tier admin editor (attribute editor and S3 media UI still pending)
-- [ ] Media adapter and upload validation
+- [x] Variant and price-tier admin editor (attribute editor still pending)
+- [x] Cloudinary signed media adapter, server-side image inspection and upload validation
 - [x] CSV/XLSX template, dry-run, row errors, commit and import log
 - [x] Import rollback with per-row before-snapshots and admin import history (source-file retention still pending)
 - [x] Verified 1000-product import (acceptance criterion 4): batched commit runs in ~9s
@@ -32,10 +32,10 @@
 - [ ] Uzbek/Russian translation files; remove English MVP paths
 - [x] Wholesale visual system and homepage
 - [x] Paginated public catalog compatibility route
-- [x] Prisma-backed category tree and catalog adapter cutover (legacy fallback retained)
+- [x] Prisma-backed category tree, public catalog and product detail cutover
 - [x] URL-based MVP search, availability, category, sorting and pagination
 - [x] PostgreSQL trigram search with uz/ru transliteration, typo tolerance, suggest API and search analytics
-- [x] Prisma product detail page with packaging, tier prices and Telegram deep link (variant selector pending)
+- [x] Prisma product detail page with variant selector, packaging, tier prices and Telegram deep link
 - [x] Prisma catalog/detail add-to-cart with stable product IDs and sale-unit quantities
 - [x] B2B landing pages and start bundles
 
@@ -50,6 +50,6 @@
 
 - [x] Admin-managed redirect manager (create/toggle/delete, 301/302/410, locale-aware catch-all resolution)
 - [x] SEO schemas, localized sitemap/canonical/hreflang and noindex rules
-- [x] Unit tests (58) and Playwright E2E coverage (46 tests: search, filters, product, cart, order request, admin pipeline, B2B landings, i18n, redirects, mobile)
+- [x] Unit tests and Playwright E2E coverage (search, filters, product, cart, order request, admin pipeline, B2B landings, i18n, redirects, mobile)
 - [x] Backup/restore runbook and production deployment guide
 - [ ] Lighthouse and accessibility pass

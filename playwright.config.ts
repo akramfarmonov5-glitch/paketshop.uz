@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+const browserChannel = process.env.E2E_BROWSER_CHANNEL as 'chrome' | 'msedge' | undefined;
+const browserOptions = browserChannel ? { channel: browserChannel } : {};
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,8 +21,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /responsive\.spec\.ts/ },
-    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /responsive\.spec\.ts/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...browserOptions }, testIgnore: /responsive\.spec\.ts/ },
+    { name: 'mobile', use: { ...devices['Pixel 7'], ...browserOptions }, testMatch: /responsive\.spec\.ts/ },
   ],
   webServer: {
     command: 'npm run dev',

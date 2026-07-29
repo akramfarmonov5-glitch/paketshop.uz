@@ -1,4 +1,5 @@
 import 'server-only';
+import { unstable_cache } from 'next/cache';
 import { DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATION } from '@/constants';
 import {
   normalizeHeroContent,
@@ -6,7 +7,7 @@ import {
 } from '@/lib/siteSettings';
 import type { HeroContent, NavigationSettings } from '@/types';
 
-async function readSetting(key: string): Promise<unknown> {
+const readSetting = unstable_cache(async (key: string): Promise<unknown> => {
   if (!process.env.DATABASE_URL) return null;
   try {
     const { db } = await import('@/lib/server/db');
@@ -15,7 +16,7 @@ async function readSetting(key: string): Promise<unknown> {
     console.error(`Could not read site setting "${key}":`, error);
     return null;
   }
-}
+}, ['site-settings'], { revalidate: 300, tags: ['site-settings'] });
 
 export async function getHeroContentSetting(): Promise<HeroContent> {
   const value = await readSetting('hero_content');

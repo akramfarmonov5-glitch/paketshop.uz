@@ -32,6 +32,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     });
     revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ category });
   } catch (error) {
     console.error('Admin category update failed:', error);
@@ -51,6 +52,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     });
     revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Admin category archive failed:', error);

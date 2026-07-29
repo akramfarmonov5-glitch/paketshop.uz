@@ -6,6 +6,7 @@ export interface LocalizedString {
 export interface Product {
   id: number;
   catalogId?: string;
+  variantId?: string;
   sku?: string;
   legacySku?: string;
   name: string | LocalizedString;
@@ -39,6 +40,7 @@ export interface Category {
   slug: string | LocalizedString;
   image: string;
   description?: string | LocalizedString;
+  productCount?: number;
 }
 
 export interface HeroContent {

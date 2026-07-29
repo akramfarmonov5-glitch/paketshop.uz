@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, User, MessageCircle, Send, Loader2 } from 'lucide-react';
 import { hasSupabaseCredentials, supabase } from '../lib/supabaseClient';
@@ -33,7 +33,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // MOCK fallback for when DB isn't configured yet
-  const FAKE_REVIEWS: Review[] = [
+  const fakeReviews = useMemo<Review[]>(() => [
     {
       id: 'fake-1',
       product_id: productId,
@@ -50,17 +50,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       comment: 'Juda chiroyli dizayn, lekin yetkazib berish bir oz kechikdi.',
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
     }
-  ];
+  ], [productId]);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       if (!hasSupabaseCredentials) {
-        setReviews(FAKE_REVIEWS);
+        setReviews(fakeReviews);
         setLoading(false);
         return;
       }
@@ -73,7 +69,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
 
       if (error) {
         console.warn("Could not fetch reviews:", error);
-        setReviews(FAKE_REVIEWS);
+        setReviews(fakeReviews);
       } else if (data && data.length > 0) {
         setReviews(data as Review[]);
       } else {
@@ -81,11 +77,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       }
     } catch (e) {
       console.error(e);
-      setReviews(FAKE_REVIEWS);
+      setReviews(fakeReviews);
     } finally {
       setLoading(false);
     }
-  };
+  }, [fakeReviews, productId]);
+
+  useEffect(() => {
+    void fetchReviews();
+  }, [fetchReviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +121,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       setComment('');
       setRating(5);
       setShowForm(false);
-    } catch (error) {
+    } catch {
       showToast(t('error_occurred'), "error");
     } finally {
       setIsSubmitting(false);

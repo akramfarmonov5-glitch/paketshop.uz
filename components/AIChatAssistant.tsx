@@ -1,9 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff, Volume2, Headphones } from 'lucide-react';
-import { Product } from '../types';
-import { getLocalizedText } from '../lib/i18nUtils';
 import { useLanguage } from '../context/LanguageContext';
 
 interface Message {
@@ -11,11 +9,7 @@ interface Message {
   text: string;
 }
 
-interface AIChatAssistantProps {
-  products: Product[];
-}
-
-const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
+const AIChatAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -58,7 +52,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
   }, [isLoading]);
 
   // Helper methods to safely start/stop recognition
-  const startRecognition = () => {
+  const startRecognition = useCallback(() => {
     if (!recognitionRef.current) return;
     recognitionRef.current.lang = lang === 'uz' ? 'uz-UZ' : lang === 'ru' ? 'ru-RU' : 'en-US';
     try {
@@ -66,16 +60,16 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     } catch (e) {
       console.warn("Speech recognition start warning:", e);
     }
-  };
+  }, [lang]);
 
-  const stopRecognition = () => {
+  const stopRecognition = useCallback(() => {
     if (!recognitionRef.current) return;
     try {
       recognitionRef.current.stop();
     } catch (e) {
       console.warn("Speech recognition stop warning:", e);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -118,7 +112,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       
       recognitionRef.current = rec;
     }
-  }, [lang]);
+  }, [startRecognition]);
 
   // Voice mode toggle effects
   useEffect(() => {
@@ -137,7 +131,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       }
       setIsPlayingAudio(false);
     }
-  }, [isVoiceMode]);
+  }, [isVoiceMode, startRecognition, stopRecognition]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -149,7 +143,7 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
       }
       setIsPlayingAudio(false);
     }
-  }, [isOpen]);
+  }, [isOpen, stopRecognition]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -213,12 +207,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
     setIsRegistered(true);
   };
 
-  const getCatalogContext = () => {
-    return products.map(p =>
-      `- ${getLocalizedText(p.name, 'uz')} (${getLocalizedText(p.category, 'uz')}): ${p.formattedPrice}. ${getLocalizedText(p.shortDescription, 'uz') || ''}`
-    ).join('\n').slice(0, 12_000);
-  };
-
   const handleSend = async (overrideText?: string | React.MouseEvent) => {
     const userMessage = (overrideText && typeof overrideText === 'string') ? overrideText : input;
     if (!userMessage.trim()) return;
@@ -242,7 +230,6 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ products }) => {
         body: JSON.stringify({
           message: userMessage,
           history: history,
-          catalogContext: getCatalogContext(),
           customerName: formData.name,
           language: lang,
           voiceMode: isVoiceMode

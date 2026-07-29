@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     });
     revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
     console.error('Admin category create failed:', error);

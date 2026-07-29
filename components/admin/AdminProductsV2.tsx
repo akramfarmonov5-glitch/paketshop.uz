@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, Edit3, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, Edit3, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import { slugify } from '@/lib/slugify';
 import { fetchWithTimeout } from '@/lib/client/fetchWithTimeout';
 import ProductVariantTierEditor from './ProductVariantTierEditor';
@@ -66,14 +66,16 @@ const initialForm: ProductForm = {
 const fieldLabel = 'mb-1 block text-xs font-medium text-slate-500';
 const fieldInput = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5';
 const saleUnitLabels: Record<string, string> = { PACK: '1 qadoq', CARTON: '1 korobka', PIECE: '1 dona', ROLL: '1 rulon', KILOGRAM: '1 kg' };
+const PAGE_SIZE = 50;
 
 export default function AdminProductsV2() {
   const [products, setProducts] = useState<ProductRecord[]>([]); const [categories, setCategories] = useState<CategoryOption[]>([]); const [form, setForm] = useState(initialForm); const [editing, setEditing] = useState<ProductRecord | null>(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState(''); const [query, setQuery] = useState('');
   const [variants, setVariants] = useState<VariantDraft[]>([]); const [tiers, setTiers] = useState<TierDraft[]>([]); const [media, setMedia] = useState<MediaDraft[]>([]); const [showArchived, setShowArchived] = useState(false);
+  const [page, setPage] = useState(1); const [pageCount, setPageCount] = useState(1); const [total, setTotal] = useState(0); const [archivedCount, setArchivedCount] = useState(0);
   const loadController = useRef<AbortController | null>(null);
   const categoryName = useMemo(() => new Map(categories.map((category) => [category.id, category.translations.find((translation) => translation.locale === 'uz')?.name || category.id])), [categories]);
 
-  const load = useCallback(async (searchQuery: string) => {
+  const load = useCallback(async (searchQuery: string, nextPage = 1, includeArchived = false) => {
     loadController.current?.abort();
     const controller = new AbortController();
     loadController.current = controller;
@@ -82,7 +84,7 @@ export default function AdminProductsV2() {
 
     try {
       const [productsResponse, categoriesResponse] = await Promise.all([
-        fetchWithTimeout(`/api/admin/products?q=${encodeURIComponent(searchQuery)}`, { signal: controller.signal }),
+        fetchWithTimeout(`/api/admin/products?q=${encodeURIComponent(searchQuery)}&page=${nextPage}&pageSize=${PAGE_SIZE}&includeArchived=${includeArchived}`, { signal: controller.signal }),
         fetchWithTimeout('/api/admin/categories', { signal: controller.signal }),
       ]);
       const productsResult = await productsResponse.json();
@@ -91,6 +93,10 @@ export default function AdminProductsV2() {
         throw new Error(productsResult.error || categoriesResult.error || 'Ma’lumot yuklanmadi');
       }
       setProducts(productsResult.products);
+      setPage(productsResult.page);
+      setPageCount(productsResult.pageCount);
+      setTotal(productsResult.total);
+      setArchivedCount(productsResult.archivedTotal);
       setCategories(categoriesResult.categories);
       setForm((current) => ({ ...current, categoryId: current.categoryId || categoriesResult.categories[0]?.id || '' }));
     } catch (loadError) {
@@ -102,7 +108,7 @@ export default function AdminProductsV2() {
   }, []);
 
   useEffect(() => {
-    void load('');
+    void load('', 1, false);
     return () => loadController.current?.abort();
   }, [load]);
 
@@ -128,7 +134,7 @@ export default function AdminProductsV2() {
     const unitsPerPack = Number(form.unitsPerPack);
     const packsPerCarton = Number(form.packsPerCarton);
     const payload = { sku: form.sku, slugUz, slugRu, legacySku: editing?.legacySku ?? null, categoryId: form.categoryId, status: 'ACTIVE', availabilityStatus: form.availabilityStatus, priceMode: form.priceMode, baseUnit: 'PIECE', saleUnit: form.saleUnit, unitsPerPack, packsPerCarton, unitsPerCarton: unitsPerPack * packsPerCarton, minimumOrderQuantity: Number(form.minimumOrderQuantity), orderStep: Number(form.orderStep), publicPrice: form.publicPrice === '' ? null : Number(form.publicPrice), originCountry: form.originCountry || null, name: { uz: form.nameUz, ru: form.nameRu }, shortDescription: { uz: form.shortDescriptionUz, ru: form.shortDescriptionRu }, description: { uz: form.descriptionUz, ru: form.descriptionRu }, isFeatured: editing?.isFeatured || false, isNew: editing?.isNew || false, isBestSeller: editing?.isBestSeller || false, isSeasonal: editing?.isSeasonal || false, variants: variants.map(draftToVariantPayload), priceTiers: tiers.map(draftToTierPayload), mediaIds: media.map((entry) => entry.id) };
-    try { const response = await fetchWithTimeout(editing ? `/api/admin/products/${editing.id}` : '/api/admin/products', { method: editing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, 30_000); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Mahsulot saqlanmadi'); reset(); await load(query); } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Xatolik'); } finally { setSaving(false); } };
+    try { const response = await fetchWithTimeout(editing ? `/api/admin/products/${editing.id}` : '/api/admin/products', { method: editing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }, 30_000); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Mahsulot saqlanmadi'); reset(); await load(query, page, showArchived); } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Xatolik'); } finally { setSaving(false); } };
   // Faol mahsulot arxivlanadi (qaytarish mumkin), arxivlangani butunlay o'chiriladi.
   const archive = async (product: ProductRecord) => {
     const isArchived = product.status === 'ARCHIVED';
@@ -140,17 +146,16 @@ export default function AdminProductsV2() {
     setError('');
     try {
       const response = await fetchWithTimeout(`/api/admin/products/${product.id}${isArchived ? '?permanent=true' : ''}`, { method: 'DELETE' }, 30_000);
-      if (response.ok) await load(query);
+      if (response.ok) await load(query, products.length === 1 && page > 1 ? page - 1 : page, showArchived);
       else setError(isArchived ? 'Mahsulotni o‘chirib bo‘lmadi' : 'Mahsulotni arxivlab bo‘lmadi');
     } catch (archiveError) {
       setError(archiveError instanceof Error ? archiveError.message : 'So‘rov bajarilmadi');
     }
   };
 
-  const visibleProducts = showArchived ? products : products.filter((product) => product.status !== 'ARCHIVED');
-  const archivedCount = products.filter((product) => product.status === 'ARCHIVED').length;
+  const visibleProducts = products;
 
-  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-bold">B2B mahsulotlar</h2><p className="text-sm text-slate-500">SKU, qadoq, korobka va narx birligi</p></div><div className="flex flex-wrap items-center gap-2">{archivedCount > 0 && <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600"><input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-red-600" />Arxivlanganlar ({archivedCount})</label>}<input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void load(query); }} placeholder="SKU yoki nom" className="rounded-xl border border-slate-200 bg-white px-3 py-2" /><button type="button" onClick={() => void load(query)} aria-label="Mahsulotlarni yangilash" className="rounded-xl border border-slate-200 p-2.5"><RefreshCw size={18} /></button></div></div>
+  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-bold">B2B mahsulotlar</h2><p className="text-sm text-slate-500">SKU, qadoq, korobka va narx birligi · jami {total}</p></div><div className="flex flex-wrap items-center gap-2">{archivedCount > 0 && <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600"><input type="checkbox" checked={showArchived} onChange={(event) => { const checked = event.target.checked; setShowArchived(checked); void load(query, 1, checked); }} className="h-4 w-4 rounded border-slate-300 text-red-600" />Arxivlanganlar ({archivedCount})</label>}<input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') void load(query, 1, showArchived); }} placeholder="SKU yoki nom" className="rounded-xl border border-slate-200 bg-white px-3 py-2" /><button type="button" onClick={() => void load(query, page, showArchived)} aria-label="Mahsulotlarni yangilash" className="rounded-xl border border-slate-200 p-2.5"><RefreshCw size={18} /></button></div></div>
     {error && <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
     <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-4"><div className="mb-4 flex items-center justify-between"><h3 className="font-semibold">{editing ? `${editing.sku} ni tahrirlash` : 'Yangi mahsulot'}</h3>{editing && <button type="button" onClick={reset} className="p-1 text-slate-500"><X size={18} /></button>}</div><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
       <label className="block"><span className={fieldLabel}>SKU (mahsulot kodi) *</span><input required value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value.toUpperCase() })} placeholder="masalan ST-250-KR" className={`${fieldInput} font-mono`} /></label>
@@ -204,5 +209,6 @@ export default function AdminProductsV2() {
       </div>
     </form>
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">{loading ? <div className="p-10 text-center"><Loader2 className="mx-auto animate-spin" /></div> : <table className="w-full min-w-[800px] text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-3">SKU</th><th className="p-3">Mahsulot</th><th className="p-3">Kategoriya</th><th className="p-3">Qadoq / korobka</th><th className="p-3">Narx</th><th className="p-3">Variant / daraja</th><th className="p-3">Holat</th><th className="p-3"></th></tr></thead><tbody className="divide-y divide-slate-100">{visibleProducts.map((product) => <tr key={product.id} className={product.status === 'ARCHIVED' ? 'bg-slate-50 text-slate-400' : ''}><td className="p-3 font-mono">{product.sku}</td><td className="p-3 font-medium">{product.translations.find((translation) => translation.locale === 'uz')?.name}{product.status === 'ARCHIVED' && <span className="ml-2 rounded-md bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">Arxivlangan</span>}</td><td className="p-3 text-slate-500">{categoryName.get(product.categoryId)}</td><td className="p-3">{product.unitsPerPack} / {product.unitsPerCarton}</td><td className="p-3">{product.publicPrice == null ? 'So‘rov' : Number(product.publicPrice).toLocaleString('uz-UZ')}</td><td className="p-3 text-slate-500">{product.variants?.length || 0} / {product.priceTiers?.length || 0}</td><td className="p-3 text-slate-500">{product.availabilityStatus}</td><td className="p-3"><div className="flex gap-2"><button onClick={() => edit(product)} className="p-2 text-blue-400" aria-label="Tahrirlash"><Edit3 size={17} /></button><button onClick={() => void archive(product)} className="p-2 text-red-400 hover:text-red-600" aria-label={product.status === 'ARCHIVED' ? `${product.sku} ni butunlay o‘chirish` : `${product.sku} ni arxivlash`} title={product.status === 'ARCHIVED' ? 'Butunlay o‘chirish' : 'Arxivlash'}>{product.status === 'ARCHIVED' ? <Trash2 size={17} /> : <Archive size={17} />}</button></div></td></tr>)}</tbody></table>}</div>
+    {pageCount > 1 && <nav aria-label="Mahsulot sahifalari" className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3"><p className="text-sm text-slate-500">{page} / {pageCount}-sahifa</p><div className="flex gap-2"><button type="button" disabled={loading || page <= 1} onClick={() => void load(query, page - 1, showArchived)} className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-40"><ChevronLeft size={16} />Oldingi</button><button type="button" disabled={loading || page >= pageCount} onClick={() => void load(query, page + 1, showArchived)} className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium disabled:opacity-40">Keyingi<ChevronRight size={16} /></button></div></nav>}
   </div>;
 }

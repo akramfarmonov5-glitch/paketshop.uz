@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Zap } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const PromoBanner: React.FC = () => {
-  const { isDark } = useTheme();
   const { t } = useLanguage();
 
   // Countdown: 7 days from now, resets every week

@@ -8,13 +8,10 @@ const InstallPWA: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     // Check if already installed
     const isAppStandalone = (typeof window !== 'undefined' ? window.matchMedia : function(){return {matches:false}})('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-    setIsStandalone(isAppStandalone);
-
     if (isAppStandalone) return;
 
     // Detect iOS

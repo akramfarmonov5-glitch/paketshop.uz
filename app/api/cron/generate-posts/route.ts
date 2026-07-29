@@ -54,12 +54,12 @@ export async function GET(req: Request) {
     );
   }
 
-  const { searchParams } = new URL(req.url);
-  const secret = searchParams.get('secret');
   const authHeader = req.headers.get('authorization');
-  const bearerToken = authHeader ? authHeader.split(' ')[1] : null;
+  const bearerToken = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice('Bearer '.length)
+    : '';
 
-  const provided = bearerToken || secret || '';
+  const provided = bearerToken;
   const providedBuf = Buffer.from(provided);
   const expectedBuf = Buffer.from(cronSecret);
   const valid =

@@ -110,7 +110,9 @@ export default function HomeContent({
 }: HomeContentProps) {
   const locale = lang === "ru" ? "ru" : "uz";
   const t = text[locale];
-  const shownCategories = categories.slice(0, 8);
+  const shownCategories = categories
+    .filter((category) => category.productCount == null || category.productCount > 0)
+    .slice(0, 8);
   const shownProducts = products.slice(0, 8);
   const heroBadge = getLocalizedText(heroContent.badge, locale) || t.eyebrow;
   const heroTitle = getLocalizedText(heroContent.title, locale) || t.title;
@@ -203,6 +205,8 @@ export default function HomeContent({
                 name={getLocalizedText(category.name, locale)}
                 slug={slug}
                 image={category.image || undefined}
+                productCount={category.productCount}
+                countLabel={locale === 'ru' ? 'товаров' : 'ta mahsulot'}
               />
             );
           })}

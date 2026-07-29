@@ -3,6 +3,7 @@ import { fetchGlobalData } from '../../../../lib/fetchGlobalData';
 import { findCategoryByValue, getCategorySlug } from '../../../../lib/categoryUtils';
 import { getLocalizedText } from '../../../../lib/i18nUtils';
 import { findActiveRedirect } from '../../../../lib/server/redirects';
+import { getActiveCategoryProductCount } from '../../../../lib/server/prismaCatalog';
 import { SITE_NAME, SITE_URL } from '../../../../lib/site';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 
@@ -28,6 +29,7 @@ export async function generateMetadata({
     }
 
     const name = getLocalizedText(category.name, activeLang);
+    const productCount = await getActiveCategoryProductCount(slug).catch(() => null);
     const description =
       getLocalizedText(category.description, activeLang) ||
       `${name} - PaketShop.uz da sifatli mahsulotlar`;
@@ -51,6 +53,7 @@ export async function generateMetadata({
         url: `${SITE_URL}/${activeLang}/category/${getCategorySlug(category, activeLang)}`,
         images: category.image ? [{ url: category.image, alt: name }] : undefined,
       },
+      ...(productCount === 0 ? { robots: { index: false, follow: true } } : {}),
     };
   } catch {
     return { title: 'Kategoriya | PaketShop.uz' };
@@ -116,6 +119,12 @@ export default async function CategoryPage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionMarkup) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbMarkup) }} />
+      <header className="border-b border-slate-200 bg-white px-4 pb-8 pt-28 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="text-3xl font-bold text-slate-950">{name}</h1>
+          <p className="mt-3 max-w-3xl text-slate-600">{description}</p>
+        </div>
+      </header>
       <CategoryContent
         lang={activeLang}
         slug={canonicalSlug}

@@ -70,7 +70,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onBack, onNavigateToProduct }
     };
 
     fetchUserData();
-  }, [user]);
+  }, [user, onBack]);
 
   if (!user) return null;
 

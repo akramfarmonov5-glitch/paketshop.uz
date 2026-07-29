@@ -61,7 +61,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       {/* Toast Container */}
       <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none" style={{ maxWidth: '420px' }}>
-        {toasts.map((toast, index) => (
+        {toasts.map((toast) => (
           <div
             key={toast.id}
             className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border backdrop-blur-xl shadow-2xl ${TOAST_STYLES[toast.type]}`}

@@ -363,6 +363,17 @@ export interface PrismaProductDetail {
   images: string[];
   piecePrice: number | null;
   packPrice: number;
+  variants: Array<{
+    id: string;
+    sku: string;
+    color: string | null;
+    size: string | null;
+    volumeMl: number | null;
+    thicknessMicron: number | null;
+    unitsPerPack: number | null;
+    price: number | null;
+    availabilityStatus: string;
+  }>;
   priceTiers: Array<{ minQuantity: number; maxQuantity: number | null; price: number; priceUnit: string }>;
   related: CatalogCard[];
 }
@@ -399,6 +410,10 @@ export const getPrismaProductDetail = cache(async function getPrismaProductDetai
       include: { media: { select: { url: true } } },
     },
     priceTiers: { orderBy: { minQuantity: 'asc' } },
+    variants: {
+      where: { active: true },
+      orderBy: { sku: 'asc' },
+    },
   } satisfies Prisma.ProductInclude;
 
   const product = await db.product.findFirst({
@@ -431,6 +446,17 @@ export const getPrismaProductDetail = cache(async function getPrismaProductDetai
     images: product.media.map((entry) => entry.media.url),
     packPrice: toPriceNumber(product.publicPrice?.toString()),
     piecePrice: approximatePiecePrice(product.publicPrice?.toString(), product.unitsPerPack),
+    variants: product.variants.map((variant) => ({
+      id: variant.id,
+      sku: variant.sku,
+      color: variant.color,
+      size: variant.size,
+      volumeMl: variant.volumeMl,
+      thicknessMicron: variant.thicknessMicron,
+      unitsPerPack: variant.unitsPerPack,
+      price: variant.price == null ? null : toPriceNumber(variant.price.toString()),
+      availabilityStatus: variant.availabilityStatus,
+    })),
     priceTiers: product.priceTiers.map((tier) => ({
       minQuantity: tier.minQuantity,
       maxQuantity: tier.maxQuantity,
@@ -439,6 +465,22 @@ export const getPrismaProductDetail = cache(async function getPrismaProductDetai
     })),
     related: related.map(toCard),
   };
+});
+
+export const getActiveCategoryProductCount = cache(async function getActiveCategoryProductCount(
+  slug: string,
+): Promise<number | null> {
+  const decoded = decodeURIComponent(slug).trim().slice(0, 200);
+  const category = await db.category.findFirst({
+    where: {
+      active: true,
+      OR: [{ slugUz: decoded }, { slugRu: decoded }],
+    },
+    select: {
+      _count: { select: { products: { where: { status: 'ACTIVE' } } } },
+    },
+  });
+  return category?._count.products ?? null;
 });
 
 export function catalogCardUrlSlug(card: CatalogCard, locale: 'uz' | 'ru'): string {

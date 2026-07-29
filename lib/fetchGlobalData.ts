@@ -51,7 +51,10 @@ export const fetchGlobalData = cache(async function fetchGlobalData(): Promise<G
     const [dbCategories, dbProducts, dbHeroSetting, dbNavigationSetting] = await Promise.all([
       db.category.findMany({
         where: { active: true },
-        include: { translations: true },
+        include: {
+          translations: true,
+          _count: { select: { products: { where: { status: 'ACTIVE' } } } },
+        },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       }),
       db.product.findMany({
@@ -78,6 +81,7 @@ export const fetchGlobalData = cache(async function fetchGlobalData(): Promise<G
             slug: { uz: c.slugUz, ru: c.slugRu },
             image: c.imageUrl || '',
             description: { uz: uzTrans?.description || '', ru: ruTrans?.description || '' },
+            productCount: c._count.products,
           };
         })
       : MOCK_CATEGORIES;

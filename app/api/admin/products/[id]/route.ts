@@ -47,7 +47,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_UPDATE', entityType: 'Product', entityId: id, before: auditJson(before), after: auditJson(mergedInput), ip: request.headers.get('x-real-ip') } });
       return transaction.product.findUniqueOrThrow({ where: { id }, include: { translations: true, variants: true, priceTiers: true } });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml'); revalidatePath('/api/catalog');
     return NextResponse.json({ product });
   } catch (error) {
     console.error('Admin product update failed:', error);
@@ -85,7 +87,9 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         },
       });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml'); revalidatePath('/api/catalog');
     return NextResponse.json({ success: true, permanent });
   } catch (error) {
     console.error('Admin product delete failed:', error);

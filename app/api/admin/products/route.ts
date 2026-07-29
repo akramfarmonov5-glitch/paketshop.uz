@@ -16,22 +16,35 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, Number(searchParams.get('page') || 1));
   const pageSize = Math.min(100, Math.max(1, Number(searchParams.get('pageSize') || 50)));
   const query = (searchParams.get('q') || '').trim().slice(0, 100);
-  const where = query ? {
+  const includeArchived = searchParams.get('includeArchived') === 'true';
+  const searchWhere = query ? {
     OR: [
       { sku: { contains: query, mode: 'insensitive' as const } },
       { translations: { some: { name: { contains: query, mode: 'insensitive' as const } } } },
     ],
   } : {};
+  const where = {
+    ...searchWhere,
+    ...(includeArchived ? {} : { status: { not: 'ARCHIVED' as const } }),
+  };
 
-  const [products, total] = await db.$transaction([
+  const [products, total, archivedTotal] = await db.$transaction([
     db.product.findMany({
       where,
       include: { translations: true, variants: true, priceTiers: true, media: { include: { media: true }, orderBy: [{ primary: 'desc' }, { sortOrder: 'asc' }] }, category: { include: { translations: true } }, brand: true },
       orderBy: { createdAt: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
     }),
     db.product.count({ where }),
+    db.product.count({ where: { ...searchWhere, status: 'ARCHIVED' } }),
   ]);
-  return NextResponse.json({ products, total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) });
+  return NextResponse.json({
+    products,
+    total,
+    archivedTotal,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -53,7 +66,9 @@ export async function POST(request: NextRequest) {
       await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_CREATE', entityType: 'Product', entityId: created.id, after: auditJson(input), ip: request.headers.get('x-real-ip') } });
       return transaction.product.findUniqueOrThrow({ where: { id: created.id }, include: { translations: true, variants: true, priceTiers: true } });
     });
+    revalidatePath('/uz'); revalidatePath('/ru');
     revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+    revalidatePath('/sitemap.xml'); revalidatePath('/api/catalog');
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     console.error('Admin product create failed:', error);

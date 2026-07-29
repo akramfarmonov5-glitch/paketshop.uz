@@ -27,8 +27,8 @@
     "@google/genai": "^1.35.0",
     "@hookform/resolvers": "^5.4.0",
     "@next-auth/prisma-adapter": "^1.0.7",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
     "@supabase/supabase-js": "2.90.1",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
@@ -51,7 +51,7 @@
     "uuid": "11.1.1",
     "undici": "7.28.0",
     "ws": "8.21.0",
-    "@hono/node-server": "1.19.13"
+    "fast-uri": "4.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -66,11 +66,11 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "postcss": "8.5.23",
-    "prisma": "^7.8.0",
+    "prisma": "7.9.1",
     "sharp": "0.35.3",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.4",
+    "vite": "7.3.6",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.10"
   }

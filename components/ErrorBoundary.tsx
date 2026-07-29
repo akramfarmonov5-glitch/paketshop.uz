@@ -24,6 +24,10 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error, isRecovering: false };
   }
 
+  public componentDidMount() {
+    sessionStorage.removeItem('paketshop_chunk_recovered');
+  }
+
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
 
@@ -63,36 +67,36 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = '/uz';
   };
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-8">
-             <AlertTriangle className="text-red-500" size={48} />
+        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center text-slate-950">
+          <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-red-50">
+             <AlertTriangle className="text-red-600" size={48} />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h1 className="mb-4 text-3xl font-bold md:text-4xl">
             Texnik xatolik yuz berdi
           </h1>
-          <p className="text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-md leading-relaxed text-slate-600">
             {this.state.isRecovering
               ? 'Yangi versiya yuklanmoqda. Sahifa bir necha soniyada avtomatik yangilanadi.'
               : "Kechirasiz, tizimda kutilmagan nosozlik kuzatildi. Iltimos, sahifani yangilang yoki bosh sahifaga qayting."}
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+          <div className="flex w-full max-w-sm flex-col gap-4 sm:flex-row">
             <button 
               onClick={this.handleReload}
-              className="flex-1 flex items-center justify-center gap-2 bg-gold-400 hover:bg-gold-500 text-black font-bold py-3 px-6 rounded-xl transition-all"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-bold text-white transition hover:bg-red-700"
             >
               <RefreshCcw size={18} />
               Yangilash
             </button>
             <button 
               onClick={this.handleGoHome}
-              className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 font-medium text-slate-800 transition hover:border-red-400 hover:text-red-700"
             >
               <Home size={18} />
               Bosh sahifa
@@ -100,8 +104,8 @@ class ErrorBoundary extends Component<Props, State> {
           </div>
 
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <div className="mt-12 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-left max-w-2xl w-full overflow-auto">
-              <p className="text-red-400 font-mono text-sm whitespace-pre-wrap">
+            <div className="mt-12 w-full max-w-2xl overflow-auto rounded-xl border border-red-200 bg-red-50 p-4 text-left">
+              <p className="whitespace-pre-wrap font-mono text-sm text-red-700">
                 {this.state.error.toString()}
               </p>
             </div>

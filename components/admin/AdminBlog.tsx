@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BlogPost } from '../../types';
-import { Sparkles, Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Edit, X, Save } from 'lucide-react';
+import { Image as ImageIcon, Plus, Trash2, Calendar, Wand2, Search, Edit, X, Save } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { requestGeminiJson } from '../../lib/geminiApi';
 import { parseLocalizedObject, getLocalizedText } from '../../lib/i18nUtils';
@@ -18,6 +18,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeLang, setActiveLang] = useState<'uz' | 'ru'>('uz');
 
   const [formData, setFormData] = useState<any>({
@@ -28,6 +29,25 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
     seo: { title: '', description: '', keywords: [] },
     date: ''
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadPosts = async () => {
+      try {
+        const response = await fetch('/api/admin/content/blog', { signal: controller.signal });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Maqolalar yuklanmadi');
+        setPosts(Array.isArray(result.posts) ? result.posts : []);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        showToast(error instanceof Error ? error.message : 'Maqolalar yuklanmadi', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void loadPosts();
+    return () => controller.abort();
+  }, [setPosts, showToast]);
 
   const handleOpenAdd = () => {
     setFormData({
@@ -275,6 +295,7 @@ const AdminBlog: React.FC<AdminBlogProps> = ({ posts, setPosts }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {isLoading && <p className="text-sm text-slate-500">Maqolalar yuklanmoqda...</p>}
         {filteredPosts.map((post) => (
           <div key={post.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden group hover:shadow-md transition-all flex flex-col shadow-sm">
             <div className="aspect-video relative overflow-hidden">

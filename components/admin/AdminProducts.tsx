@@ -282,8 +282,6 @@ const AdminProducts: React.FC<AdminProductsProps> = ({ products, setProducts, ca
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formattedPrice = new Intl.NumberFormat('uz-UZ').format(Number(formData.price)) + ' UZS';
-
     const validImages = formData.images?.filter((url: string) => url.trim() !== '') || [];
     const mainImage = validImages.length > 0 ? validImages[0] : (formData.image || 'https://via.placeholder.com/400');
 

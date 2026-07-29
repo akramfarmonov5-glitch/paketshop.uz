@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/server/db';
@@ -48,6 +49,24 @@ function serializePost(row: Record<string, unknown>) {
       keywords: row.seo_keywords,
     },
   };
+}
+
+export async function GET() {
+  const session = await getAdminSession([...roles]);
+  if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  try {
+    const rows = await db.$queryRaw<Array<Record<string, unknown>>>(Prisma.sql`
+      SELECT *
+      FROM public.blog_posts
+      ORDER BY date DESC, id DESC
+      LIMIT 200
+    `);
+    return NextResponse.json({ posts: rows.map(serializePost) });
+  } catch (error) {
+    console.error('Admin blog load failed:', error);
+    return NextResponse.json({ error: 'Maqolalarni yuklab bo‘lmadi' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -112,6 +131,9 @@ export async function POST(request: NextRequest) {
       return saved;
     });
 
+    revalidatePath('/uz/blog');
+    revalidatePath('/ru/blog');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ post }, { status: input.id ? 200 : 201 });
   } catch (error) {
     console.error('Admin blog save failed:', error);
@@ -144,6 +166,11 @@ export async function DELETE(request: NextRequest) {
       });
       return before;
     });
+    if (deleted) {
+      revalidatePath('/uz/blog');
+      revalidatePath('/ru/blog');
+      revalidatePath('/sitemap.xml');
+    }
     return deleted
       ? NextResponse.json({ success: true })
       : NextResponse.json({ error: 'Not found' }, { status: 404 });

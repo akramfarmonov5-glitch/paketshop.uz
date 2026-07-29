@@ -10,7 +10,7 @@ interface BlogPostDetailProps {
 }
 
 const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack }) => {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   return (
     <div className="pt-24 pb-20 min-h-screen bg-black text-white">
       <article className="container mx-auto px-4 md:px-6 max-w-4xl">

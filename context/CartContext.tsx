@@ -19,7 +19,12 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const productKey = (product: Pick<Product, 'id' | 'catalogId'>) => product.catalogId || String(product.id);
+export const cartProductKey = (
+  product: Pick<Product, 'id' | 'catalogId' | 'variantId'>,
+) => {
+  const productId = product.catalogId || String(product.id);
+  return product.variantId ? `${productId}:${product.variantId}` : productId;
+};
 
 function quoteUnitPrice(product: Product): number {
   const packSize = Math.max(1, product.itemsPerPackage || 1);
@@ -60,12 +65,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const addToCart = (product: Product) => {
     const minimum = Math.max(1, product.minimumOrderQuantity || 1);
     const step = Math.max(1, product.orderStep || 1);
-    const key = productKey(product);
+    const key = cartProductKey(product);
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => productKey(item) === key);
+      const existingItem = prevCart.find((item) => cartProductKey(item) === key);
       if (existingItem) {
         return prevCart.map((item) =>
-          productKey(item) === key ? { ...item, quantity: item.quantity + step } : item
+          cartProductKey(item) === key ? { ...item, quantity: item.quantity + step } : item
         );
       }
       return [...prevCart, { ...product, quantity: minimum, quoteUnitPrice: quoteUnitPrice(product) }];
@@ -84,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const removeFromCart = (productId: string | number) => {
     setCart((prevCart) => {
-      const newCart = prevCart.filter((item) => productKey(item) !== String(productId));
+      const newCart = prevCart.filter((item) => cartProductKey(item) !== String(productId));
       if (newCart.length === 0) {
         setIsCartOpen(false);
       }
@@ -93,14 +98,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateQuantity = (productId: string | number, quantity: number) => {
-    const current = cart.find((item) => productKey(item) === String(productId));
+    const current = cart.find((item) => cartProductKey(item) === String(productId));
     const minimum = Math.max(1, current?.minimumOrderQuantity || 1);
     if (quantity < minimum) {
       removeFromCart(productId);
       return;
     }
     setCart((prevCart) => prevCart.map((item) => {
-      if (productKey(item) !== String(productId)) return item;
+      if (cartProductKey(item) !== String(productId)) return item;
       const step = Math.max(1, item.orderStep || 1);
       const normalizedQuantity = minimum + Math.max(0, Math.round((quantity - minimum) / step)) * step;
       return { ...item, quantity: normalizedQuantity };

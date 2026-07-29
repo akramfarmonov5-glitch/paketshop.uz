@@ -1,140 +1,130 @@
-import React, { useRef, useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+'use client';
+
+import { Image as ImageIcon, Loader2, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { fetchWithTimeout } from '@/lib/client/fetchWithTimeout';
 
 interface CloudinaryUploadProps {
-    onUpload: (url: string) => void;
-    currentImage?: string;
-    label?: string;
+  onUpload: (url: string) => void;
+  currentImage?: string;
+  label?: string;
 }
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'daazevmhg';
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'unsigned_preset';
+export default function CloudinaryUpload({
+  onUpload,
+  currentImage,
+  label = 'Rasm yuklash',
+}: CloudinaryUploadProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({
-    onUpload,
-    currentImage,
-    label = "Rasm yuklash"
-}) => {
-    const [isUploading, setIsUploading] = useState(false);
-    const [preview, setPreview] = useState<string | null>(currentImage || null);
-    const [error, setError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    setPreview(currentImage || null);
+  }, [currentImage]);
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            setError('Faqat rasm fayllari qabul qilinadi');
-            return;
-        }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) {
+      setError('Faqat JPG, PNG, WebP yoki AVIF rasm qabul qilinadi');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Rasm 5 MB dan kichik bo‘lishi kerak');
+      return;
+    }
 
-        // Validate file size (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            setError('Rasm 10MB dan kichik bo\'lishi kerak');
-            return;
-        }
+    setError(null);
+    setIsUploading(true);
+    const form = new FormData();
+    form.set('file', file);
 
-        setError(null);
-        setIsUploading(true);
+    try {
+      const response = await fetchWithTimeout(
+        '/api/admin/media',
+        { method: 'POST', body: form },
+        60_000,
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body?.media?.url) {
+        throw new Error(body?.error || 'Rasm yuklanmadi');
+      }
+      setPreview(body.media.url);
+      onUpload(body.media.url);
+    } catch (uploadError) {
+      console.error('Upload error:', uploadError);
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : 'Rasm yuklashda xatolik yuz berdi',
+      );
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET);
-            formData.append('folder', 'paketshop');
+  const handleRemove = () => {
+    setPreview(null);
+    onUpload('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-            const response = await fetch(
-                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-                {
-                    method: 'POST',
-                    body: formData,
-                }
-            );
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-sm text-slate-500">
+        <ImageIcon size={16} />
+        {label}
+      </label>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif"
+        onChange={(event) => void handleFileSelect(event)}
+        className="hidden"
+      />
 
-            if (!response.ok) {
-                throw new Error('Yuklashda xatolik yuz berdi');
-            }
-
-            const data = await response.json();
-            const optimizedUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto,w_1200/');
-
-            setPreview(optimizedUrl);
-            onUpload(optimizedUrl);
-        } catch (err) {
-            console.error('Upload error:', err);
-            setError('Rasm yuklashda xatolik. Qayta urinib ko\'ring.');
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    const handleRemove = () => {
-        setPreview(null);
-        onUpload('');
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    return (
-        <div className="space-y-2">
-            <label className="text-sm text-gray-400 flex items-center gap-2">
-                <ImageIcon size={16} />
-                {label}
-            </label>
-
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-            />
-
-            {preview ? (
-                <div className="relative group">
-                    <img
-                        src={preview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-xl border border-white/10"
-                    />
-                    <button
-                        type="button"
-                        onClick={handleRemove}
-                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-full h-48 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-gold-400/50 hover:bg-white/5 transition-all disabled:opacity-50"
-                >
-                    {isUploading ? (
-                        <>
-                            <Loader2 size={32} className="text-gold-400 animate-spin" />
-                            <span className="text-gray-400 text-sm">Yuklanmoqda...</span>
-                        </>
-                    ) : (
-                        <>
-                            <Upload size={32} className="text-gray-500" />
-                            <span className="text-gray-400 text-sm">Rasm tanlash uchun bosing</span>
-                            <span className="text-gray-500 text-xs">PNG, JPG, WEBP (max 10MB)</span>
-                        </>
-                    )}
-                </button>
-            )}
-
-            {error && (
-                <p className="text-red-400 text-sm">{error}</p>
-            )}
+      {preview ? (
+        <div className="group relative">
+          <img
+            src={preview}
+            alt="Yuklangan rasm"
+            className="h-48 w-full rounded-xl border border-slate-200 bg-slate-50 object-contain"
+          />
+          <button
+            type="button"
+            onClick={handleRemove}
+            aria-label="Rasmni olib tashlash"
+            className="absolute right-2 top-2 rounded-lg bg-red-600 p-2 text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
+          >
+            <X size={16} />
+          </button>
         </div>
-    );
-};
-
-export default CloudinaryUpload;
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="flex h-48 w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition hover:border-red-300 hover:bg-red-50/30 disabled:opacity-50"
+        >
+          {isUploading ? (
+            <>
+              <Loader2 size={32} className="animate-spin text-red-600" />
+              <span className="text-sm text-slate-500">Yuklanmoqda...</span>
+            </>
+          ) : (
+            <>
+              <Upload size={32} className="text-slate-400" />
+              <span className="text-sm text-slate-600">Rasm tanlash uchun bosing</span>
+              <span className="text-xs text-slate-400">JPG, PNG, WebP, AVIF (maks. 5 MB)</span>
+            </>
+          )}
+        </button>
+      )}
+      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+    </div>
+  );
+}

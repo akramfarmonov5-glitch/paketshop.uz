@@ -10,34 +10,20 @@ import AdminHero from './AdminHero';
 import AdminNavigation from './AdminNavigation';
 import AdminLeadsV2 from './AdminLeadsV2';
 import AdminRedirects from './AdminRedirects';
-import { Product, Category, HeroContent, NavigationSettings, BlogPost } from '../../types';
+import { DEFAULT_HERO_CONTENT, DEFAULT_NAVIGATION } from '../../constants';
+import type { BlogPost } from '../../types';
 
 interface AdminLayoutProps {
   onLogout: () => void | Promise<void>;
-  products: Product[];
-  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
-  categories: Category[];
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  heroContent: HeroContent;
-  setHeroContent: React.Dispatch<React.SetStateAction<HeroContent>>;
-  navigationSettings?: NavigationSettings;
-  setNavigationSettings?: React.Dispatch<React.SetStateAction<NavigationSettings>>;
-  blogPosts?: BlogPost[]; 
-  setBlogPosts?: React.Dispatch<React.SetStateAction<BlogPost[]>>;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ 
-    onLogout, 
-    heroContent,
-    setHeroContent,
-    navigationSettings,
-    setNavigationSettings,
-    blogPosts,
-    setBlogPosts
-}) => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'import' | 'orders' | 'leads' | 'blog' | 'hero' | 'navigation' | 'redirects'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [productsVisited, setProductsVisited] = useState(false);
+  const [heroContent, setHeroContent] = useState(DEFAULT_HERO_CONTENT);
+  const [navigationSettings, setNavigationSettings] = useState(DEFAULT_NAVIGATION);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
 
   const navItems = [
     { id: 'dashboard', label: 'Statistika', icon: LayoutDashboard },
@@ -59,15 +45,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       case 'hero':
         return <AdminHero heroContent={heroContent} setHeroContent={setHeroContent} />;
       case 'navigation':
-        if (navigationSettings && setNavigationSettings) {
-            return (
-                <AdminNavigation 
-                    navigationSettings={navigationSettings} 
-                    setNavigationSettings={setNavigationSettings} 
-                />
-            );
-        }
-        return <div>Loading...</div>;
+        return (
+          <AdminNavigation
+            navigationSettings={navigationSettings}
+            setNavigationSettings={setNavigationSettings}
+          />
+        );
       case 'categories':
         return <AdminCategoriesV2 />;
       case 'products':
@@ -81,10 +64,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       case 'leads':
         return <AdminLeadsV2 />;
       case 'blog':
-        if (blogPosts && setBlogPosts) {
-            return <AdminBlog posts={blogPosts} setPosts={setBlogPosts} />;
-        }
-        return <div>Blog posts loading...</div>;
+        return <AdminBlog posts={blogPosts} setPosts={setBlogPosts} />;
       default:
         return <AdminDashboard />;
     }

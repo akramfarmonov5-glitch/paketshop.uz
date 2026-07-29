@@ -59,3 +59,11 @@ export function checkRateLimit(
   buckets.set(key, existing);
   return { allowed: true, remaining: limit - existing.count, resetAt: existing.resetAt };
 }
+
+/**
+ * Clears a bucket after a trusted action succeeds. Login throttling uses this
+ * so the limit counts consecutive failed attempts, not legitimate sessions.
+ */
+export function resetRateLimit(key: string): void {
+  buckets.delete(key);
+}

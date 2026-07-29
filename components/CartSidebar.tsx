@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Minus, Package, Plus, ShoppingCart, Trash2, X } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { cartProductKey, useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
 import { saleUnitLabel } from '../lib/domain/catalogMapping';
@@ -35,7 +35,7 @@ export default function CartSidebar({ onCheckout }: CartSidebarProps) {
           </header>
           <div className="flex-1 space-y-5 overflow-y-auto p-5">
             {cart.length === 0 ? <div className="flex h-full flex-col items-center justify-center text-center"><Package size={48} className="text-slate-300" /><p className="mt-4 font-semibold text-slate-600">{t.empty}</p><button onClick={closeCart} className="mt-4 font-bold text-red-700">{t.catalog}</button></div> : cart.map((item) => {
-              const key = item.catalogId || String(item.id);
+              const key = cartProductKey(item);
               const step = Math.max(1, item.orderStep || 1);
               const unit = saleUnitLabel(item.saleUnit || 'PACK', locale);
               const baseUnits = item.saleUnit === 'CARTON' ? item.unitsPerCarton : item.itemsPerPackage;

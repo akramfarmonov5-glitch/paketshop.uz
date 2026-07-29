@@ -26,7 +26,9 @@ Requirements: Node.js 22+, npm and PostgreSQL 16+.
 5. Set `SEED_ADMIN_EMAIL` and a 12+ character `SEED_ADMIN_PASSWORD`, then run `npm run db:seed`.
 6. Start the app: `npm run dev`.
 
-During the incremental migration, existing catalog data is read through Supabase. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are therefore required until the Prisma migration job is completed.
+The public and admin catalog uses Prisma/PostgreSQL as its single source of truth. Supabase variables are optional unless customer authentication, the legacy blog compatibility route, or migration utilities are used.
+
+Admin image uploads require `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET`. All three are server-only variables. Add them to every Vercel environment that needs uploads, then redeploy. Do not create a `NEXT_PUBLIC_CLOUDINARY_API_SECRET`.
 
 ## Docker
 
@@ -58,7 +60,7 @@ Use the session pooler for migrations and seeds. For serverless production deplo
 
 Public clients send product IDs and quantities only. `/api/orders` reloads catalog prices, calculates totals and stores an immutable item snapshot. The browser cannot set an authoritative total. Telegram notifications are composed and HTML-escaped on the server.
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, payment secrets, S3 secrets or bot tokens with a `NEXT_PUBLIC_` prefix.
+Never expose `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `CLOUDINARY_API_SECRET`, payment secrets or bot tokens with a `NEXT_PUBLIC_` prefix. Rotate a secret immediately if it appeared in a screenshot, chat, log, Git commit or client-side environment variable.
 
 ## Product import
 

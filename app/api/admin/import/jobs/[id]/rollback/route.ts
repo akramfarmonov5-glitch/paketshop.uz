@@ -79,6 +79,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     revalidatePath('/uz/catalog');
     revalidatePath('/ru/catalog');
+    revalidatePath('/uz');
+    revalidatePath('/ru');
+    revalidatePath('/sitemap.xml');
+    revalidatePath('/api/catalog');
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     console.error('Import rollback failed:', error);

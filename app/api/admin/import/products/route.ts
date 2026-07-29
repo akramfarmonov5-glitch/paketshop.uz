@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import ExcelJS from 'exceljs';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminProductSchema } from '@/lib/validation/adminCatalog';
 import { PRODUCT_IMPORT_HEADERS, normalizeHeader, normalizeImportRecord, toAdminProductImport, type RawImportRow } from '@/lib/import/productImport';
@@ -141,6 +142,9 @@ export async function POST(request: NextRequest) {
         await transaction.importJob.update({ where: { id: job.id }, data: { status: 'COMPLETED', successRows: valid.length, rollbackData: rollbackEntries } });
         await transaction.auditLog.create({ data: { actorId: session.user.id, action: 'PRODUCT_IMPORT', entityType: 'ImportJob', entityId: job.id, after: auditJson({ filename: file.name, rows: valid.length, created: productCreates.length, updated: productUpdates.length }), ip: request.headers.get('x-real-ip') } });
       }, { timeout: 120_000, maxWait: 20_000 });
+      revalidatePath('/uz'); revalidatePath('/ru');
+      revalidatePath('/uz/catalog'); revalidatePath('/ru/catalog');
+      revalidatePath('/sitemap.xml'); revalidatePath('/api/catalog');
       return NextResponse.json({ success: true, jobId: job.id, importedRows: valid.length, createdRows: productCreates.length, updatedRows: productUpdates.length });
     } catch (commitError) {
       await db.importJob.update({ where: { id: job.id }, data: { status: 'FAILED', errorRows: rows.length } });
