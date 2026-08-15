@@ -126,7 +126,20 @@ const Footer: React.FC<FooterProps> = ({
         </div>
 
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs border-slate-200 text-slate-500">
-          <p>&copy; 2026 PaketShop.uz. Barcha huquqlar himoyalangan.</p>
+          <div>
+            <p>&copy; 2026 PaketShop.uz. Barcha huquqlar himoyalangan.</p>
+            <p className="mt-1 text-slate-400">
+              Dasturiy ta&apos;minot va IT yechimlar:{" "}
+              <a
+                href="https://trendoai.uz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 font-semibold hover:underline"
+              >
+                TrendoAI IT Agentligi
+              </a>
+            </p>
+          </div>
           <div className="flex gap-6 mt-4 md:mt-0 items-center">
             <a href={`/${lang}/privacy`} className="hover:text-red-600 transition-colors">Maxfiylik siyosati</a>
             <a href={`/${lang}/terms`} className="hover:text-red-600 transition-colors">Foydalanish shartlari</a>
