@@ -22,7 +22,7 @@ export async function generateStaticParams() {
     select: { slugUz: true, slugRu: true },
     orderBy: { sortOrder: 'asc' },
     take: 500,
-  });
+  }).catch(() => []);
 
   return categories.flatMap((category) => [
     { lang: 'uz', slug: category.slugUz },

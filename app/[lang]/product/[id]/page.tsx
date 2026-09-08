@@ -18,7 +18,7 @@ export async function generateStaticParams() {
     select: { slugUz: true, slugRu: true, legacySku: true },
     orderBy: { updatedAt: 'desc' },
     take: 5000,
-  });
+  }).catch(() => []);
 
   return products.flatMap((product) => {
     const legacyId = legacyIdFromSku(product.legacySku);
