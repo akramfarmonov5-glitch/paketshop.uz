@@ -34,7 +34,7 @@ jobs:
       - run: npm ci
       - run: npm run db:validate
       - run: npm run db:generate
-      - run: npx prisma db push --skip-generate
+      - run: npx prisma db push --accept-data-loss
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
