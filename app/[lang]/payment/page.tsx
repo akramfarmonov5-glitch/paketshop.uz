@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Banknote, CreditCard, Building2, Smartphone, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Banknote, CreditCard, Building2, Smartphone, FileText, ArrowRight } from 'lucide-react';
 import { localizedPageMetadata } from '@/lib/seo';
 
 type PageProps = { params: Promise<{ lang: string }> };

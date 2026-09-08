@@ -1,4 +1,4 @@
-import { Phone, Send, MapPin, Clock, Mail } from 'lucide-react';
+import { Phone, Send, MapPin, Clock } from 'lucide-react';
 import LeadRequestForm from '@/components/LeadRequestForm';
 import { localizedPageMetadata } from '@/lib/seo';
 

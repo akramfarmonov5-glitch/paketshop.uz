@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Package, ShieldCheck, Truck, Users, Award, ArrowRight } from 'lucide-react';
+import { Package, ShieldCheck, Truck, Award, ArrowRight } from 'lucide-react';
 import { localizedPageMetadata } from '@/lib/seo';
 
 type PageProps = { params: Promise<{ lang: string }> };
