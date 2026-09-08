@@ -7,5 +7,5 @@ export default function TrackingPage() {
   const params = useParams();
   const lang = String(params?.lang || 'uz');
 
-  return <OrderTracker onBack={() => router.push(`/${lang}`)} />;
+  return <OrderTracker onBack={() => router.push(`/${lang}`)} lang={lang} />;
 }

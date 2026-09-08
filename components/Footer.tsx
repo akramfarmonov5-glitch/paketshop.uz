@@ -65,7 +65,9 @@ const Footer: React.FC<FooterProps> = ({
             <ul className="space-y-3 text-sm text-slate-600">
               <li><Link href={`/${lang}/delivery`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Доставка' : 'Yetkazib berish'}</Link></li>
               <li><Link href={`/${lang}/payment`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Способы оплаты' : 'To‘lov usullari'}</Link></li>
+              <li><Link href={`/${lang}/tracking`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Отслеживание заказа' : 'Buyurtmani kuzatish'}</Link></li>
               <li><Link href={`/${lang}/faq`} className="hover:text-red-600 transition-colors">FAQ</Link></li>
+              <li><Link href={`/${lang}/contact`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Контакты' : 'Aloqa'}</Link></li>
               <li><Link href={`/${lang}/about`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'О нас' : 'Biz haqimizda'}</Link></li>
             </ul>
           </div>
