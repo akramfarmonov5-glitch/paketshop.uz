@@ -11,7 +11,7 @@ interface Message {
 
 const AIChatAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [formLoading, setFormLoading] = useState(false);
@@ -168,19 +168,23 @@ const AIChatAssistant: React.FC = () => {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isRegistered]);
+  }, [messages, isOpen, showContactModal]);
 
   useEffect(() => {
     const savedUser = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_chat_user') : null);
     if (savedUser) {
-      setIsRegistered(true);
-      const user = JSON.parse(savedUser);
-      setFormData(user);
+      try {
+        const user = JSON.parse(savedUser);
+        setFormData(user);
+      } catch {
+        // ignore
+      }
     }
   }, []);
 
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.phone.trim()) return;
     setFormLoading(true);
 
     localStorage.setItem('paketshop_chat_user', JSON.stringify(formData));
@@ -191,20 +195,30 @@ const AIChatAssistant: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'chat',
-          name: formData.name,
-          phone: formData.phone,
-          note: "Mijoz AI chat yordamchisi bilan suhbat boshladi",
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          note: "Mijoz AI chat orqali aloqa qoldirdi",
           website: '',
           startedAt: formStartedAt,
         }),
       });
       if (!response.ok) throw new Error('Lead request failed');
+      setShowContactModal(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'model',
+          text:
+            lang === 'ru'
+              ? `Спасибо, ${formData.name}! Мы передали ваш номер менеджеру, скоро с вами свяжутся.`
+              : `Rahmat, ${formData.name}! Raqamingiz menejerga yetkazildi, tez orada siz bilan bog‘lanishadi.`,
+        },
+      ]);
     } catch (leadError) {
       console.error("Lead registration error:", leadError);
+    } finally {
+      setFormLoading(false);
     }
-
-    setFormLoading(false);
-    setIsRegistered(true);
   };
 
   const handleSend = async (overrideText?: string | React.MouseEvent) => {
@@ -336,24 +350,37 @@ const AIChatAssistant: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                {isRegistered && (
-                  <button
-                    onClick={() => setIsVoiceMode(!isVoiceMode)}
-                    className={`p-2 rounded-full transition-all duration-300 flex items-center justify-center relative ${
-                      isVoiceMode
-                        ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse shadow-lg shadow-red-500/30 ring-2 ring-red-400'
-                        : 'text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
-                    title={isVoiceMode ? "Ovozli rejimni o'chirish" : "Hands-free Ovozli rejimni yoqish"}
-                  >
-                    {isVoiceMode ? <Mic className="animate-bounce" size={18} /> : <MicOff size={18} />}
-                    {isVoiceMode && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-black animate-ping"></span>
-                    )}
-                  </button>
-                )}
+              <div className="flex items-center gap-1.5">
                 <button
+                  type="button"
+                  onClick={() => setShowContactModal(prev => !prev)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                    showContactModal
+                      ? 'bg-gold-400 text-black'
+                      : 'bg-white/10 text-gray-300 hover:text-white hover:bg-white/20'
+                  }`}
+                  title={lang === 'ru' ? 'Оставить заявку менеджеру' : 'Menejerga buyurtma qoldirish'}
+                >
+                  <Phone size={12} />
+                  <span className="hidden sm:inline">{lang === 'ru' ? 'Связаться' : 'Aloqa'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsVoiceMode(!isVoiceMode)}
+                  className={`p-2 rounded-full transition-all duration-300 flex items-center justify-center relative ${
+                    isVoiceMode
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse shadow-lg shadow-red-500/30 ring-2 ring-red-400'
+                      : 'text-gray-400 hover:text-white hover:bg-white/10'
+                  }`}
+                  title={isVoiceMode ? "Ovozli rejimni o'chirish" : "Hands-free Ovozli rejimni yoqish"}
+                >
+                  {isVoiceMode ? <Mic className="animate-bounce" size={18} /> : <MicOff size={18} />}
+                  {isVoiceMode && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-black animate-ping"></span>
+                  )}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
                 >
@@ -362,60 +389,79 @@ const AIChatAssistant: React.FC = () => {
               </div>
             </div>
 
-            {!isRegistered ? (
-              <div className="flex-1 p-6 flex flex-col justify-center">
-                <div className="text-center mb-8">
-                  <h4 className="text-xl font-bold text-white mb-2">Xush kelibsiz!</h4>
-                  <p className="text-gray-400 text-sm">Shaxsiy yordamchingizdan foydalanish uchun ma'lumotlaringizni kiriting.</p>
+            {showContactModal ? (
+              <div className="flex-1 p-6 flex flex-col justify-center bg-dark-950/95 relative">
+                <div className="text-center mb-6">
+                  <h4 className="text-lg font-bold text-white mb-1">
+                    {lang === 'ru' ? 'Связаться с менеджером' : "Menejer bilan bog'lanish"}
+                  </h4>
+                  <p className="text-gray-400 text-xs">
+                    {lang === 'ru'
+                      ? 'Оставьте свои данные, и наш специалист свяжется с вами в течение 10 минут.'
+                      : "Ma'lumotlaringizni qoldiring, 10 daqiqa ichida siz bilan bog'lanamiz."}
+                  </p>
                 </div>
 
                 <form onSubmit={handleRegistration} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm text-gold-400 font-medium ml-1">Ismingiz</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gold-400 font-medium ml-1">
+                      {lang === 'ru' ? 'Ваше имя' : 'Ismingiz'}
+                    </label>
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-black/40 border border-white/20 rounded-xl pl-12 pr-4 py-3 text-white focus:border-gold-400 focus:outline-none"
-                        placeholder="Ismingizni kiriting"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:border-gold-400 focus:outline-none"
+                        placeholder={lang === 'ru' ? 'Введите имя' : 'Ismingizni kiriting'}
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gold-400 font-medium ml-1">Telefon raqam</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gold-400 font-medium ml-1">
+                      {lang === 'ru' ? 'Телефон' : 'Telefon raqam'}
+                    </label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                      <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400">+998</span>
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                      <span className="absolute left-11 top-1/2 -translate-y-1/2 text-xs text-gray-400">+998</span>
                       <input
                         type="tel"
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full bg-black/40 border border-white/20 rounded-xl pl-24 pr-4 py-3 text-white focus:border-gold-400 focus:outline-none"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl pl-22 pr-4 py-2.5 text-sm text-white focus:border-gold-400 focus:outline-none"
                         placeholder="90 123 45 67"
                       />
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={formLoading}
-                    className="w-full bg-gold-400 text-black font-bold py-3.5 rounded-xl hover:bg-gold-500 transition-colors flex items-center justify-center gap-2 mt-4"
-                  >
-                    {formLoading ? (
-                      <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
-                    ) : (
-                      <>
-                        Boshlash <ChevronRight size={18} />
-                      </>
-                    )}
-                  </button>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowContactModal(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      {lang === 'ru' ? 'Отмена' : 'Bekor qilish'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="flex-1 bg-gold-400 text-black font-bold py-2.5 rounded-xl text-xs hover:bg-gold-500 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {formLoading ? (
+                        <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+                      ) : (
+                        <>
+                          {lang === 'ru' ? 'Отправить' : "Jo'natish"} <ChevronRight size={14} />
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </form>
-                <p className="text-xs text-gray-600 text-center mt-6">
-                  Ma'lumotlaringiz xavfsizligi kafolatlangan.
+                <p className="text-[11px] text-gray-500 text-center mt-4">
+                  {lang === 'ru' ? 'Конфиденциальность гарантируется.' : "Ma'lumotlaringiz xavfsizligi kafolatlangan."}
                 </p>
               </div>
             ) : (
@@ -575,8 +621,8 @@ const AIChatAssistant: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {!isOpen && !isRegistered && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-black animate-pulse"></span>
+        {!isOpen && (
+          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-black animate-pulse"></span>
         )}
       </motion.button>
     </div>

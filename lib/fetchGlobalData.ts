@@ -62,10 +62,11 @@ export const fetchGlobalData = cache(async function fetchGlobalData(): Promise<G
         include: {
           category: true,
           translations: true,
+          priceTiers: { orderBy: { minQuantity: 'asc' } },
           media: { include: { media: true }, orderBy: { sortOrder: 'asc' } },
         },
         take: 50,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
       }),
       db.siteSetting.findUnique({ where: { key: 'hero_content' } }),
       db.siteSetting.findUnique({ where: { key: 'navigation_settings' } }),
@@ -122,6 +123,11 @@ export const fetchGlobalData = cache(async function fetchGlobalData(): Promise<G
             isFeatured: p.isFeatured,
             isNew: p.isNew,
             isBestSeller: p.isBestSeller,
+            priceTiers: p.priceTiers?.map((t) => ({
+              minQuantity: t.minQuantity,
+              maxQuantity: t.maxQuantity,
+              price: Number(t.price),
+            })) || [],
           };
         })
       : MOCK_PRODUCTS;

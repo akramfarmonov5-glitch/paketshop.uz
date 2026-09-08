@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import {
   Instagram,
   Facebook,
@@ -52,20 +53,20 @@ const Footer: React.FC<FooterProps> = ({
           <div>
             <h4 className="font-semibold mb-6 text-slate-900">{t('footer_categories')}</h4>
             <ul className="space-y-3 text-sm text-slate-600">
-              <li><a href={`/${lang}/catalog?category=chiqindi-paketlari`} className="hover:text-red-600 transition-colors">Chiqindi paketlari</a></li>
-              <li><a href={`/${lang}/catalog?category=salfetka-va-qogoz`} className="hover:text-red-600 transition-colors">Salfetka va qog‘oz</a></li>
-              <li><a href={`/${lang}/catalog?category=zip-paketlar`} className="hover:text-red-600 transition-colors">Zip-Lock paketlar</a></li>
-              <li><a href={`/${lang}/catalog?category=ovqat-konteynerlari`} className="hover:text-red-600 transition-colors">Konteynerlar va idishlar</a></li>
+              <li><Link href={`/${lang}/catalog?category=chiqindi-paketlari`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Мусорные пакеты' : 'Chiqindi paketlari'}</Link></li>
+              <li><Link href={`/${lang}/catalog?category=salfetka-va-qogoz`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Салфетки и бумага' : 'Salfetka va qog‘oz'}</Link></li>
+              <li><Link href={`/${lang}/catalog?category=zip-paketlar`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Зип-пакеты' : 'Zip-Lock paketlar'}</Link></li>
+              <li><Link href={`/${lang}/catalog?category=ovqat-konteynerlari`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Контейнеры и посуда' : 'Konteynerlar va idishlar'}</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-6 text-slate-900">{t('footer_help')}</h4>
             <ul className="space-y-3 text-sm text-slate-600">
-              <li><a href={`/${lang}/delivery`} className="hover:text-red-600 transition-colors">Yetkazib berish</a></li>
-              <li><a href={`/${lang}/payment`} className="hover:text-red-600 transition-colors">To‘lov usullari</a></li>
-              <li><a href={`/${lang}/faq`} className="hover:text-red-600 transition-colors">FAQ</a></li>
-              <li><a href={`/${lang}/about`} className="hover:text-red-600 transition-colors">Biz haqimizda</a></li>
+              <li><Link href={`/${lang}/delivery`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Доставка' : 'Yetkazib berish'}</Link></li>
+              <li><Link href={`/${lang}/payment`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Способы оплаты' : 'To‘lov usullari'}</Link></li>
+              <li><Link href={`/${lang}/faq`} className="hover:text-red-600 transition-colors">FAQ</Link></li>
+              <li><Link href={`/${lang}/about`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'О нас' : 'Biz haqimizda'}</Link></li>
             </ul>
           </div>
 
@@ -84,13 +85,13 @@ const Footer: React.FC<FooterProps> = ({
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-100">
                   <MapPin size={14} className="text-red-600" />
                 </div>
-                <span>Toshkent sh., O'zbekiston</span>
+                <span>{lang === 'ru' ? 'г. Ташкент, Узбекистан' : "Toshkent sh., O'zbekiston"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-slate-600">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-slate-100">
                   <Clock size={14} className="text-red-600" />
                 </div>
-                <span>Dush–Shan: 09:00 – 20:00</span>
+                <span>{lang === 'ru' ? 'Пн–Сб: 09:00 – 20:00' : 'Dush–Shan: 09:00 – 20:00'}</span>
               </div>
             </div>
 
@@ -127,9 +128,9 @@ const Footer: React.FC<FooterProps> = ({
 
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs border-slate-200 text-slate-500">
           <div>
-            <p>&copy; 2026 PaketShop.uz. Barcha huquqlar himoyalangan.</p>
+            <p>&copy; 2026 PaketShop.uz. {t('all_rights_reserved') || (lang === 'ru' ? 'Все права защищены.' : 'Barcha huquqlar himoyalangan.')}</p>
             <p className="mt-1 text-slate-400">
-              Dasturiy ta&apos;minot va IT yechimlar:{" "}
+              {lang === 'ru' ? 'Программное обеспечение и IT-решения: ' : "Dasturiy ta'minot va IT yechimlar: "}
               <a
                 href="https://trendoai.uz"
                 target="_blank"
@@ -141,8 +142,8 @@ const Footer: React.FC<FooterProps> = ({
             </p>
           </div>
           <div className="flex gap-6 mt-4 md:mt-0 items-center">
-            <a href={`/${lang}/privacy`} className="hover:text-red-600 transition-colors">Maxfiylik siyosati</a>
-            <a href={`/${lang}/terms`} className="hover:text-red-600 transition-colors">Foydalanish shartlari</a>
+            <Link href={`/${lang}/privacy`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Политика конфиденциальности' : 'Maxfiylik siyosati'}</Link>
+            <Link href={`/${lang}/terms`} className="hover:text-red-600 transition-colors">{lang === 'ru' ? 'Условия использования' : 'Foydalanish shartlari'}</Link>
             {/* Secret Admin Link */}
             {onAdminClick && (
               <button onClick={onAdminClick} className="flex items-center gap-1 hover:text-red-600 transition-colors ml-4 opacity-50 hover:opacity-100">

@@ -4,11 +4,12 @@ import { Product, CartItem } from '../types';
 import { trackAddToCart } from '../lib/fpixel';
 import { getLocalizedText } from '../lib/i18nUtils';
 import { isPriceOnRequest } from '../lib/domain/catalogMapping';
+import { selectTierPrice } from '../lib/domain/commerce';
 
 interface CartContextType {
   cart: CartItem[];
   isCartOpen: boolean;
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string | number) => void;
   updateQuantity: (productId: string | number, quantity: number) => void;
   toggleCart: () => void;
@@ -27,11 +28,15 @@ export const cartProductKey = (
   return product.variantId ? `${productId}:${product.variantId}` : productId;
 };
 
-function quoteUnitPrice(product: Product): number {
+function quoteUnitPrice(product: Product, quantity?: number): number {
   if (isPriceOnRequest(product.priceMode)) return 0;
   const packSize = Math.max(1, product.itemsPerPackage || 1);
   const legacyPackMultiplier = !product.catalogId && (product.saleUnit || 'PACK') === 'PACK' ? packSize : 1;
-  return Math.max(0, Number(product.price || 0) * legacyPackMultiplier);
+  const basePrice = Math.max(0, Number(product.price || 0) * legacyPackMultiplier);
+  if (product.priceTiers && product.priceTiers.length > 0 && quantity && quantity > 0) {
+    return selectTierPrice(basePrice, quantity, product.priceTiers);
+  }
+  return basePrice;
 }
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -45,14 +50,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const parsed = JSON.parse(savedCart) as Array<CartItem & { quoteUnitPrice?: number }>;
         setCart(parsed.map((item) => {
-          if (Number.isFinite(item.quoteUnitPrice)) {
-            return { ...item, quoteUnitPrice: quoteUnitPrice(item) } as CartItem;
-          }
           const packSize = Math.max(1, item.itemsPerPackage || 1);
+          const quantity = Math.max(item.minimumOrderQuantity || 1, Math.round(Number(item.quantity || packSize) / packSize));
           return {
             ...item,
-            quantity: Math.max(item.minimumOrderQuantity || 1, Math.round(Number(item.quantity || packSize) / packSize)),
-            quoteUnitPrice: quoteUnitPrice(item),
+            quantity,
+            quoteUnitPrice: quoteUnitPrice(item, quantity),
           };
         }));
       } catch (e) {
@@ -66,18 +69,23 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('paketshop_cart', JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, requestedQuantity?: number) => {
     const minimum = Math.max(1, product.minimumOrderQuantity || 1);
     const step = Math.max(1, product.orderStep || 1);
     const key = cartProductKey(product);
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => cartProductKey(item) === key);
       if (existingItem) {
+        const addedQty = requestedQuantity ?? step;
+        const newQty = existingItem.quantity + addedQty;
         return prevCart.map((item) =>
-          cartProductKey(item) === key ? { ...item, quantity: item.quantity + step } : item
+          cartProductKey(item) === key
+            ? { ...item, quantity: newQty, quoteUnitPrice: quoteUnitPrice(item, newQty) }
+            : item
         );
       }
-      return [...prevCart, { ...product, quantity: minimum, quoteUnitPrice: quoteUnitPrice(product) }];
+      const initialQty = requestedQuantity ?? minimum;
+      return [...prevCart, { ...product, quantity: initialQty, quoteUnitPrice: quoteUnitPrice(product, initialQty) }];
     });
     
     // Pixel Tracking
@@ -112,7 +120,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (cartProductKey(item) !== String(productId)) return item;
       const step = Math.max(1, item.orderStep || 1);
       const normalizedQuantity = minimum + Math.max(0, Math.round((quantity - minimum) / step)) * step;
-      return { ...item, quantity: normalizedQuantity };
+      return {
+        ...item,
+        quantity: normalizedQuantity,
+        quoteUnitPrice: quoteUnitPrice(item, normalizedQuantity),
+      };
     }));
   };
 

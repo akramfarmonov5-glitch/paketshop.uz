@@ -1,6 +1,6 @@
 'use client';
 
-import { Phone, Send } from 'lucide-react';
+import { Minus, Phone, Plus, Send } from 'lucide-react';
 import { useState } from 'react';
 import B2BAddToCartButton from '@/components/B2BAddToCartButton';
 import B2BWishlistButton from '@/components/B2BWishlistButton';
@@ -9,6 +9,7 @@ import {
   formatUzsPrice,
   saleUnitLabel,
 } from '@/lib/domain/catalogMapping';
+import { selectTierPrice } from '@/lib/domain/commerce';
 import type { PrismaProductDetail } from '@/lib/server/prismaCatalog';
 import type { Product } from '@/types';
 
@@ -27,6 +28,9 @@ const copy = {
     tiers: 'Ulgurji narx darajalari',
     tierQty: 'Miqdor',
     tierPrice: 'Narx',
+    activeTier: 'Faol',
+    quantity: 'Buyurtma miqdori',
+    totalPrice: 'Jami summa',
     telegram: 'Telegram orqali buyurtma',
     phone: 'Telefon qilish',
     manager: 'Yakuniy narx va qoldiqni menejer tasdiqlaydi.',
@@ -53,6 +57,9 @@ const copy = {
     tiers: 'Оптовые уровни цен',
     tierQty: 'Количество',
     tierPrice: 'Цена',
+    activeTier: 'Активно',
+    quantity: 'Количество для заказа',
+    totalPrice: 'Итоговая сумма',
     telegram: 'Заказать в Telegram',
     phone: 'Позвонить',
     manager: 'Итоговую цену и наличие подтверждает менеджер.',
@@ -118,29 +125,41 @@ export default function B2BProductPurchasePanel({
   const selectedUnitsPerPack = selectedVariant?.unitsPerPack ?? card.itemsPerPackage;
   const selectedAvailability = selectedVariant?.availabilityStatus || card.availabilityStatus;
   const selectedSku = selectedVariant?.sku || card.sku;
+  const unit = saleUnitLabel(card.saleUnit, locale);
+
+  const minQty = Math.max(1, card.minimumOrderQuantity || 1);
+  const step = Math.max(1, card.orderStep || 1);
+  const [quantity, setQuantity] = useState(minQty);
+
+  const currentTierPrice = detail.priceTiers.length > 0
+    ? selectTierPrice(selectedPrice, quantity, detail.priceTiers)
+    : selectedPrice;
   const piecePrice =
-    selectedPrice > 0 && selectedUnitsPerPack > 1
-      ? Math.round(selectedPrice / selectedUnitsPerPack)
+    currentTierPrice > 0 && selectedUnitsPerPack > 1
+      ? Math.round(currentTierPrice / selectedUnitsPerPack)
       : null;
   const showExactPrice =
     ['PUBLIC_EXACT', 'FROM_PRICE'].includes(card.priceMode)
-    && selectedPrice > 0;
-  const unit = saleUnitLabel(card.saleUnit, locale);
+    && currentTierPrice > 0;
+  const totalPrice = currentTierPrice * quantity;
+
   const product = {
     ...card,
     variantId: selectedVariant?.id,
     sku: selectedSku,
     price: selectedPrice,
-    formattedPrice: showExactPrice ? formatUzsPrice(selectedPrice, locale) : '',
+    priceTiers: detail.priceTiers,
+    formattedPrice: showExactPrice ? formatUzsPrice(currentTierPrice, locale) : '',
     availabilityStatus: selectedAvailability,
     itemsPerPackage: selectedUnitsPerPack,
     unitsPerCarton: selectedUnitsPerPack * card.packsPerCarton,
   } as unknown as Product;
+
   const telegramText = buildProductTelegramMessage({
     locale,
     sku: selectedSku,
     name: detail.name,
-    quantity: card.minimumOrderQuantity,
+    quantity,
     saleUnit: card.saleUnit,
     url: pageUrl,
   });
@@ -192,7 +211,7 @@ export default function B2BProductPurchasePanel({
         {showExactPrice ? (
           <>
             <p className="text-2xl font-bold text-slate-950">
-              1 {unit}: {formatUzsPrice(selectedPrice, locale)}
+              1 {unit}: {formatUzsPrice(currentTierPrice, locale)}
               {card.priceMode === 'FROM_PRICE' && (
                 <span className="ml-1 text-base font-semibold text-slate-500">{t.from}</span>
               )}
@@ -249,26 +268,99 @@ export default function B2BProductPurchasePanel({
               </tr>
             </thead>
             <tbody>
-              {detail.priceTiers.map((tier) => (
-                <tr key={`${tier.minQuantity}-${tier.maxQuantity}`} className="border-t border-slate-100">
-                  <td className="py-1.5 text-slate-700">
-                    {tier.minQuantity}{tier.maxQuantity ? `–${tier.maxQuantity}` : '+'}{' '}
-                    {saleUnitLabel(tier.priceUnit, locale)}
-                  </td>
-                  <td className="py-1.5 text-right font-semibold text-slate-900">
-                    {formatUzsPrice(tier.price, locale)}
-                  </td>
-                </tr>
-              ))}
+              {detail.priceTiers.map((tier) => {
+                const isTierActive =
+                  quantity >= tier.minQuantity &&
+                  (tier.maxQuantity == null || quantity <= tier.maxQuantity);
+                return (
+                  <tr
+                    key={`${tier.minQuantity}-${tier.maxQuantity}`}
+                    className={`border-t border-slate-100 transition-colors ${
+                      isTierActive ? 'bg-emerald-50 font-semibold text-emerald-950' : ''
+                    }`}
+                  >
+                    <td className="py-2 px-2 text-slate-700">
+                      {tier.minQuantity}
+                      {tier.maxQuantity ? `–${tier.maxQuantity}` : '+'}{' '}
+                      {saleUnitLabel(tier.priceUnit, locale)}
+                      {isTierActive && (
+                        <span className="ml-2 inline-block rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {t.activeTier}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-right font-bold text-slate-900">
+                      {formatUzsPrice(tier.price, locale)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
+      {/* Miqdor tanlagich va Jami hisob */}
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="block text-sm font-bold text-slate-900">{t.quantity}</span>
+            <span className="text-xs text-slate-500">
+              {card.minimumOrderQuantity > 1 ? `${t.minOrder}: ${card.minimumOrderQuantity} ${unit}` : ''}
+              {card.orderStep > 1 ? ` · ${t.orderStep}: ${card.orderStep} ${unit}` : ''}
+            </span>
+          </div>
+          <div className="flex self-start sm:self-auto items-center rounded-xl border border-slate-300 bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => setQuantity((prev) => Math.max(minQty, prev - step))}
+              disabled={quantity <= minQty}
+              className="grid h-11 w-11 place-items-center rounded-l-xl text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-white transition"
+              aria-label="Kamaytirish"
+            >
+              <Minus size={16} />
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              min={minQty}
+              step={step}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (Number.isInteger(val)) {
+                  setQuantity(Math.max(minQty, val));
+                }
+              }}
+              onBlur={() => {
+                setQuantity((prev) => minQty + Math.max(0, Math.round((prev - minQty) / step)) * step);
+              }}
+              className="h-11 w-16 text-center text-base font-bold text-slate-900 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              aria-label={t.quantity}
+            />
+            <span className="pr-3 select-none text-xs font-semibold text-slate-500">{unit}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((prev) => prev + step)}
+              className="grid h-11 w-11 place-items-center rounded-r-xl text-slate-600 hover:bg-slate-100 transition"
+              aria-label="Oshirish"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+        </div>
+
+        {showExactPrice && (
+          <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/70 pt-3">
+            <span className="text-sm font-semibold text-slate-600">{t.totalPrice}:</span>
+            <span className="text-xl font-black text-slate-950">{formatUzsPrice(totalPrice, locale)}</span>
+          </div>
+        )}
+      </div>
+
       <p className="mt-4 text-xs text-slate-500">{t.manager}</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <B2BAddToCartButton product={product} locale={locale} className="h-12 text-sm" />
+        <B2BAddToCartButton product={product} locale={locale} quantity={quantity} className="h-12 text-sm" />
         <B2BWishlistButton product={product} locale={locale} variant="button" className="h-12 text-sm" />
         <a
           href={`https://t.me/${telegramUser}?text=${encodeURIComponent(telegramText)}`}

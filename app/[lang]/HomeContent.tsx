@@ -16,6 +16,7 @@ import { getCategorySlug } from "@/lib/categoryUtils";
 import { getLocalizedText } from "@/lib/i18nUtils";
 import { productSlug } from "@/lib/slugify";
 import type { BlogPost, Category, HeroContent, Product } from "@/types";
+import B2BAddToCartButton from "@/components/B2BAddToCartButton";
 import B2BWishlistButton from "@/components/B2BWishlistButton";
 import CategoryCard from "@/components/CategoryCard";
 
@@ -263,12 +264,21 @@ export default function HomeContent({
                   <p className="mt-2 text-sm text-slate-600">
                     {t.pack}: <b>{product.itemsPerPackage || 1}</b>
                   </p>
-                  <p className="mt-3 text-lg font-black">
-                    {product.priceMode === "REQUEST_ONLY"
-                      ? t.askPrice
-                      : product.formattedPrice}
-                  </p>
-                  <p className="mt-1 text-xs text-amber-700">{t.stock}</p>
+                  <div className="mt-3 flex items-baseline justify-between">
+                    <p className="text-lg font-black text-slate-950">
+                      {product.priceMode === "REQUEST_ONLY"
+                        ? t.askPrice
+                        : product.formattedPrice}
+                    </p>
+                    <span className="text-xs text-amber-700">{t.stock}</span>
+                  </div>
+                  <div className="mt-3">
+                    <B2BAddToCartButton
+                      product={product}
+                      locale={locale}
+                      className="h-10 w-full text-xs font-bold"
+                    />
+                  </div>
                 </article>
               );
             })}

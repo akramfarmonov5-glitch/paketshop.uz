@@ -61,14 +61,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate, categori
 
         {/* Badges */}
         <div className="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-1.5 z-10">
-          {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
+          {Boolean(product.isBestSeller) && (
             <span className="px-2 py-0.5 bg-red-600 text-white text-[10px] md:text-[11px] font-bold rounded-md uppercase tracking-wider shadow-sm">
               🔥 Bestseller
             </span>
           )}
-          {product.price >= 100000 && product.price <= 300000 && (
+          {Boolean(product.isNew) && (
             <span className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] md:text-[11px] font-bold rounded-md uppercase tracking-wider shadow-sm">
-              ✨ Yangi
+              ✨ {lang === 'ru' ? 'Новинка' : 'Yangi'}
             </span>
           )}
         </div>
@@ -114,7 +114,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigate, categori
             aria-label={t('add_to_cart')}
           >
             <Plus size={16} className="md:w-[16px] md:h-[16px]" />
-            <span className="hidden md:inline">Savatga</span>
+            <span className="hidden md:inline">{t('add_to_cart')}</span>
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { Product } from '../types';
 import * as fpixel from '../lib/fpixel';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedText } from '../lib/i18nUtils';
+import { selectTierPrice } from '../lib/domain/commerce';
 
 interface QuickBuyModalProps {
   isOpen: boolean;
@@ -29,7 +30,8 @@ const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ isOpen, onClose, product,
   const saleUnit = product.saleUnit || (product.itemsPerPackage && product.itemsPerPackage > 1 ? 'PACK' : 'PIECE');
   const saleQuantity = saleUnit === 'PACK' ? Math.max(1, Math.round(quantity / Math.max(1, product.itemsPerPackage || 1))) : quantity;
   const unitPrice = product.catalogId || saleUnit !== 'PACK' ? product.price : product.price * Math.max(1, product.itemsPerPackage || 1);
-  const total = unitPrice * saleQuantity;
+  const effectiveUnitPrice = selectTierPrice(unitPrice, saleQuantity, product.priceTiers || []);
+  const total = effectiveUnitPrice * saleQuantity;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('uz-UZ').format(price) + ' UZS';

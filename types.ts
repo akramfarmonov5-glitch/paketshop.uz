@@ -28,6 +28,7 @@ export interface Product {
   saleUnit?: 'PIECE' | 'PACK' | 'CARTON' | 'ROLL' | 'KILOGRAM';
   priceMode?: 'PUBLIC_EXACT' | 'FROM_PRICE' | 'LOGIN_REQUIRED' | 'REQUEST_ONLY';
   availabilityStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'CHECK_AVAILABILITY' | 'ON_ORDER' | 'OUT_OF_STOCK' | 'DISCONTINUED';
+  priceTiers?: { minQuantity: number; maxQuantity?: number | null; price: number }[];
   isFeatured?: boolean;
   isNew?: boolean;
   isBestSeller?: boolean;

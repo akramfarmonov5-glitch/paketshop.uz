@@ -124,7 +124,8 @@ const Navbar: React.FC<NavbarProps> = ({
                   key={l.code}
                   onClick={() => {
                     setLang(l.code);
-                    router.push(`/${l.code}${window.location.pathname.replace(/^\/(uz|ru)/, '')}`);
+                    const cleanPath = window.location.pathname.replace(/^\/(uz|ru)/, '');
+                    router.push(`/${l.code}${cleanPath}${window.location.search}`);
                   }}
                   className={`px-2 py-1.5 transition-colors sm:px-2.5 ${
                     lang === l.code
