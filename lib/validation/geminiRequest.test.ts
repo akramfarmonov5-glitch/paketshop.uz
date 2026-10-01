@@ -22,6 +22,14 @@ describe('geminiRequestSchema', () => {
     }).success).toBe(false);
   });
 
+  it('accepts a widget session id and rejects malformed ones', () => {
+    expect(geminiRequestSchema.safeParse({ message: 'test', sessionId: '3f2b8c1e-5a4d-4e6f-9b7a-1c2d3e4f5a6b' }).success).toBe(true);
+    expect(geminiRequestSchema.safeParse({ message: 'test' }).success).toBe(true);
+    expect(geminiRequestSchema.safeParse({ message: 'test', sessionId: 'short' }).success).toBe(false);
+    expect(geminiRequestSchema.safeParse({ message: 'test', sessionId: 'has spaces and !! symbols' }).success).toBe(false);
+    expect(geminiRequestSchema.safeParse({ message: 'test', sessionId: 'a'.repeat(65) }).success).toBe(false);
+  });
+
   it('caps history to prevent unbounded model cost', () => {
     const history = Array.from({ length: 13 }, () => ({
       role: 'user',

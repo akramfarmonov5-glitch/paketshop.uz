@@ -2,6 +2,13 @@
 
 ## Unreleased — B2B rebuild
 
+### AI assistant integration
+
+- Added `GET /api/assistant/catalog`, a key-protected (`ASSISTANT_API_KEY`) feed of active products for the AI assistant: public prices, price tiers, variants, availability, dimensions and images only — purchase/reseller/organization prices and supplier data are never selected, and a unit test asserts they cannot leak.
+- `POST /api/leads` recognises the assistant's bearer key: its requests use their own rate-limit bucket instead of the per-IP limit of 6, and the response reports whether the Telegram alert was sent (`notified`). Public form behaviour is unchanged.
+- The storefront chat widget can run through the assistant (`ASSISTANT_CHAT_PROXY=true`) with an automatic fallback to the built-in Gemini reply; the widget keeps a persistent `sessionId`, shows paketshop.uz/t.me links as clickable links and keeps line breaks in replies.
+- Everything stays off until `ASSISTANT_API_KEY` is set; see `docs/assistant-integration.md` for the rollout order.
+
 ### Import rollback and bulk-import scalability
 
 - Added `rollbackData`/`rolledBackAt` to ImportJob with a deployed migration; every commit now stores a per-row before-snapshot (created flag, or previous scalars, translations, variants and price tiers).
