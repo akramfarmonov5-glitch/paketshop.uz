@@ -3,10 +3,43 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageCircle, User, Phone, ChevronRight, Mic, MicOff, Volume2, Headphones } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { splitTextLinks } from '@/lib/domain/assistantChat';
 
 interface Message {
   role: 'user' | 'model';
   text: string;
+}
+
+const SESSION_STORAGE_KEY = 'paketshop_chat_session';
+
+// Random id kept in this browser so the AI assistant can remember the conversation between messages.
+function loadChatSessionId(): string {
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (saved && /^[A-Za-z0-9_-]{8,64}$/.test(saved)) return saved;
+    const created = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`
+    ).replace(/[^A-Za-z0-9_-]/g, '');
+    localStorage.setItem(SESSION_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return '';
+  }
+}
+
+function MessageText({ text }: { text: string }) {
+  return (
+    <>
+      {splitTextLinks(text).map((part, index) => part.href ? (
+        <a key={index} href={part.href} target="_blank" rel="noopener noreferrer" className="underline break-all">
+          {part.text}
+        </a>
+      ) : (
+        <React.Fragment key={index}>{part.text}</React.Fragment>
+      ))}
+    </>
+  );
 }
 
 const AIChatAssistant: React.FC = () => {
@@ -16,6 +49,7 @@ const AIChatAssistant: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [formLoading, setFormLoading] = useState(false);
   const [formStartedAt] = useState(() => Date.now());
+  const chatSessionIdRef = useRef('');
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: "Assalomu alaykum! Men PaketShop onlayn do'koni yordamchisiman. Sizga qanday yordam bera olaman? Masalan, 'qanday paketlar bor' yoki 'konteyner narxini ayt' deb so'rashingiz mumkin." }
@@ -171,6 +205,10 @@ const AIChatAssistant: React.FC = () => {
   }, [messages, isOpen, showContactModal]);
 
   useEffect(() => {
+    chatSessionIdRef.current = loadChatSessionId();
+  }, []);
+
+  useEffect(() => {
     const savedUser = (typeof window !== 'undefined' ? localStorage.getItem('paketshop_chat_user') : null);
     if (savedUser) {
       try {
@@ -246,7 +284,8 @@ const AIChatAssistant: React.FC = () => {
           history: history,
           customerName: formData.name,
           language: lang,
-          voiceMode: isVoiceMode
+          voiceMode: isVoiceMode,
+          ...(chatSessionIdRef.current ? { sessionId: chatSessionIdRef.current } : {})
         })
       });
 
@@ -544,12 +583,12 @@ const AIChatAssistant: React.FC = () => {
                           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
+                            className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${msg.role === 'user'
                               ? 'bg-gold-500 text-black font-medium rounded-tr-sm'
                               : 'bg-white/10 text-gray-200 rounded-tl-sm border border-white/5'
                               }`}
                           >
-                            {msg.text}
+                            <MessageText text={msg.text} />
                           </div>
                         </div>
                       ))}

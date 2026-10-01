@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildTelegramLeadMessage, normalizeUzbekPhone, summarizeAttribution } from '@/lib/domain/commerce';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { isAssistantRequest } from '@/lib/server/assistantAuth';
 import { db } from '@/lib/server/db';
 import { sendTelegramHtml } from '@/lib/server/telegram';
 import { leadRequestSchema, type LeadRequestInput } from '@/lib/validation/leadRequest';
@@ -33,10 +34,16 @@ function leadDetails(input: LeadRequestInput): Array<{ label: string; value?: st
 }
 
 export async function POST(request: NextRequest) {
+  // The AI assistant forwards customers' requests from one server address, so it gets its own (higher) bucket instead
+  // of the per-IP limit that protects the public form. The assistant already limits requests per phone number.
+  const fromAssistant = isAssistantRequest(request);
   const ip = request.headers.get('x-real-ip')
     || request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
     || 'unknown';
-  if (!checkRateLimit(`lead-create:${ip}`, 6, 10 * 60 * 1000).allowed) {
+  const limit = fromAssistant
+    ? checkRateLimit('lead-create:assistant', 120, 10 * 60 * 1000)
+    : checkRateLimit(`lead-create:${ip}`, 6, 10 * 60 * 1000);
+  if (!limit.allowed) {
     return NextResponse.json({ error: "Juda ko'p so'rov yuborildi" }, { status: 429 });
   }
 
@@ -102,15 +109,21 @@ export async function POST(request: NextRequest) {
       source,
       details,
     });
+    let notified = false;
     try {
       const sent = await sendTelegramHtml(message);
+      notified = Boolean(sent);
       if (sent) console.info(`Telegram lead notification sent: ${lead.id}`);
       else console.warn(`Telegram lead notification skipped: ${lead.id}`);
     } catch (notificationError) {
       console.error('Lead created but notification failed:', notificationError);
     }
 
-    return NextResponse.json({ success: true, id: lead.id }, { status: 201 });
+    // The assistant needs to know whether the manager was pinged here, so it can alert them itself if not.
+    return NextResponse.json(
+      { success: true, id: lead.id, ...(fromAssistant ? { notified } : {}) },
+      { status: 201 },
+    );
   } catch (error) {
     console.error('Lead request failed:', error);
     return NextResponse.json({ error: "Murojaatni saqlab bo'lmadi" }, { status: 500 });

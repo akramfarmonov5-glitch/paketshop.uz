@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { askAssistant, isChatProxyEnabled } from '@/lib/server/assistantClient';
 import { db } from '@/lib/server/db';
 import { getAdminSession } from '@/lib/server/rbac';
 import { geminiRequestSchema, type GeminiRequest } from '@/lib/validation/geminiRequest';
+
+// The AI assistant can take up to ~25s (model fallbacks); the built-in reply then still needs time as a fallback.
+export const maxDuration = 60;
 
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.1-flash-lite';
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
@@ -146,6 +150,21 @@ export async function POST(request: NextRequest) {
   if (input.voiceMode) {
     const voiceLimit = checkRateLimit(`gemini-voice:${ip}`, 3, 60_000);
     if (!voiceLimit.allowed) return rateLimitResponse(voiceLimit.resetAt);
+  }
+
+  // With ASSISTANT_CHAT_PROXY=true the public widget talks to the AI assistant (live catalogue, quotes, manager
+  // requests). When it cannot answer, the built-in Gemini reply below is used, as before.
+  if (!adminSession && isChatProxyEnabled()) {
+    const proxied = await askAssistant({
+      message: input.message,
+      history: input.history,
+      sessionId: input.sessionId,
+      language: input.language,
+      customerName: input.customerName,
+      voiceMode: input.voiceMode,
+      clientIp: ip,
+    });
+    if (proxied) return NextResponse.json(proxied);
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

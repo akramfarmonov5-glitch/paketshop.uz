@@ -19,6 +19,8 @@ export const geminiRequestSchema = z.object({
   catalogContext: z.string().trim().max(12_000).optional(),
   customerName: z.string().trim().max(100).optional(),
   language: z.enum(['uz', 'ru', 'en']).optional().default('uz'),
+  // Random id the widget keeps in localStorage, so the AI assistant can remember the conversation between messages.
+  sessionId: z.string().trim().regex(/^[A-Za-z0-9_-]{8,64}$/).optional(),
 }).strict();
 
 export type GeminiRequest = z.infer<typeof geminiRequestSchema>;
