@@ -8,6 +8,14 @@
 - `POST /api/leads` recognises the assistant's bearer key: its requests use their own rate-limit bucket instead of the per-IP limit of 6, and the response reports whether the Telegram alert was sent (`notified`). Public form behaviour is unchanged.
 - The storefront chat widget can run through the assistant (`ASSISTANT_CHAT_PROXY=true`) with an automatic fallback to the built-in Gemini reply; the widget keeps a persistent `sessionId`, shows paketshop.uz/t.me links as clickable links and keeps line breaks in replies.
 - Everything stays off until `ASSISTANT_API_KEY` is set; see `docs/assistant-integration.md` for the rollout order.
+- Added `GET /api/assistant/leads?ids=…`, a key-protected status lookup for the requests the assistant handed over: it
+  returns only status fields (`status`, `lostReason`, timestamps) of leads whose source is the assistant, so customers
+  asking the assistant "where is my request?" get the status the managers set in the CRM.
+- The chat widget now presents itself as the assistant does (Malika · AI yordamchi / Малика · AI-помощник) with its
+  greeting, voice-mode labels, placeholder and error text in the page language (uz/ru); server error details are no
+  longer shown to customers.
+- The built-in voice reply no longer depends on the retiring `gemini-2.5-flash-preview-tts`: it tries
+  `GEMINI_TTS_MODEL`, then `gemini-3.1-flash-tts-preview`, then the old model, and uses the same voice as the assistant.
 
 ### Import rollback and bulk-import scalability
 
