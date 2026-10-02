@@ -8,6 +8,8 @@ customer requests; the assistant consults and hands requests over.
             catalogue feed (GET, key)                  customer request (POST, key)
  paketshop.uz  ──────────────────────▶  assistant  ──────────────────────▶  paketshop.uz /api/leads
  (Prisma/Postgres)                      (Neon + pgvector)                    (CRM lead + Telegram alert)
+                                            assistant  ◀──────────────────────  paketshop.uz /api/assistant/leads
+                                                          lead status (GET, key)  (status set by the managers)
 
  widget ──▶ /api/gemini ──(ASSISTANT_CHAT_PROXY=true)──▶ assistant /api/chat   (falls back to built-in Gemini)
 ```
@@ -62,6 +64,19 @@ the request number, quote, delivery and comments in `note`, the requested items 
 `attribution.source = "AI yordamchi (Telegram | Veb | Sayt)"`. Honeypot and timing checks do not apply to it (it sends
 neither field), the schema validation does.
 
+### `GET /api/assistant/leads`
+
+`Authorization: Bearer <ASSISTANT_API_KEY>`. `?ids=<lead id>,<lead id>` — the `leadId`s the assistant received from
+`POST /api/leads` (up to 50; malformed ids are ignored). Returns only leads the assistant created
+(`source` starting with `AI yordamchi`), so it cannot be used to look up other CRM entries:
+
+```json
+{ "leads": [{ "id": "…", "status": "CONTACTED", "lostReason": null, "createdAt": "…", "updatedAt": "…" }] }
+```
+
+Status fields only (`NEW`, `CONTACTED`, `IN_PROGRESS`, `WON`, `LOST`) — no names, phones or notes; responses are
+`no-store`. The assistant uses it to answer "where is my request?" with the status the managers set in the CRM.
+
 ### `POST /api/gemini` (existing endpoint, widget chat)
 
 When `ASSISTANT_CHAT_PROXY=true` and the key is set, non-admin requests are forwarded to the assistant's `/api/chat`
@@ -71,13 +86,17 @@ timeout (25 s), an error status or an empty reply the built-in Gemini answer is 
 working when the assistant is down. Admin requests (`systemInstruction`/`jsonMode`) are never forwarded.
 
 The widget stores a random `sessionId` in `localStorage` (`paketshop_chat_session`) so the assistant can remember the
-conversation; it contains no personal data.
+conversation; it contains no personal data. It introduces itself as the assistant does (Malika · AI yordamchi /
+Малика · AI-помощник) and shows its greeting, labels and error text in the page language (uz/ru).
+
+The built-in voice reply tries `GEMINI_TTS_MODEL` (if set), then `gemini-3.1-flash-tts-preview`, then
+`gemini-2.5-flash-preview-tts` (being retired), and answers without audio when none of them works.
 
 ## Rollout order
 
 1. Generate the secret and set `ASSISTANT_API_KEY` in both Vercel projects.
 2. Merge this branch and let the site redeploy; redeploy the assistant.
-3. Check `GET /api/assistant/catalog` with the key (200) and without it (401).
+3. Check `GET /api/assistant/catalog` and `GET /api/assistant/leads` with the key (200) and without it (401).
 4. In Telegram run `/sync apply` on the assistant bot: the catalogue now comes from the feed instead of HTML scraping.
 5. Send a test request through the assistant and confirm the lead appears in the admin CRM and the manager alert arrives
    once.

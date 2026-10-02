@@ -12,6 +12,50 @@ interface Message {
 
 const SESSION_STORAGE_KEY = 'paketshop_chat_session';
 
+// The widget's own texts; the assistant (Malika) answers in the language the customer writes in
+const COPY = {
+  uz: {
+    title: 'Malika',
+    subtitle: 'AI yordamchi · PaketShop.uz',
+    greeting: "Assalomu alaykum! Men Malika, PaketShop.uz yordamchisiman. Mahsulot tanlash, narx va miqdorni hisoblashda yordam beraman. Masalan: «kraft paket 20x30 narxi» yoki «kafe uchun stakan kerak».",
+    placeholder: 'Xabaringizni yozing...',
+    voiceInput: 'Ovozli kiritish',
+    voiceModeOn: "Ovozli rejimni yoqish (qo'l tegizmasdan)",
+    voiceModeOff: "Ovozli rejimni o'chirish",
+    answering: 'Javob berilmoqda',
+    thinking: 'Fikrlanmoqda',
+    listening: 'Eshitilmoqda',
+    waiting: 'Kutilmoqda',
+    thinkingLong: "Malika o'ylamoqda...",
+    listeningLong: 'Sizni eshitayapman, gapiring...',
+    startTalking: 'Gapirishni boshlang...',
+    backToText: 'Matnli chatga qaytish',
+    handsFree: "Qo'l tegizmasdan gaplashish rejimi yoqilgan.",
+    noSpeech: "Kechirasiz, ushbu brauzerda ovozli kiritish qo'llab-quvvatlanmaydi.",
+    failed: "Kechirasiz, javob olishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.",
+  },
+  ru: {
+    title: 'Малика',
+    subtitle: 'AI-помощник · PaketShop.uz',
+    greeting: 'Здравствуйте! Я Малика, помощник PaketShop.uz. Помогу подобрать товар, рассчитать цену и количество. Например: «цена крафт-пакета 20x30» или «нужны стаканы для кафе».',
+    placeholder: 'Напишите сообщение...',
+    voiceInput: 'Голосовой ввод',
+    voiceModeOn: 'Включить голосовой режим (без рук)',
+    voiceModeOff: 'Выключить голосовой режим',
+    answering: 'Отвечаю',
+    thinking: 'Думаю',
+    listening: 'Слушаю',
+    waiting: 'Ожидание',
+    thinkingLong: 'Малика думает...',
+    listeningLong: 'Слушаю вас, говорите...',
+    startTalking: 'Начните говорить...',
+    backToText: 'Вернуться к текстовому чату',
+    handsFree: 'Включён режим разговора без рук.',
+    noSpeech: 'Извините, этот браузер не поддерживает голосовой ввод.',
+    failed: 'Извините, не удалось получить ответ. Попробуйте ещё раз.',
+  },
+} as const;
+
 // Random id kept in this browser so the AI assistant can remember the conversation between messages.
 function loadChatSessionId(): string {
   try {
@@ -50,19 +94,23 @@ const AIChatAssistant: React.FC = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formStartedAt] = useState(() => Date.now());
   const chatSessionIdRef = useRef('');
+  const { lang } = useLanguage();
+  const t = COPY[lang === 'ru' ? 'ru' : 'uz'];
 
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: "Assalomu alaykum! Men PaketShop onlayn do'koni yordamchisiman. Sizga qanday yordam bera olaman? Masalan, 'qanday paketlar bor' yoki 'konteyner narxini ayt' deb so'rashingiz mumkin." }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => [{ role: 'model', text: t.greeting }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // The greeting follows the page language until the conversation starts
+  useEffect(() => {
+    setMessages(prev => (prev.length === 1 && prev[0].role === 'model' ? [{ role: 'model', text: t.greeting }] : prev));
+  }, [t.greeting]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
-  const { lang } = useLanguage();
 
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -181,7 +229,7 @@ const AIChatAssistant: React.FC = () => {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert("Kechirasiz, ushbu brauzerda ovozli kiritish qo'llab-quvvatlanmaydi.");
+      alert(t.noSpeech);
       return;
     }
 
@@ -347,7 +395,7 @@ const AIChatAssistant: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Chat Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: `Kechirasiz, xatolik yuz berdi: ${error.message || error}` }]);
+      setMessages(prev => [...prev, { role: 'model', text: t.failed }]);
       if (isVoiceModeRef.current) {
         startRecognition();
       }
@@ -382,10 +430,10 @@ const AIChatAssistant: React.FC = () => {
                   <Sparkles size={20} className="text-black" />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-sm">PaketShop Assistant</h3>
+                  <h3 className="text-white font-bold text-sm">{t.title}</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span className="text-xs text-gray-400">Online | Gemini AI</span>
+                    <span className="text-xs text-gray-400">{t.subtitle}</span>
                   </div>
                 </div>
               </div>
@@ -411,7 +459,7 @@ const AIChatAssistant: React.FC = () => {
                       ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse shadow-lg shadow-red-500/30 ring-2 ring-red-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
-                  title={isVoiceMode ? "Ovozli rejimni o'chirish" : "Hands-free Ovozli rejimni yoqish"}
+                  title={isVoiceMode ? t.voiceModeOff : t.voiceModeOn}
                 >
                   {isVoiceMode ? <Mic className="animate-bounce" size={18} /> : <MicOff size={18} />}
                   {isVoiceMode && (
@@ -512,7 +560,7 @@ const AIChatAssistant: React.FC = () => {
                     
                     <div className="text-center z-10 mt-2">
                       <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-gold-400 font-black uppercase tracking-widest animate-pulse">
-                        {isPlayingAudio ? "Javob berilmoqda" : isLoading ? "Fikrlanmoqda" : isListening ? "Eshitilmoqda" : "Kutilmoqda"}
+                        {isPlayingAudio ? t.answering : isLoading ? t.thinking : isListening ? t.listening : t.waiting}
                       </span>
                     </div>
 
@@ -545,11 +593,11 @@ const AIChatAssistant: React.FC = () => {
                         <p className="text-white text-sm font-bold px-4 leading-relaxed max-h-[110px] overflow-y-auto custom-scrollbar">
                           {isPlayingAudio 
                             ? messages[messages.length - 1]?.text 
-                            : isLoading 
-                              ? "PaketShop o'ylamoqda..." 
-                              : isListening 
-                                ? (input || "Sizni eshitayapman, gapiring...") 
-                                : "Gapirishni boshlang..."
+                            : isLoading
+                              ? t.thinkingLong
+                              : isListening
+                                ? (input || t.listeningLong)
+                                : t.startTalking
                           }
                         </p>
                         {isListening && input && (
@@ -563,10 +611,10 @@ const AIChatAssistant: React.FC = () => {
                         onClick={() => setIsVoiceMode(false)}
                         className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs text-gray-400 hover:text-white transition-all font-bold"
                       >
-                        Matnli chatga qaytish
+                        {t.backToText}
                       </button>
                       <p className="text-[9px] text-gray-600 font-medium">
-                        Qo'llarsiz (Hands-free) rejim faol.
+                        {t.handsFree}
                       </p>
                     </div>
                   </div>
@@ -611,7 +659,7 @@ const AIChatAssistant: React.FC = () => {
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
                           onKeyDown={handleKeyPress}
-                          placeholder="Xabaringizni yozing..."
+                          placeholder={t.placeholder}
                           className="w-full bg-white/5 border border-white/10 rounded-full pl-5 pr-24 py-3.5 text-sm text-white focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/50 transition-all placeholder:text-gray-600"
                         />
                         <button
@@ -621,7 +669,7 @@ const AIChatAssistant: React.FC = () => {
                               ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30'
                               : 'text-gray-400 hover:text-white hover:bg-white/10'
                           }`}
-                          title="Ovozli kiritish"
+                          title={t.voiceInput}
                         >
                           {isListening ? <MicOff size={16} /> : <Mic size={16} />}
                         </button>

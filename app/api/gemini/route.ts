@@ -9,7 +9,12 @@ import { geminiRequestSchema, type GeminiRequest } from '@/lib/validation/gemini
 export const maxDuration = 60;
 
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.1-flash-lite';
-const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
+// gemini-2.5-flash-preview-tts is being retired, so the voice reply tries the next model when one fails.
+const TTS_MODELS = [...new Set([
+  process.env.GEMINI_TTS_MODEL,
+  'gemini-3.1-flash-tts-preview',
+  'gemini-2.5-flash-preview-tts',
+].filter((model): model is string => Boolean(model)))];
 const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'CONTENT_MANAGER'] as const;
 
 function clientIp(request: NextRequest) {
@@ -194,29 +199,32 @@ export async function POST(request: NextRequest) {
 
     let audioBase64: string | null = null;
     if (input.voiceMode) {
-      try {
-        const audioResponse = await ai.models.generateContent({
-          model: TTS_MODEL,
-          contents: [{ role: 'user', parts: [{ text }] }],
-          config: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } },
+      for (const model of TTS_MODELS) {
+        try {
+          const audioResponse = await ai.models.generateContent({
+            model,
+            contents: [{ role: 'user', parts: [{ text }] }],
+            config: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+              },
             },
-          },
-        });
+          });
 
-        for (const part of audioResponse.candidates?.[0]?.content?.parts || []) {
-          if (!part.inlineData?.data) continue;
-          const pcmBuffer = Buffer.from(part.inlineData.data, 'base64');
-          audioBase64 = Buffer.concat([
-            createWavHeader(pcmBuffer.length),
-            pcmBuffer,
-          ]).toString('base64');
-          break;
+          for (const part of audioResponse.candidates?.[0]?.content?.parts || []) {
+            if (!part.inlineData?.data) continue;
+            const pcmBuffer = Buffer.from(part.inlineData.data, 'base64');
+            audioBase64 = Buffer.concat([
+              createWavHeader(pcmBuffer.length),
+              pcmBuffer,
+            ]).toString('base64');
+            break;
+          }
+          if (audioBase64) break;
+        } catch (ttsError) {
+          console.error(`Gemini TTS generation failed (${model}):`, ttsError);
         }
-      } catch (ttsError) {
-        console.error('Gemini TTS generation failed:', ttsError);
       }
     }
 
